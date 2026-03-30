@@ -43,3 +43,27 @@
 
 !/Data/*
 !/bin/rosyln/*
+
+# Pastas do shard
+Saves/
+Backups/
+Logs/
+
+# Build / Visual Studio
+bin/
+obj/
+.vs/
+
+# Executáveis e bibliotecas
+*.exe
+*.dll
+*.pdb
+
+# Arquivos de usuário / temporários
+*.user
+*.cache
+*.tmp
+
+# Windows
+Thumbs.db
+Desktop.ini
