@@ -1,1 +1,0 @@
-OSU is a RP project for Ultima Online. The ideia is a Shard that doesnt stay on constantly, instead that goes on for a period of time to provide a One Shot Experience. One adventure, for how long it takes. once its done the shard oges offline and prepairs for the next adventure. 
