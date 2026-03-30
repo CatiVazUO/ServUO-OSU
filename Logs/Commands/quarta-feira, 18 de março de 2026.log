@@ -1,0 +1,330 @@
+##############################
+Log started on 18/03/2026 07:22:21
+
+18/03/2026 07:23:51: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+18/03/2026 07:23:53: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x400009CE (TintaDeBarbaBarbeiro)
+18/03/2026 07:23:54: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+18/03/2026 07:23:55: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x400009D8 (TesouraDeBarbeiro)
+18/03/2026 07:23:56: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+18/03/2026 07:23:58: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A05 (HairDye)
+18/03/2026 07:23:59: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+18/03/2026 07:24:00: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x400009CC (TintaDeCabeloBarbeiro)
+18/03/2026 07:24:26: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+18/03/2026 07:24:35: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add PenAndInkTool'
+18/03/2026 07:24:36: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1620, -2) in Trammel: "PenAndInkTool"
+18/03/2026 07:24:36: 127.0.0.1: Serials: 0x40000A0F; 
+18/03/2026 07:24:46: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add bookseal'
+18/03/2026 07:24:48: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1621, -4) in Trammel: "bookseal"
+18/03/2026 07:24:48: 127.0.0.1: Serials: 0x40000A11; 
+18/03/2026 07:25:01: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add PaperCutterTool'
+18/03/2026 07:25:03: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1621, -4) in Trammel: "PaperCutterTool"
+18/03/2026 07:25:03: 127.0.0.1: Serials: 0x40000A13; 
+18/03/2026 07:26:10: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlbook50'
+18/03/2026 07:26:11: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1621, -4) in Trammel: "htmlbook50"
+18/03/2026 07:26:11: 127.0.0.1: Serials: 0x40000A15; 
+18/03/2026 07:26:19: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlbook200'
+18/03/2026 07:26:20: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1621, -4) in Trammel: "htmlbook200"
+18/03/2026 07:26:20: 127.0.0.1: Serials: 0x40000A16; 
+18/03/2026 07:26:30: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add loosepage'
+18/03/2026 07:26:33: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1621, -4) in Trammel: "HtmlLoosePage"
+18/03/2026 07:26:33: 127.0.0.1: Serials: 0x40000A17; 
+18/03/2026 07:27:25: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlscroll4'
+18/03/2026 07:27:27: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1621, -4) in Trammel: "htmlscroll4"
+18/03/2026 07:27:27: 127.0.0.1: Serials: 0x40000A18; 
+18/03/2026 07:27:34: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlscrolllong 2'
+18/03/2026 07:27:38: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1621, -4) in Trammel: "HtmlScrollLongo3"
+18/03/2026 07:27:38: 127.0.0.1: Serials: 0x40000A19; 
+18/03/2026 07:27:52: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlscrollpage'
+18/03/2026 07:28:06: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlscrollpapel'
+18/03/2026 07:28:10: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1621, -4) in Trammel: "HtmlScrollPapel2"
+18/03/2026 07:28:10: 127.0.0.1: Serials: 0x40000A1A; 
+18/03/2026 07:28:43: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlscrollpapel'
+18/03/2026 07:28:52: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add loosepage'
+18/03/2026 07:28:55: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1621, -4) in Trammel: "HtmlLoosePage"
+18/03/2026 07:28:55: 127.0.0.1: Serials: 0x40000A1B; 
+18/03/2026 07:29:10: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlcompilationbook1'
+18/03/2026 07:29:19: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add HtmlCompilationBook'
+18/03/2026 07:29:21: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1621, -4) in Trammel: "HtmlCompilationBook"
+18/03/2026 07:29:21: 127.0.0.1: Serials: 0x40000A1E; 
+18/03/2026 07:29:28: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add HtmlCompilationBook2'
+18/03/2026 07:29:30: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1621, -4) in Trammel: "HtmlCompilationBook2"
+18/03/2026 07:29:30: 127.0.0.1: Serials: 0x40000A20; 
+18/03/2026 07:34:46: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add penandink'
+18/03/2026 07:34:48: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "penandink"
+18/03/2026 07:34:48: 127.0.0.1: Serials: 0x40000A26; 
+18/03/2026 07:34:55: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+18/03/2026 07:35:02: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A26 (PenAndInk)
+18/03/2026 07:35:09: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add PenAndInkTool'
+18/03/2026 07:35:11: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "PenAndInkTool"
+18/03/2026 07:35:11: 127.0.0.1: Serials: 0x40000A27; 
+18/03/2026 07:36:46: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add bookseal'
+18/03/2026 07:36:47: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "bookseal"
+18/03/2026 07:36:47: 127.0.0.1: Serials: 0x40000A35; 
+18/03/2026 07:39:03: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set int 40'
+18/03/2026 07:39:04: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'int' of 0x199 "Ze" ('Vaz1') to '40'
+18/03/2026 07:39:05: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set int 40'
+18/03/2026 07:39:06: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'int' of 0x77 "Vaz" ('vaz') to '40'
+18/03/2026 07:42:10: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add bookseal'
+18/03/2026 07:42:11: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1619, 0) in Trammel: "bookseal"
+18/03/2026 07:42:11: 127.0.0.1: Serials: 0x40000A36; 
+18/03/2026 07:42:18: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add bookseal'
+18/03/2026 07:42:19: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1619, 0) in Trammel: "bookseal"
+18/03/2026 07:42:19: 127.0.0.1: Serials: 0x40000A37; 
+18/03/2026 07:49:23: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set int 40'
+18/03/2026 07:49:24: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'int' of 0x77 "Vaz" ('vaz') to '40'
+18/03/2026 07:49:29: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set int 80'
+18/03/2026 07:49:31: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'int' of 0x77 "Vaz" ('vaz') to '80'
+18/03/2026 07:49:37: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add meatloaf'
+18/03/2026 07:49:44: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add bread'
+18/03/2026 07:49:47: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "BreadLoaf"
+18/03/2026 07:49:47: 127.0.0.1: Serials: 0x40000A3C; 
+18/03/2026 07:49:57: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'needs '
+18/03/2026 07:50:17: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add rocambole'
+18/03/2026 07:50:19: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "rocambole"
+18/03/2026 07:50:19: 127.0.0.1: Serials: 0x40000A3D; 
+18/03/2026 07:50:22: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add rocambole'
+18/03/2026 07:50:23: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "rocambole"
+18/03/2026 07:50:23: 127.0.0.1: Serials: 0x40000A3E; 
+18/03/2026 07:50:25: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add rocambole'
+18/03/2026 07:50:26: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "rocambole"
+18/03/2026 07:50:26: 127.0.0.1: Serials: 0x40000A3F; 
+18/03/2026 07:50:29: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add rocambole'
+18/03/2026 07:50:30: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "rocambole"
+18/03/2026 07:50:30: 127.0.0.1: Serials: 0x40000A40; 
+18/03/2026 07:50:37: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add flaskofwater'
+18/03/2026 07:51:03: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add jarraagua'
+18/03/2026 07:51:04: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "jarraagua"
+18/03/2026 07:51:04: 127.0.0.1: Serials: 0x40000A41; 
+18/03/2026 07:51:07: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add jarraagua'
+18/03/2026 07:51:08: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "jarraagua"
+18/03/2026 07:51:08: 127.0.0.1: Serials: 0x40000A42; 
+18/03/2026 07:51:11: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add jarraagua'
+18/03/2026 07:51:12: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "jarraagua"
+18/03/2026 07:51:12: 127.0.0.1: Serials: 0x40000A43; 
+18/03/2026 07:51:14: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add jarraagua'
+18/03/2026 07:51:15: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "jarraagua"
+18/03/2026 07:51:15: 127.0.0.1: Serials: 0x40000A44; 
+18/03/2026 07:51:18: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add jarraagua'
+18/03/2026 07:51:19: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "jarraagua"
+18/03/2026 07:51:19: 127.0.0.1: Serials: 0x40000A45; 
+18/03/2026 07:52:21: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add wax'
+18/03/2026 07:52:23: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "wax"
+18/03/2026 07:52:23: 127.0.0.1: Serials: 0x40000A46; 
+18/03/2026 07:52:29: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add booksealer'
+18/03/2026 07:52:31: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "BookSealerTool"
+18/03/2026 07:52:31: 127.0.0.1: Serials: 0x40000A47; 
+18/03/2026 07:52:44: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add wax 10'
+18/03/2026 07:52:45: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "wax" "10"
+18/03/2026 07:52:45: 127.0.0.1: Serials: 0x40000A48; 
+18/03/2026 07:57:38: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add loosepage'
+18/03/2026 07:57:41: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "HtmlLoosePage"
+18/03/2026 07:57:41: 127.0.0.1: Serials: 0x40000C78; 
+18/03/2026 07:59:33: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+18/03/2026 07:59:53: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlscoll4'
+18/03/2026 08:00:01: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlsroll4'
+18/03/2026 08:00:10: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlscroll4'
+18/03/2026 08:00:12: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "htmlscroll4"
+18/03/2026 08:00:12: 127.0.0.1: Serials: 0x40000D28; 
+18/03/2026 08:00:16: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlscroll14'
+18/03/2026 08:07:29: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set int 10'
+18/03/2026 08:07:31: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'int' of 0x77 "Vaz" ('vaz') to '10'
+18/03/2026 08:07:40: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlscroll4'
+18/03/2026 08:07:41: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1619, 0) in Trammel: "htmlscroll4"
+18/03/2026 08:07:41: 127.0.0.1: Serials: 0x40000F29; 
+18/03/2026 08:10:17: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+18/03/2026 08:21:38: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set int 405'
+18/03/2026 08:21:39: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'int' of 0x77 "Vaz" ('vaz') to '405'
+18/03/2026 08:21:55: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlcopiledbook'
+18/03/2026 08:22:28: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlcompilationbook'
+18/03/2026 08:22:30: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "htmlcompilationbook"
+18/03/2026 08:22:30: 127.0.0.1: Serials: 0x40000FD6; 
+18/03/2026 08:23:53: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add loosepage'
+18/03/2026 08:23:55: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1620, -2) in Trammel: "HtmlLoosePage"
+18/03/2026 08:23:55: 127.0.0.1: Serials: 0x40000FE5; 
+##############################
+Log started on 18/03/2026 09:12:54
+
+##############################
+Log started on 18/03/2026 09:15:45
+
+##############################
+Log started on 18/03/2026 16:29:31
+
+18/03/2026 16:32:24: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlscroll4'
+18/03/2026 16:32:26: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "htmlscroll4"
+18/03/2026 16:32:26: 127.0.0.1: Serials: 0x400009CE; 
+18/03/2026 16:35:03: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+18/03/2026 16:35:04: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A1E (HtmlCompilationBook)
+18/03/2026 16:35:07: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+18/03/2026 16:35:09: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x400009CE (HtmlScroll4)
+18/03/2026 16:35:12: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add loosepages'
+18/03/2026 16:35:19: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "HtmlLoosePage"
+18/03/2026 16:35:19: 127.0.0.1: Serials: 0x40000A24; 
+18/03/2026 16:35:20: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1619, 0) in Trammel: "HtmlLoosePage"
+18/03/2026 16:35:20: 127.0.0.1: Serials: 0x40000A25; 
+18/03/2026 16:35:33: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+18/03/2026 16:35:35: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A20 (HtmlCompilationBook2)
+18/03/2026 16:35:44: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlcompilationbook2'
+18/03/2026 16:35:46: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "htmlcompilationbook2"
+18/03/2026 16:35:46: 127.0.0.1: Serials: 0x40000A26; 
+18/03/2026 16:48:46: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+##############################
+Log started on 18/03/2026 17:27:30
+
+##############################
+Log started on 18/03/2026 17:34:24
+
+##############################
+Log started on 18/03/2026 17:56:55
+
+##############################
+Log started on 18/03/2026 18:08:35
+
+##############################
+Log started on 18/03/2026 18:12:38
+
+18/03/2026 18:18:43: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+##############################
+Log started on 18/03/2026 18:20:02
+
+##############################
+Log started on 18/03/2026 18:43:37
+
+##############################
+Log started on 18/03/2026 18:46:34
+
+##############################
+Log started on 18/03/2026 19:18:17
+
+18/03/2026 19:18:39: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add correiosnpc'
+18/03/2026 19:18:47: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1613, 9) in Trammel: "CorreioNPC"
+18/03/2026 19:18:47: 127.0.0.1: Serials: 0x78; 
+18/03/2026 19:18:51: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+##############################
+Log started on 18/03/2026 19:24:22
+
+18/03/2026 19:31:25: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+##############################
+Log started on 18/03/2026 19:49:06
+
+18/03/2026 19:49:18: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+18/03/2026 19:49:20: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A26 (HtmlCompilationBook2)
+18/03/2026 19:49:27: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlcompilationbook2'
+18/03/2026 19:49:29: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1612, 9) in Trammel: "htmlcompilationbook2"
+18/03/2026 19:49:29: 127.0.0.1: Serials: 0x40000A1A; 
+18/03/2026 19:53:56: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+18/03/2026 19:55:59: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlloosepage'
+18/03/2026 19:56:01: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1675, 1615, 9) in Trammel: "htmlloosepage"
+18/03/2026 19:56:01: 127.0.0.1: Serials: 0x40000A1E; 
+##############################
+Log started on 18/03/2026 21:20:58
+
+18/03/2026 21:21:04: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'e '
+##############################
+Log started on 18/03/2026 21:44:06
+
+18/03/2026 21:44:15: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'e '
+18/03/2026 21:44:35: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'needs '
+##############################
+Log started on 18/03/2026 21:55:41
+
+18/03/2026 21:56:08: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'e '
+##############################
+Log started on 18/03/2026 22:42:47
+
+18/03/2026 22:43:10: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add cantil'
+18/03/2026 22:43:12: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1675, 1617, 6) in Trammel: "cantil"
+18/03/2026 22:43:12: 127.0.0.1: Serials: 0x40000A1A; 
+18/03/2026 22:43:42: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add waterbarrel'
+18/03/2026 22:43:43: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1706, 1629, 0) in Trammel: "waterbarrel"
+18/03/2026 22:43:43: 127.0.0.1: Serials: 0x40000A1B; 
+18/03/2026 22:43:59: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add water'
+18/03/2026 22:44:27: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1708, 1629, -2) in Trammel: "EmptyJar"
+18/03/2026 22:44:27: 127.0.0.1: Serials: 0x40000A1E; 
+18/03/2026 22:44:36: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+18/03/2026 22:44:38: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A1E (EmptyJar)
+18/03/2026 22:45:06: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1708, 1629, -2) in Trammel: "Pitcher"
+18/03/2026 22:45:06: 127.0.0.1: Serials: 0x40000A20; 
+18/03/2026 22:45:28: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add waterthrou'
+18/03/2026 22:45:42: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1704, 1629, 0) in Trammel: "WaterTroughEastAddon"
+18/03/2026 22:45:42: 127.0.0.1: Serials: 0x40000A22; 
+18/03/2026 22:47:01: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+18/03/2026 22:47:03: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A20 (Pitcher)
+18/03/2026 22:47:05: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+18/03/2026 22:47:05: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A2C (AddonComponent)
+18/03/2026 22:47:07: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+18/03/2026 22:47:07: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A1B (WaterBarrel)
+18/03/2026 22:47:12: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add waterbarrel'
+18/03/2026 22:47:14: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1704, 1629, 0) in Trammel: "waterbarrel"
+18/03/2026 22:47:14: 127.0.0.1: Serials: 0x40000A2F; 
+18/03/2026 22:48:39: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add water'
+18/03/2026 22:48:44: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1645, 1625, 20) in Trammel: "WaterTroughEastAddon"
+18/03/2026 22:48:44: 127.0.0.1: Serials: 0x40000A31; 
+18/03/2026 22:48:48: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1664, 1607, 20) in Trammel: "WaterTroughEastAddon"
+18/03/2026 22:48:48: 127.0.0.1: Serials: 0x40000A37; 
+18/03/2026 22:48:50: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1664, 1606, 20) in Trammel: "WaterTroughEastAddon"
+18/03/2026 22:48:50: 127.0.0.1: Serials: 0x40000A3A; 
+18/03/2026 22:48:57: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+18/03/2026 22:48:59: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A33 (AddonComponent)
+18/03/2026 22:49:00: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+18/03/2026 22:49:00: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A39 (AddonComponent)
+18/03/2026 22:49:20: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+18/03/2026 22:49:21: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A2F (WaterBarrel)
+18/03/2026 22:57:46: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'e '
+18/03/2026 23:02:05: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set int 40'
+18/03/2026 23:02:06: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'int' of 0x77 "Vaz" ('vaz') to '40'
+18/03/2026 23:02:16: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add rocambole 10'
+18/03/2026 23:02:18: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1667, 1613, 10) in Trammel: "rocambole" "10"
+##############################
+Log started on 18/03/2026 23:05:02
+
+18/03/2026 23:07:31: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+18/03/2026 23:07:32: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A1A (Cantil)
+18/03/2026 23:07:34: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add cantil'
+18/03/2026 23:07:36: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1620, -2) in Trammel: "cantil"
+18/03/2026 23:07:36: 127.0.0.1: Serials: 0x40000A20; 
+18/03/2026 23:08:05: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add rocambole 10'
+18/03/2026 23:08:06: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1616, 8) in Trammel: "rocambole" "10"
+18/03/2026 23:08:18: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add meatloaf 10'
+18/03/2026 23:08:23: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add rocambole'
+18/03/2026 23:08:25: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1617, 6) in Trammel: "rocambole"
+18/03/2026 23:08:25: 127.0.0.1: Serials: 0x40000A22; 
+18/03/2026 23:08:37: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add rocambole 10'
+18/03/2026 23:08:38: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1616, 8) in Trammel: "rocambole" "10"
+##############################
+Log started on 18/03/2026 23:20:08
+
+18/03/2026 23:24:05: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add rocambole 10'
+18/03/2026 23:24:06: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1621, -4) in Trammel: "rocambole" "10"
+18/03/2026 23:24:06: 127.0.0.1: Serials: 0x40000A20; 
+##############################
+Log started on 18/03/2026 23:28:44
+
+18/03/2026 23:39:49: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add papel'
+18/03/2026 23:39:52: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1615, 9) in Trammel: "CorreioPapel"
+18/03/2026 23:39:52: 127.0.0.1: Serials: 0x40000A20; 
+18/03/2026 23:39:52: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1615, 9) in Trammel: "CorreioPapel"
+18/03/2026 23:39:52: 127.0.0.1: Serials: 0x40000A22; 
+18/03/2026 23:40:09: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1646, 1626, 20) in Trammel: "CorreioEnvelope"
+18/03/2026 23:40:09: 127.0.0.1: Serials: 0x40000A23; 
+18/03/2026 23:40:10: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1615, 9) in Trammel: "CorreioEnvelope"
+18/03/2026 23:40:10: 127.0.0.1: Serials: 0x40000A2C; 
+18/03/2026 23:40:13: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1615, 9) in Trammel: "CorreioSelo"
+18/03/2026 23:40:13: 127.0.0.1: Serials: 0x40000A2F; 
+18/03/2026 23:40:47: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add gold 100000'
+18/03/2026 23:40:48: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1615, 9) in Trammel: "gold" "100000"
+18/03/2026 23:40:48: 127.0.0.1: Serials: 0x40000A33; 
+19/03/2026 00:05:01: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add bag'
+19/03/2026 00:05:02: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1669, 1614, 10) in Trammel: "bag"
+19/03/2026 00:05:02: 127.0.0.1: Serials: 0x40000A39; 
+19/03/2026 00:06:05: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add pouch'
+19/03/2026 00:06:07: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1669, 1614, 10) in Trammel: "pouch"
+19/03/2026 00:06:07: 127.0.0.1: Serials: 0x40000A3D; 
+19/03/2026 00:06:13: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add backpack'
+19/03/2026 00:06:14: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1669, 1614, 10) in Trammel: "backpack"
+19/03/2026 00:06:14: 127.0.0.1: Serials: 0x40000A3E; 
+19/03/2026 00:30:30: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1616, 8) in Trammel: "MetalChest"
+19/03/2026 00:30:30: 127.0.0.1: Serials: 0x40000A3F; 
+19/03/2026 00:33:45: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add metalbox'
+19/03/2026 00:33:47: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1616, 8) in Trammel: "metalbox"
+19/03/2026 00:33:47: 127.0.0.1: Serials: 0x40000A40; 

@@ -1,0 +1,7 @@
+D:\UO\My Shards\OSU Servuo Transfer\ServUO-pub57\Ultima\bin\Debug\Ultima.dll
+D:\UO\My Shards\OSU Servuo Transfer\ServUO-pub57\Ultima\bin\Debug\Ultima.pdb
+D:\UO\My Shards\OSU Servuo Transfer\ServUO-pub57\Ultima\obj\Debug\Ultima.csproj.AssemblyReference.cache
+D:\UO\My Shards\OSU Servuo Transfer\ServUO-pub57\Ultima\obj\Debug\Ultima.GeneratedMSBuildEditorConfig.editorconfig
+D:\UO\My Shards\OSU Servuo Transfer\ServUO-pub57\Ultima\obj\Debug\Ultima.csproj.CoreCompileInputs.cache
+D:\UO\My Shards\OSU Servuo Transfer\ServUO-pub57\Ultima\obj\Debug\Ultima.dll
+D:\UO\My Shards\OSU Servuo Transfer\ServUO-pub57\Ultima\obj\Debug\Ultima.pdb

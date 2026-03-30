@@ -1,0 +1,89 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO-pub57\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{308EA7C6-2873-4E47-AF3F-ABBA3F8AB63E}|Scripts\\Scripts.csproj|d:\\uo\\my shards\\osu servuo transfer\\servuo-pub57\\scripts\\custom\\orbremoteserver\\uoarchitect\\mobilesaver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{308EA7C6-2873-4E47-AF3F-ABBA3F8AB63E}|Scripts\\Scripts.csproj|solutionrelative:scripts\\custom\\orbremoteserver\\uoarchitect\\mobilesaver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{308EA7C6-2873-4E47-AF3F-ABBA3F8AB63E}|Scripts\\Scripts.csproj|d:\\uo\\my shards\\osu servuo transfer\\servuo-pub57\\scripts\\custom\\orbremoteserver\\orbserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{308EA7C6-2873-4E47-AF3F-ABBA3F8AB63E}|Scripts\\Scripts.csproj|solutionrelative:scripts\\custom\\orbremoteserver\\orbserver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{308EA7C6-2873-4E47-AF3F-ABBA3F8AB63E}|Scripts\\Scripts.csproj|d:\\uo\\my shards\\osu servuo transfer\\servuo-pub57\\scripts\\scripts.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{308EA7C6-2873-4E47-AF3F-ABBA3F8AB63E}|Scripts\\Scripts.csproj|solutionrelative:scripts\\scripts.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{308EA7C6-2873-4E47-AF3F-ABBA3F8AB63E}|Scripts\\Scripts.csproj|d:\\uo\\my shards\\osu servuo transfer\\servuo-pub57\\scripts\\mobiles\\playermobile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{308EA7C6-2873-4E47-AF3F-ABBA3F8AB63E}|Scripts\\Scripts.csproj|solutionrelative:scripts\\mobiles\\playermobile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 3,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Scripts.csproj",
+              "DocumentMoniker": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO-pub57\\Scripts\\Scripts.csproj",
+              "RelativeDocumentMoniker": "Scripts\\Scripts.csproj",
+              "ToolTip": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO-pub57\\Scripts\\Scripts.csproj",
+              "RelativeToolTip": "Scripts\\Scripts.csproj",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAABkAAABYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-01-30T18:42:11.563Z",
+              "IsPinned": true,
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "PlayerMobile.cs",
+              "DocumentMoniker": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO-pub57\\Scripts\\Mobiles\\PlayerMobile.cs",
+              "RelativeDocumentMoniker": "Scripts\\Mobiles\\PlayerMobile.cs",
+              "ToolTip": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO-pub57\\Scripts\\Mobiles\\PlayerMobile.cs",
+              "RelativeToolTip": "Scripts\\Mobiles\\PlayerMobile.cs",
+              "ViewState": "AgIAAA4CAAAAAAAAAAAqwBkCAAA0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-18T23:09:55.398Z",
+              "IsPinned": true
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "OrbServer.cs",
+              "DocumentMoniker": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO-pub57\\Scripts\\Custom\\OrbRemoteServer\\OrbServer.cs",
+              "RelativeDocumentMoniker": "Scripts\\Custom\\OrbRemoteServer\\OrbServer.cs",
+              "ToolTip": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO-pub57\\Scripts\\Custom\\OrbRemoteServer\\OrbServer.cs",
+              "RelativeToolTip": "Scripts\\Custom\\OrbRemoteServer\\OrbServer.cs",
+              "ViewState": "AgIAALgAAAAAAAAAAAAEwMcAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-27T14:57:54.248Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MobileSaver.cs",
+              "DocumentMoniker": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO-pub57\\Scripts\\Custom\\OrbRemoteServer\\UOArchitect\\MobileSaver.cs",
+              "RelativeDocumentMoniker": "Scripts\\Custom\\OrbRemoteServer\\UOArchitect\\MobileSaver.cs",
+              "ToolTip": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO-pub57\\Scripts\\Custom\\OrbRemoteServer\\UOArchitect\\MobileSaver.cs",
+              "RelativeToolTip": "Scripts\\Custom\\OrbRemoteServer\\UOArchitect\\MobileSaver.cs",
+              "ViewState": "AgIAAN0AAAAAAAAAAAAEwFgBAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-27T14:54:22.915Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

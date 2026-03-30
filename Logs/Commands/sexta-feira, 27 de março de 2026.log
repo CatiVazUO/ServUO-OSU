@@ -1,0 +1,117 @@
+##############################
+Log started on 27/03/2026 01:23:54
+
+27/03/2026 01:29:01: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+##############################
+Log started on 27/03/2026 01:40:21
+
+27/03/2026 02:01:44: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add item 0x3302'
+27/03/2026 02:01:45: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1669, 1613, 10) in Trammel: "item" "0x3302"
+27/03/2026 02:01:45: 127.0.0.1: Serials: 0x40001D3E; 
+27/03/2026 02:01:58: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+27/03/2026 02:02:14: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+27/03/2026 02:02:17: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+27/03/2026 02:04:58: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'props '
+27/03/2026 02:26:09: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'props '
+##############################
+Log started on 27/03/2026 02:53:05
+
+##############################
+Log started on 27/03/2026 03:06:33
+
+##############################
+Log started on 27/03/2026 03:53:07
+
+27/03/2026 03:53:24: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'props '
+27/03/2026 03:54:12: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') set property 'HairItemID' of 0x77 "The Vaz" ('vaz') to '13050'
+27/03/2026 03:54:29: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') set property 'HairItemID' of 0x77 "The Vaz" ('vaz') to '13058'
+27/03/2026 04:10:29: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'add barbe'
+27/03/2026 04:10:33: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') building at (1667, 1614, 10) in Trammel: "TesouraDeBarbeiro"
+27/03/2026 04:10:33: 127.0.0.1: Serials: 0x40000483; 
+27/03/2026 04:10:42: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'props '
+27/03/2026 04:10:59: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') set property 'OSUAbilityPicks' of 0x77 "The Vaz" ('vaz') to '10'
+27/03/2026 04:14:09: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'add sculp'
+27/03/2026 04:15:01: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'add SculptorTools'
+27/03/2026 04:15:02: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') building at (1666, 1617, 0) in Trammel: "SculptorTools"
+27/03/2026 04:15:02: 127.0.0.1: Serials: 0x40000484; 
+27/03/2026 04:16:14: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'add stoneblocksmall 10'
+27/03/2026 04:16:16: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') building at (1656, 1616, 20) in Trammel: "stoneblocksmall" "10"
+27/03/2026 04:16:16: 127.0.0.1: Serials: 0x40001D30; 
+27/03/2026 04:16:22: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'add stoneblocklarge 20'
+27/03/2026 04:16:24: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') building at (1657, 1615, 20) in Trammel: "stoneblocklarge" "20"
+27/03/2026 04:16:24: 127.0.0.1: Serials: 0x40001D31; 
+27/03/2026 04:16:30: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'add scaff'
+27/03/2026 04:16:41: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') building at (1657, 1615, 20) in Trammel: "SculptorScaffoldSouth"
+27/03/2026 04:16:41: 127.0.0.1: Serials: 0x40001D32; 
+27/03/2026 04:20:24: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'props '
+27/03/2026 04:20:30: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') set property 'CustomizationDone' of 0x1A1 "" (no account) to 'False'
+27/03/2026 04:20:42: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'props '
+27/03/2026 04:20:44: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') set property 'CustomizationDone' of 0x1A1 "" (no account) to 'False'
+27/03/2026 04:21:07: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') set property 'CustomizationExpire' of 0x1A1 "" (no account) to '03/28/2026 20:36:00'
+##############################
+Log started on 27/03/2026 06:53:24
+
+27/03/2026 06:53:55: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'delete '
+27/03/2026 06:53:57: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') deleting 0x1A0 "Tsthil" (no account)
+27/03/2026 06:54:05: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'go greenacres'
+27/03/2026 06:54:10: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'go green acres'
+27/03/2026 06:55:22: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'go 5456 2186'
+27/03/2026 06:55:27: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'add horse'
+27/03/2026 06:55:29: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') building at (5457, 2192, 0) in Trammel: "horse"
+27/03/2026 06:55:29: 127.0.0.1: Serials: 0x1A0; 
+27/03/2026 06:55:37: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'add cantil'
+27/03/2026 06:55:39: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') building at (5458, 2190, 0) in Trammel: "cantil"
+27/03/2026 06:55:39: 127.0.0.1: Serials: 0x40000A40; 
+27/03/2026 06:55:45: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'add rocambole 10'
+27/03/2026 06:55:46: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') building at (5458, 2190, 0) in Trammel: "rocambole" "10"
+27/03/2026 06:55:46: 127.0.0.1: Serials: 0x40001D3E; 
+27/03/2026 06:55:54: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'add waterbarrel'
+27/03/2026 06:55:56: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') building at (5458, 2190, 0) in Trammel: "waterbarrel"
+27/03/2026 06:55:56: 127.0.0.1: Serials: 0x40001D4A; 
+27/03/2026 06:56:00: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'delete '
+27/03/2026 06:56:01: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') deleting 0x40001D4A (WaterBarrel)
+27/03/2026 06:56:22: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'add watertub'
+27/03/2026 06:56:46: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'set dex 100'
+27/03/2026 06:56:47: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') set property 'dex' of 0x77 "The Vaz" ('vaz') to '100'
+27/03/2026 06:56:53: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'set stam 100'
+27/03/2026 06:56:54: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') set property 'stam' of 0x77 "The Vaz" ('vaz') to '100'
+27/03/2026 06:57:44: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') building at (5122, 2232, 0) in Trammel: "WaterTroughEastDeed"
+27/03/2026 06:57:44: 127.0.0.1: Serials: 0x40001D4C; 
+27/03/2026 06:58:04: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') building at (5121, 2232, 0) in Trammel: "WaterTroughEastAddon"
+27/03/2026 06:58:04: 127.0.0.1: Serials: 0x40001D50; 
+27/03/2026 06:58:43: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'save '
+27/03/2026 06:59:30: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'add banker'
+27/03/2026 07:03:28: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'save '
+##############################
+Log started on 27/03/2026 07:05:29
+
+27/03/2026 07:05:59: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'delete '
+27/03/2026 07:06:01: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') deleting 0x40001D32 (SculptorScaffoldSouth)
+27/03/2026 07:06:11: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'add SculptorScaffold'
+27/03/2026 07:06:12: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') building at (5124, 2230, 0) in Trammel: "SculptorScaffold"
+27/03/2026 07:06:32: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'add scaffo'
+27/03/2026 07:06:35: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') building at (5123, 2229, 0) in Trammel: "SculptorScaffoldSouth"
+27/03/2026 07:06:35: 127.0.0.1: Serials: 0x40001D4F; 
+27/03/2026 07:06:41: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'delete '
+27/03/2026 07:06:42: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') deleting 0x40001D53 (PlacedSculptorScaffold)
+27/03/2026 07:06:49: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'save '
+27/03/2026 07:06:55: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'save '
+##############################
+Log started on 27/03/2026 14:08:52
+
+##############################
+Log started on 27/03/2026 15:00:00
+
+##############################
+Log started on 27/03/2026 15:01:38
+
+##############################
+Log started on 27/03/2026 15:16:38
+
+27/03/2026 15:24:01: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'tele '
+27/03/2026 15:24:09: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'set z 40'
+27/03/2026 15:24:10: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') set property 'z' of 0x77 "The Vaz" ('vaz') to '40'
+27/03/2026 15:24:13: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'set z 80'
+27/03/2026 15:24:14: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') set property 'z' of 0x77 "The Vaz" ('vaz') to '80'
+27/03/2026 15:24:17: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') used command 'set z 90'
+27/03/2026 15:24:19: 127.0.0.1: Owner 0x77 "The Vaz" ('vaz') set property 'z' of 0x77 "The Vaz" ('vaz') to '90'

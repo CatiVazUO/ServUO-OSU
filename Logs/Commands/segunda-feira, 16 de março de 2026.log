@@ -1,0 +1,113 @@
+##############################
+Log started on 16/03/2026 06:16:44
+
+16/03/2026 06:23:47: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add horse'
+16/03/2026 06:23:48: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1623, 1675, 18) in Trammel: "horse"
+16/03/2026 06:23:48: 127.0.0.1: Serials: 0x19E; 
+16/03/2026 06:24:11: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+16/03/2026 06:24:40: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+16/03/2026 06:25:45: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairHue' of 0x77 "Vaz" ('vaz') to '2954'
+16/03/2026 06:26:25: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairHue' of 0x77 "Vaz" ('vaz') to '2719'
+16/03/2026 06:26:47: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairHue' of 0x77 "Vaz" ('vaz') to '2498'
+16/03/2026 06:27:03: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairHue' of 0x77 "Vaz" ('vaz') to '2418'
+16/03/2026 06:27:23: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairHue' of 0x77 "Vaz" ('vaz') to '2306'
+16/03/2026 06:27:50: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairHue' of 0x77 "Vaz" ('vaz') to '2025'
+16/03/2026 06:28:00: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairHue' of 0x77 "Vaz" ('vaz') to '2020'
+16/03/2026 06:28:19: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairHue' of 0x77 "Vaz" ('vaz') to '1899'
+16/03/2026 06:28:55: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairHue' of 0x77 "Vaz" ('vaz') to '1149'
+16/03/2026 06:29:04: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairHue' of 0x77 "Vaz" ('vaz') to '1152'
+16/03/2026 06:29:13: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairHue' of 0x77 "Vaz" ('vaz') to '1153'
+16/03/2026 06:29:22: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairHue' of 0x77 "Vaz" ('vaz') to '1150'
+16/03/2026 06:30:00: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairHue' of 0x77 "Vaz" ('vaz') to '2955'
+16/03/2026 06:30:32: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairHue' of 0x77 "Vaz" ('vaz') to '2720'
+16/03/2026 06:30:59: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairHue' of 0x77 "Vaz" ('vaz') to '2898'
+16/03/2026 06:31:14: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairHue' of 0x77 "Vaz" ('vaz') to '2498'
+16/03/2026 06:31:45: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairHue' of 0x77 "Vaz" ('vaz') to '2720'
+16/03/2026 06:32:45: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairHue' of 0x77 "Vaz" ('vaz') to '2036'
+16/03/2026 06:32:52: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairHue' of 0x77 "Vaz" ('vaz') to '2031'
+16/03/2026 06:33:21: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairHue' of 0x77 "Vaz" ('vaz') to '2955'
+16/03/2026 06:34:00: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add shirt'
+16/03/2026 06:34:02: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1668, 1618, 0) in Trammel: "shirt"
+16/03/2026 06:34:02: 127.0.0.1: Serials: 0x40000663; 
+16/03/2026 06:34:06: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add skirt'
+16/03/2026 06:34:07: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1667, 1618, 0) in Trammel: "skirt"
+16/03/2026 06:34:07: 127.0.0.1: Serials: 0x40000666; 
+16/03/2026 06:34:12: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+##############################
+Log started on 16/03/2026 13:17:39
+
+16/03/2026 13:19:27: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add TesouraDeBarbeiro'
+16/03/2026 13:19:29: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1624, -5) in Trammel: "TesouraDeBarbeiro"
+16/03/2026 13:19:29: 127.0.0.1: Serials: 0x4000046E; 
+16/03/2026 13:19:53: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+16/03/2026 13:20:08: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'OSULevel' of 0x77 "Vaz" ('vaz') to '1'
+16/03/2026 13:20:28: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'OSULevel' of 0x77 "Vaz" ('vaz') to '0'
+16/03/2026 13:21:45: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'OSUAbilityPicks' of 0x77 "Vaz" ('vaz') to '1'
+16/03/2026 13:22:16: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+16/03/2026 13:30:16: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add tinturadecabelo'
+16/03/2026 13:30:22: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add tintadecabelo'
+16/03/2026 13:30:27: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1623, -5) in Trammel: "TintaDeCabeloBarbeiro"
+16/03/2026 13:30:27: 127.0.0.1: Serials: 0x400009CC; 
+16/03/2026 13:31:05: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add tintadebarbabarbeiro'
+16/03/2026 13:31:06: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1623, -5) in Trammel: "tintadebarbabarbeiro"
+16/03/2026 13:31:06: 127.0.0.1: Serials: 0x400009CE; 
+##############################
+Log started on 16/03/2026 14:14:55
+
+16/03/2026 14:20:44: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+##############################
+Log started on 16/03/2026 14:27:56
+
+##############################
+Log started on 16/03/2026 14:31:42
+
+##############################
+Log started on 16/03/2026 14:35:52
+
+##############################
+Log started on 16/03/2026 15:03:49
+
+16/03/2026 15:04:45: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add tesourabarbeiro'
+16/03/2026 15:04:52: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1623, -5) in Trammel: "TesouraDeBarbeiro"
+16/03/2026 15:04:52: 127.0.0.1: Serials: 0x400009D8; 
+16/03/2026 15:05:29: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+##############################
+Log started on 16/03/2026 15:54:29
+
+##############################
+Log started on 16/03/2026 16:32:40
+
+16/03/2026 16:33:25: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'admin '
+16/03/2026 16:33:34: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') adding new account: Vaz4
+##############################
+Log started on 16/03/2026 16:36:13
+
+16/03/2026 16:37:05: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'admin '
+16/03/2026 16:37:14: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+16/03/2026 16:39:39: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+16/03/2026 16:44:04: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'admin '
+16/03/2026 16:44:14: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') changing access level of account vaz4 to Administrator
+16/03/2026 16:44:26: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') changing access level of account vaz4 to GameMaster
+16/03/2026 16:44:38: 127.0.0.1: Player 0x19F "tester" ('vaz4') used command 'time '
+16/03/2026 16:44:41: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'tempo '
+16/03/2026 16:45:35: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+16/03/2026 16:46:16: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'AccessLevel' of 0x19F "tester" ('vaz4') to 'GameMaster'
+16/03/2026 16:46:23: 127.0.0.1: GameMaster 0x19F "tester" ('vaz4') used command 'props '
+16/03/2026 16:46:32: 127.0.0.1: GameMaster 0x19F "tester" ('vaz4') used command 'props '
+16/03/2026 16:54:31: 127.0.0.1: GameMaster 0x19F "tester" ('vaz4') used command 'delete '
+##############################
+Log started on 16/03/2026 17:06:30
+
+16/03/2026 17:06:37: 127.0.0.1: GameMaster 0x19F "tester" ('vaz4') used command 'props '
+##############################
+Log started on 16/03/2026 17:21:47
+
+16/03/2026 17:22:27: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'admin '
+16/03/2026 17:23:01: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting account vaz4
+16/03/2026 17:23:13: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') adding new account: Vaz4
+##############################
+Log started on 16/03/2026 17:30:28
+
+16/03/2026 17:30:40: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+16/03/2026 17:32:09: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'HairItemID' of 0x77 "Vaz" ('vaz') to '13058'
+16/03/2026 17:47:10: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '

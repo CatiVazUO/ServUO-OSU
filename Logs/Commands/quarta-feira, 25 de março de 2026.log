@@ -1,0 +1,94 @@
+##############################
+Log started on 25/03/2026 13:34:23
+
+25/03/2026 13:34:52: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+25/03/2026 13:35:10: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'SignText' of 0x40001AC0 (GoldenMediumPlatform) to 'Lizard Statue Teste'
+25/03/2026 13:35:17: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+25/03/2026 13:35:37: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+##############################
+Log started on 25/03/2026 15:02:41
+
+25/03/2026 15:03:27: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add AncientGuardianStatueRecipe'
+25/03/2026 15:03:28: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1654, 1620, 20) in Trammel: "AncientGuardianStatueRecipe"
+25/03/2026 15:03:28: 127.0.0.1: Serials: 0x40001D0D; 
+25/03/2026 15:03:32: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+25/03/2026 15:03:33: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40001D0D (AncientGuardianStatueRecipe)
+25/03/2026 15:03:51: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add BaseSculptingRecipeScroll'
+25/03/2026 15:03:52: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1654, 1620, 20) in Trammel: "BaseSculptingRecipeScroll"
+25/03/2026 15:04:49: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add AncientGuardianStatueRecipeScroll'
+25/03/2026 15:04:51: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1654, 1620, 20) in Trammel: "AncientGuardianStatueRecipeScroll"
+25/03/2026 15:04:51: 127.0.0.1: Serials: 0x40001D0E; 
+25/03/2026 15:07:21: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add scaffold'
+25/03/2026 15:08:11: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1653, 1621, 16) in Trammel: "SculptorScaffold"
+25/03/2026 15:08:11: 127.0.0.1: Serials: 0x40001D0F; 
+25/03/2026 15:08:20: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+25/03/2026 15:08:21: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40001D10 (PlacedSculptorScaffold)
+25/03/2026 15:08:22: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+25/03/2026 15:08:23: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40001D0F (SculptorScaffold)
+25/03/2026 15:08:26: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add scaffold'
+25/03/2026 15:08:40: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add sculptorscaffold south'
+25/03/2026 15:08:42: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1653, 1621, 16) in Trammel: "sculptorscaffold" "south"
+25/03/2026 15:08:54: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add sculptorscaffoldfacing south'
+25/03/2026 15:09:04: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add sculptorscaffold south'
+25/03/2026 15:09:05: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1653, 1620, 20) in Trammel: "sculptorscaffold" "south"
+25/03/2026 15:09:16: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add sculptorscaffold 20 south'
+25/03/2026 15:09:17: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1653, 1620, 20) in Trammel: "sculptorscaffold" "20" "south"
+25/03/2026 15:09:17: 127.0.0.1: Serials: 0x40001D11; 
+25/03/2026 15:09:35: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+25/03/2026 15:09:37: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40001D12 (PlacedSculptorScaffold)
+25/03/2026 15:11:09: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+25/03/2026 15:11:10: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40001D11 (SculptorScaffold)
+##############################
+Log started on 25/03/2026 15:32:34
+
+##############################
+Log started on 25/03/2026 15:43:09
+
+25/03/2026 15:43:20: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add sculptorsca'
+25/03/2026 15:43:24: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1655, 1620, 17) in Trammel: "SculptorScaffoldEast"
+25/03/2026 15:43:24: 127.0.0.1: Serials: 0x40000A1B; 
+25/03/2026 15:43:32: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1656, 1620, 16) in Trammel: "SculptorScaffoldSouth"
+25/03/2026 15:43:32: 127.0.0.1: Serials: 0x40000A23; 
+25/03/2026 15:43:36: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+25/03/2026 15:43:37: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A23 (SculptorScaffoldSouth)
+25/03/2026 15:43:38: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+25/03/2026 15:43:38: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A1B (SculptorScaffoldEast)
+25/03/2026 15:43:42: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1656, 1620, 16) in Trammel: "PlacedSculptorScaffold"
+25/03/2026 15:43:42: 127.0.0.1: Serials: 0x40000A26; 
+25/03/2026 15:43:46: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+25/03/2026 15:43:46: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A26 (PlacedSculptorScaffold)
+##############################
+Log started on 25/03/2026 15:46:51
+
+25/03/2026 15:48:01: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add sculpto'
+25/03/2026 15:48:03: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1655, 1621, 12) in Trammel: "SculptorScaffoldEast"
+25/03/2026 15:48:04: 127.0.0.1: Serials: 0x40000A1B; 
+25/03/2026 15:48:08: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1656, 1621, 9) in Trammel: "SculptorScaffoldSouth"
+25/03/2026 15:48:08: 127.0.0.1: Serials: 0x40000A23; 
+##############################
+Log started on 25/03/2026 15:50:46
+
+25/03/2026 15:50:57: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add scaffol'
+25/03/2026 15:50:59: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1654, 1621, 13) in Trammel: "SculptorScaffoldEast"
+25/03/2026 15:50:59: 127.0.0.1: Serials: 0x40000A1B; 
+25/03/2026 15:51:07: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+25/03/2026 15:51:08: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A1B (SculptorScaffoldEast)
+##############################
+Log started on 25/03/2026 15:52:51
+
+25/03/2026 15:52:58: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add scaulpto'
+25/03/2026 15:53:06: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add scoulp'
+25/03/2026 15:53:14: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add sculptor'
+25/03/2026 15:53:17: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add sculpto'
+25/03/2026 15:53:20: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1655, 1621, 12) in Trammel: "SculptorScaffoldEast"
+25/03/2026 15:53:20: 127.0.0.1: Serials: 0x40000A1B; 
+25/03/2026 15:53:22: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1656, 1621, 9) in Trammel: "SculptorScaffoldSouth"
+25/03/2026 15:53:22: 127.0.0.1: Serials: 0x40000A23; 
+##############################
+Log started on 25/03/2026 15:55:02
+
+25/03/2026 15:55:10: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add scaf'
+25/03/2026 15:55:12: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1655, 1621, 12) in Trammel: "SculptorScaffoldEast"
+25/03/2026 15:55:12: 127.0.0.1: Serials: 0x40000A1B; 
+25/03/2026 15:55:16: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1656, 1622, 5) in Trammel: "SculptorScaffoldSouth"
+25/03/2026 15:55:16: 127.0.0.1: Serials: 0x40000A23; 

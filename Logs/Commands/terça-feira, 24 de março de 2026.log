@@ -1,0 +1,260 @@
+##############################
+Log started on 24/03/2026 00:33:08
+
+##############################
+Log started on 24/03/2026 01:02:39
+
+##############################
+Log started on 24/03/2026 01:10:10
+
+##############################
+Log started on 24/03/2026 01:28:56
+
+24/03/2026 01:29:40: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set z 15'
+24/03/2026 01:29:41: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'z' of 0x77 "Vaz" ('vaz') to '15'
+24/03/2026 01:29:51: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'where '
+24/03/2026 01:29:58: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set z 3'
+24/03/2026 01:29:59: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'z' of 0x77 "Vaz" ('vaz') to '3'
+24/03/2026 01:30:08: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set z 4'
+24/03/2026 01:30:10: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'z' of 0x77 "Vaz" ('vaz') to '4'
+24/03/2026 01:42:35: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add platemail'
+24/03/2026 01:42:58: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1648, 1619, 20) in Trammel: "FemaleGargishPlateArms"
+24/03/2026 01:42:58: 127.0.0.1: Serials: 0x40001A22; 
+24/03/2026 01:43:18: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+24/03/2026 01:43:21: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40001A22 (FemaleGargishPlateArms)
+24/03/2026 01:43:30: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1648, 1619, 20) in Trammel: "BreastplateOfTheBerserker"
+24/03/2026 01:43:30: 127.0.0.1: Serials: 0x40001A25; 
+24/03/2026 01:43:40: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+24/03/2026 01:43:41: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40001A25 (BreastplateOfTheBerserker)
+24/03/2026 01:43:46: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1648, 1618, 20) in Trammel: "FemalePlateChest"
+24/03/2026 01:43:46: 127.0.0.1: Serials: 0x40001A28; 
+24/03/2026 01:44:00: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 01:45:02: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1647, 1619, 20) in Trammel: "KnightsPlateArms"
+24/03/2026 01:45:02: 127.0.0.1: Serials: 0x40001A2B; 
+24/03/2026 01:45:06: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1648, 1619, 20) in Trammel: "KnightsPlateChest"
+24/03/2026 01:45:06: 127.0.0.1: Serials: 0x40001A2E; 
+24/03/2026 01:45:08: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1649, 1619, 20) in Trammel: "KnightsPlateGloves"
+24/03/2026 01:45:08: 127.0.0.1: Serials: 0x40001A31; 
+24/03/2026 01:45:12: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1646, 1619, 20) in Trammel: "KnightsPlateGorget"
+24/03/2026 01:45:12: 127.0.0.1: Serials: 0x40001A33; 
+24/03/2026 01:45:15: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1645, 1619, 20) in Trammel: "KnightsPlateHelm"
+24/03/2026 01:45:15: 127.0.0.1: Serials: 0x40001A36; 
+24/03/2026 01:45:21: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set str 100'
+24/03/2026 01:45:23: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'str' of 0x19D "Joao" ('vaz3') to '100'
+24/03/2026 01:48:28: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add stool'
+24/03/2026 01:48:30: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1650, 1618, 20) in Trammel: "stool"
+24/03/2026 01:48:30: 127.0.0.1: Serials: 0x40001A38; 
+24/03/2026 01:48:45: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add horse'
+24/03/2026 01:48:47: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1644, 1621, 20) in Trammel: "horse"
+24/03/2026 01:48:47: 127.0.0.1: Serials: 0x1A1; 
+24/03/2026 01:48:49: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 01:49:30: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'Controlled' of 0x1A1 "a horse" (no account) to 'True'
+24/03/2026 01:49:40: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 01:50:43: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'Rider' of 0x1A1 "a horse" (no account) to '0x19D "Joao"'
+##############################
+Log started on 24/03/2026 02:43:46
+
+24/03/2026 02:44:08: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 02:44:16: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 02:44:45: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'ControlMaster' of 0x19E "a horse" (no account) to '0x77 "Vaz"'
+24/03/2026 02:44:55: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 02:45:04: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'Controlled' of 0x19E "a horse" (no account) to 'True'
+24/03/2026 02:45:52: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 02:45:59: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'ControlMaster' of 0x19E "a horse" (no account) to '0x19D "Joao"'
+24/03/2026 02:49:09: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add stoneblocklarge 100'
+24/03/2026 02:49:10: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1651, 1617, 20) in Trammel: "stoneblocklarge" "100"
+24/03/2026 02:49:10: 127.0.0.1: Serials: 0x40001A49; 
+24/03/2026 02:54:52: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add dragon'
+24/03/2026 02:54:53: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1655, 1620, 17) in Trammel: "dragon"
+24/03/2026 02:54:53: 127.0.0.1: Serials: 0x1A3; 
+24/03/2026 02:55:02: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+24/03/2026 02:55:06: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x1A3 "a dragon" (no account)
+24/03/2026 02:55:21: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 02:59:41: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+24/03/2026 02:59:42: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x1A1 "" (no account)
+24/03/2026 02:59:50: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add dragon'
+24/03/2026 02:59:52: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1650, 1619, 25) in Trammel: "dragon"
+24/03/2026 02:59:52: 127.0.0.1: Serials: 0x1A4; 
+24/03/2026 03:00:02: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+24/03/2026 03:00:04: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x1A4 "a dragon" (no account)
+24/03/2026 03:01:02: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+24/03/2026 03:01:03: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40001A45 (RusticGiantPlatform)
+##############################
+Log started on 24/03/2026 06:06:58
+
+##############################
+Log started on 24/03/2026 06:13:24
+
+24/03/2026 06:13:45: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+24/03/2026 06:13:45: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40001A45 (RusticGiantPlatform)
+##############################
+Log started on 24/03/2026 06:37:11
+
+24/03/2026 06:40:00: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'where '
+24/03/2026 06:40:05: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set z 21'
+24/03/2026 06:40:06: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'z' of 0x40001ABD (SimpleSmallPlatform) to '21'
+24/03/2026 06:40:08: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set z 22'
+24/03/2026 06:40:10: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'z' of 0x40001ABD (SimpleSmallPlatform) to '22'
+24/03/2026 06:44:51: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set z 27'
+24/03/2026 06:44:52: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'z' of 0x1A1 "" (no account) to '27'
+24/03/2026 06:44:56: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set z 35'
+24/03/2026 06:44:58: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'z' of 0x1A1 "" (no account) to '35'
+24/03/2026 06:46:59: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set z 34'
+24/03/2026 06:47:01: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'z' of 0x1A1 "" (no account) to '34'
+24/03/2026 06:47:04: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set z 34'
+24/03/2026 06:47:06: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'z' of 0x1A1 "" (no account) to '34'
+24/03/2026 06:47:08: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set z 33'
+24/03/2026 06:47:10: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'z' of 0x1A1 "" (no account) to '33'
+##############################
+Log started on 24/03/2026 12:51:01
+
+24/03/2026 12:59:55: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set z 35'
+24/03/2026 12:59:57: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'z' of 0x1A1 "" (no account) to '35'
+24/03/2026 13:00:00: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set z 40'
+24/03/2026 13:00:01: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'z' of 0x1A1 "" (no account) to '40'
+24/03/2026 13:03:58: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'move '
+24/03/2026 13:04:01: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') moving 0x1A1 "" (no account) to (1651, 1617, 20)
+24/03/2026 13:04:05: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set z 10'
+24/03/2026 13:04:07: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'z' of 0x1A1 "" (no account) to '10'
+24/03/2026 13:04:09: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set z 30'
+24/03/2026 13:04:11: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'z' of 0x1A1 "" (no account) to '30'
+24/03/2026 13:04:13: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set z 25'
+24/03/2026 13:04:16: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'z' of 0x1A1 "" (no account) to '25'
+24/03/2026 13:04:22: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set z 27'
+24/03/2026 13:04:23: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'z' of 0x1A1 "" (no account) to '27'
+24/03/2026 13:04:31: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+24/03/2026 13:04:33: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40001AC5 (BrokenGiantPlatform)
+##############################
+Log started on 24/03/2026 15:27:13
+
+24/03/2026 15:30:40: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'move '
+24/03/2026 15:30:43: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') moving 0x40001AC3 (GoldenMediumPlatform) to (1650, 1618, 20)
+##############################
+Log started on 24/03/2026 15:43:53
+
+##############################
+Log started on 24/03/2026 15:53:10
+
+24/03/2026 15:53:58: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add ironwire 50'
+24/03/2026 15:53:59: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1651, 1618, 20) in Trammel: "ironwire" "50"
+24/03/2026 15:53:59: 127.0.0.1: Serials: 0x40001A54; 
+24/03/2026 15:54:24: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add ironingots 180'
+24/03/2026 15:54:28: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add ironingots 18'
+24/03/2026 15:54:43: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add ironingot40'
+24/03/2026 15:54:46: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add ironingot 40'
+24/03/2026 15:54:47: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1651, 1617, 20) in Trammel: "ironingot" "40"
+24/03/2026 15:54:47: 127.0.0.1: Serials: 0x40001ABD; 
+24/03/2026 15:57:16: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'where '
+24/03/2026 15:57:21: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set 26'
+24/03/2026 15:57:27: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set x 26'
+24/03/2026 15:57:29: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'x' of 0x77 "Vaz" ('vaz') to '26'
+24/03/2026 15:57:37: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'admin '
+24/03/2026 15:57:48: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set z 26'
+24/03/2026 15:57:50: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'z' of 0x77 "Vaz" ('vaz') to '26'
+##############################
+Log started on 24/03/2026 16:07:09
+
+24/03/2026 16:07:43: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add ironwire 100'
+24/03/2026 16:07:45: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1650, 1618, 20) in Trammel: "ironwire" "100"
+24/03/2026 16:07:45: 127.0.0.1: Serials: 0x40001A54; 
+24/03/2026 16:07:54: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add ironingot 100'
+24/03/2026 16:07:56: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1650, 1617, 20) in Trammel: "ironingot" "100"
+24/03/2026 16:07:56: 127.0.0.1: Serials: 0x40001A57; 
+24/03/2026 16:08:02: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+24/03/2026 16:08:31: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+24/03/2026 16:13:06: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 16:13:38: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set z 35'
+24/03/2026 16:13:40: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'z' of 0x40001A49 (StoneBlockLarge) to '35'
+##############################
+Log started on 24/03/2026 16:19:14
+
+24/03/2026 16:24:11: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+24/03/2026 16:26:52: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add genericsign'
+24/03/2026 16:26:53: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1651, 1619, 20) in Trammel: "genericsign"
+24/03/2026 16:26:53: 127.0.0.1: Serials: 0x40001AD0; 
+24/03/2026 16:27:33: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+24/03/2026 16:27:48: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 16:28:33: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'BodyValue' of 0x19D "Joao" ('vaz3') to '401'
+24/03/2026 16:28:38: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'BodyValue' of 0x19D "Joao" ('vaz3') to '400'
+24/03/2026 16:30:09: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'move '
+24/03/2026 16:30:11: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') moving 0x40001A49 (StoneBlockLarge) to (1652, 1618, 20)
+24/03/2026 16:30:53: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'where '
+24/03/2026 16:30:57: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 16:31:08: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set z 22'
+24/03/2026 16:31:09: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'z' of 0x40001AC0 (GoldenMediumPlatform) to '22'
+24/03/2026 16:34:13: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set z 31'
+24/03/2026 16:34:14: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'z' of 0x1A1 "" (no account) to '31'
+##############################
+Log started on 24/03/2026 16:50:11
+
+24/03/2026 16:51:02: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+24/03/2026 16:51:03: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A08 (FancyShirt)
+##############################
+Log started on 24/03/2026 16:55:12
+
+##############################
+Log started on 24/03/2026 17:38:04
+
+24/03/2026 17:38:49: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 17:38:53: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 17:38:57: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 17:41:43: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+24/03/2026 17:41:47: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+##############################
+Log started on 24/03/2026 17:48:07
+
+##############################
+Log started on 24/03/2026 18:20:44
+
+##############################
+Log started on 24/03/2026 18:37:33
+
+24/03/2026 18:37:49: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 18:37:53: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 18:38:25: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'FaceItemID' of 0x19D "Joao" ('vaz3') to '0'
+24/03/2026 18:38:32: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+24/03/2026 18:38:45: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'FaceHue' of 0x19D "Joao" ('vaz3') to '0'
+24/03/2026 18:38:49: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+24/03/2026 18:39:25: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 18:39:37: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'FaceHue' of 0x199 "Ze" ('Vaz1') to '0'
+24/03/2026 18:39:42: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'FaceItemID' of 0x199 "Ze" ('Vaz1') to '0'
+24/03/2026 18:39:45: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+24/03/2026 18:40:26: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 18:40:36: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'FaceHue' of 0x19C "Angela" ('Vaz2') to '0'
+24/03/2026 18:40:42: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'FaceItemID' of 0x19C "Angela" ('Vaz2') to '0'
+24/03/2026 18:40:44: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+24/03/2026 18:41:08: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 18:41:19: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'FaceHue' of 0x19F "Joana" ('vaz4') to '0'
+24/03/2026 18:41:25: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'FaceItemID' of 0x19F "Joana" ('vaz4') to '0'
+24/03/2026 18:41:28: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+##############################
+Log started on 24/03/2026 18:52:28
+
+##############################
+Log started on 24/03/2026 18:53:03
+
+##############################
+Log started on 24/03/2026 19:00:18
+
+24/03/2026 19:13:08: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+##############################
+Log started on 24/03/2026 19:34:33
+
+24/03/2026 19:34:56: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'move '
+24/03/2026 19:34:58: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') moving 0x1A0 "Tsthil" (no account) to (1655, 1618, 20)
+24/03/2026 19:35:31: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+24/03/2026 19:35:32: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A1B (SculptorScaffold)
+24/03/2026 19:35:34: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add scaff'
+24/03/2026 19:35:40: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1650, 1618, 20) in Trammel: "SculptorScaffold"
+24/03/2026 19:35:40: 127.0.0.1: Serials: 0x40001B2A; 
+24/03/2026 19:39:38: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+24/03/2026 20:01:14: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 20:01:37: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'Hue' of 0x40000663 (Shirt) to '2131'
+24/03/2026 20:01:45: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'Hue' of 0x40000663 (Shirt) to '213'
+24/03/2026 20:01:53: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'Hue' of 0x40000663 (Shirt) to '300'
+24/03/2026 20:01:57: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+24/03/2026 20:02:04: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'Hue' of 0x40000666 (Skirt) to '190'
+24/03/2026 20:02:08: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+##############################
+Log started on 24/03/2026 20:13:28
+

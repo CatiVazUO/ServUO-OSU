@@ -1,0 +1,16 @@
+##############################
+Log started on 26/02/2026 14:30:02
+
+26/02/2026 14:30:27: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'needs '
+26/02/2026 14:30:39: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'props '
+26/02/2026 14:31:04: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'climehere '
+26/02/2026 14:32:06: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'add sheep'
+26/02/2026 14:32:08: 127.0.0.1: Owner 0x77 "vaz" ('vaz') building at (1674, 1617, 6) in Trammel: "sheep"
+26/02/2026 14:32:08: 127.0.0.1: Serials: 0x78; 
+26/02/2026 14:32:17: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'add dagger'
+26/02/2026 14:32:19: 127.0.0.1: Owner 0x77 "vaz" ('vaz') building at (1673, 1618, 3) in Trammel: "dagger"
+26/02/2026 14:32:19: 127.0.0.1: Serials: 0x40000499; 
+26/02/2026 14:32:35: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'kill '
+26/02/2026 14:32:37: 127.0.0.1: Owner 0x77 "vaz" ('vaz') killing 0x78 "a sheep" (no account)
+26/02/2026 14:32:44: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+26/02/2026 14:32:47: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x4000049B (Corpse)

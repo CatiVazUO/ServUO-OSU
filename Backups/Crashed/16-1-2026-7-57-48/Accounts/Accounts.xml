@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<accounts count="2">
+	<account>
+		<username>vaz</username>
+		<newCryptPassword>F4-BE-1C-28-5E-C1-4D-4F-1D-83-0C-1B-17-35-81-40-13-15-88-4D</newCryptPassword>
+		<accessLevel>Owner</accessLevel>
+		<created>2026-01-13T00:28:34.3303145Z</created>
+		<lastLogin>2026-01-16T01:34:16.2049521Z</lastLogin>
+		<totalGameTime>PT6H4M59.980512S</totalGameTime>
+		<chars>
+			<char index="0">405</char>
+		</chars>
+		<totalCurrency>0</totalCurrency>
+		<sovereigns>0</sovereigns>
+	</account>
+	<account>
+		<username>vaz1</username>
+		<newCryptPassword>E5-53-54-B5-D6-60-5F-42-49-6A-32-08-75-4D-08-AC-5B-2B-9E-74</newCryptPassword>
+		<created>2026-01-13T01:25:15.3556954Z</created>
+		<lastLogin>2026-01-16T07:35:58.0215048Z</lastLogin>
+		<totalGameTime>PT4H11M16.1754384S</totalGameTime>
+		<chars>
+			<char index="0">116</char>
+		</chars>
+		<totalCurrency>9E-07</totalCurrency>
+		<sovereigns>0</sovereigns>
+	</account>
+</accounts>

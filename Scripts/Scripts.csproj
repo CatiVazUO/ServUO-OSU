@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net48</TargetFramework>
+		<OutputType>Library</OutputType>
+		<AssemblyName>Scripts</AssemblyName>
+		<RootNamespace>Server</RootNamespace>
+		<AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
+		<GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+		<UseVSHostingProcess>False</UseVSHostingProcess>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<UseWindowsForms>false</UseWindowsForms>
+		<Platforms>x64</Platforms>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+		<OutputPath>..\</OutputPath>
+		<DefineConstants>TRACE;DEBUG;NEWTIMERS;ServUO</DefineConstants>
+		<DebugType>embedded</DebugType>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+		<OutputPath>..\</OutputPath>
+		<DefineConstants>TRACE;NEWTIMERS;ServUO</DefineConstants>
+		<DebugType>none</DebugType>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Content Include="Custom\OrbRemoteServer\ExportMobiles.txt" />
+	  <Content Include="Custom\OrbRemoteServer\UOArchitect\BuildDesignTarget Backup.txt" />
+	</ItemGroup>
+	<ItemGroup>
+		<Reference Include="OrbServerSDK">
+		  <HintPath>..\OrbServerSDK.dll</HintPath>
+		</Reference>
+		<Reference Include="System.Runtime.Remoting" />
+		<Reference Include="System.Web" />
+		<Reference Include="UOArchitectInterface">
+		  <HintPath>..\UOArchitectInterface.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Server\Server.csproj" />
+		<ProjectReference Include="..\Ultima\Ultima.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Custom\Recipes\" />
+	</ItemGroup>
+</Project>

@@ -1,0 +1,105 @@
+14/01/2026 19:46:12	Warning: Attempted to delete 0x40002276 "TownHouse" during world save.
+This action could cause inconsistent state.
+It is strongly advised that the offending scripts be corrected.
+   em Server.World.OnDelete(IEntity entity)
+   em Server.Item.Delete()
+   em Knives.TownHouses.TownHouseSign.ValidateOwnership()
+   em Knives.TownHouses.General.OnSave(WorldSaveEventArgs e)
+   em Server.WorldSaveEventHandler.Invoke(WorldSaveEventArgs e)
+   em Server.EventSink.InvokeWorldSave(WorldSaveEventArgs e)
+   em Server.World.Save(Boolean message, Boolean permitBackgroundWrite)
+   em Server.Misc.AutoSave.Save(Boolean permitBackgroundWrite)
+   em Server.Misc.AutoSave.Save()
+   em Server.Commands.CommandHandlers.Save_OnCommand(CommandEventArgs e)
+   em Server.Commands.CommandSystem.Handle(Mobile from, String text, MessageType type)
+   em Server.Mobile.DoSpeech(String text, Int32[] keywords, MessageType type, Int32 hue)
+   em Server.Mobiles.PlayerMobile.DoSpeech(String text, Int32[] keywords, MessageType type, Int32 hue)
+   em Server.Network.PacketHandlers.UnicodeSpeech(NetState state, PacketReader pvSrc)
+   em Server.Network.MessagePump.HandleReceive(NetState ns)
+   em Server.Network.MessagePump.Slice()
+   em Server.Core.Main(String[] args)
+
+
+14/01/2026 19:48:50	Warning: Attempted to delete 0x40002276 "TownHouse" during world save.
+This action could cause inconsistent state.
+It is strongly advised that the offending scripts be corrected.
+   em Server.World.OnDelete(IEntity entity)
+   em Server.Item.Delete()
+   em Knives.TownHouses.TownHouseSign.ValidateOwnership()
+   em Knives.TownHouses.General.OnSave(WorldSaveEventArgs e)
+   em Server.WorldSaveEventHandler.Invoke(WorldSaveEventArgs e)
+   em Server.EventSink.InvokeWorldSave(WorldSaveEventArgs e)
+   em Server.World.Save(Boolean message, Boolean permitBackgroundWrite)
+   em Server.Misc.AutoSave.Save(Boolean permitBackgroundWrite)
+   em Server.Misc.AutoSave.Save()
+   em Server.Timer.DelayCallTimer.OnTick()
+   em Server.Timer.Slice()
+   em Server.Core.Main(String[] args)
+
+
+14/01/2026 20:27:58	Warning: Attempted to delete 0x40002276 "TownHouse" during world save.
+This action could cause inconsistent state.
+It is strongly advised that the offending scripts be corrected.
+   em Server.World.OnDelete(IEntity entity)
+   em Server.Item.Delete()
+   em Knives.TownHouses.TownHouseSign.ValidateOwnership()
+   em Knives.TownHouses.General.OnSave(WorldSaveEventArgs e)
+   em Server.WorldSaveEventHandler.Invoke(WorldSaveEventArgs e)
+   em Server.EventSink.InvokeWorldSave(WorldSaveEventArgs e)
+   em Server.World.Save(Boolean message, Boolean permitBackgroundWrite)
+   em Server.Misc.AutoSave.Save(Boolean permitBackgroundWrite)
+   em Server.Misc.AutoSave.Save()
+   em Server.Commands.CommandHandlers.Save_OnCommand(CommandEventArgs e)
+   em Server.Commands.CommandSystem.Handle(Mobile from, String text, MessageType type)
+   em Server.Mobile.DoSpeech(String text, Int32[] keywords, MessageType type, Int32 hue)
+   em Server.Mobiles.PlayerMobile.DoSpeech(String text, Int32[] keywords, MessageType type, Int32 hue)
+   em Server.Network.PacketHandlers.UnicodeSpeech(NetState state, PacketReader pvSrc)
+   em Server.Network.MessagePump.HandleReceive(NetState ns)
+   em Server.Network.MessagePump.Slice()
+   em Server.Core.Main(String[] args)
+
+
+15/01/2026 01:11:08	Warning: Attempted to delete 0x40002276 "TownHouse" during world save.
+This action could cause inconsistent state.
+It is strongly advised that the offending scripts be corrected.
+   em Server.World.OnDelete(IEntity entity)
+   em Server.Item.Delete()
+   em Knives.TownHouses.TownHouseSign.ValidateOwnership()
+   em Knives.TownHouses.General.OnSave(WorldSaveEventArgs e)
+   em Server.WorldSaveEventHandler.Invoke(WorldSaveEventArgs e)
+   em Server.EventSink.InvokeWorldSave(WorldSaveEventArgs e)
+   em Server.World.Save(Boolean message, Boolean permitBackgroundWrite)
+   em Server.Misc.AutoSave.Save(Boolean permitBackgroundWrite)
+   em Server.Misc.AutoSave.Save()
+   em Server.Commands.CommandHandlers.Save_OnCommand(CommandEventArgs e)
+   em Server.Commands.CommandSystem.Handle(Mobile from, String text, MessageType type)
+   em Server.Mobile.DoSpeech(String text, Int32[] keywords, MessageType type, Int32 hue)
+   em Server.Mobiles.PlayerMobile.DoSpeech(String text, Int32[] keywords, MessageType type, Int32 hue)
+   em Server.Network.PacketHandlers.UnicodeSpeech(NetState state, PacketReader pvSrc)
+   em Server.Network.MessagePump.HandleReceive(NetState ns)
+   em Server.Network.MessagePump.Slice()
+   em Server.Core.Main(String[] args)
+
+
+15/01/2026 01:15:59	Warning: Attempted to delete 0x40002276 "TownHouse" during world save.
+This action could cause inconsistent state.
+It is strongly advised that the offending scripts be corrected.
+   em Server.World.OnDelete(IEntity entity)
+   em Server.Item.Delete()
+   em Knives.TownHouses.TownHouseSign.ValidateOwnership()
+   em Knives.TownHouses.General.OnSave(WorldSaveEventArgs e)
+   em Server.WorldSaveEventHandler.Invoke(WorldSaveEventArgs e)
+   em Server.EventSink.InvokeWorldSave(WorldSaveEventArgs e)
+   em Server.World.Save(Boolean message, Boolean permitBackgroundWrite)
+   em Server.Misc.AutoSave.Save(Boolean permitBackgroundWrite)
+   em Server.Misc.AutoSave.Save()
+   em Server.Commands.CommandHandlers.Save_OnCommand(CommandEventArgs e)
+   em Server.Commands.CommandSystem.Handle(Mobile from, String text, MessageType type)
+   em Server.Mobile.DoSpeech(String text, Int32[] keywords, MessageType type, Int32 hue)
+   em Server.Mobiles.PlayerMobile.DoSpeech(String text, Int32[] keywords, MessageType type, Int32 hue)
+   em Server.Network.PacketHandlers.UnicodeSpeech(NetState state, PacketReader pvSrc)
+   em Server.Network.MessagePump.HandleReceive(NetState ns)
+   em Server.Network.MessagePump.Slice()
+   em Server.Core.Main(String[] args)
+
+

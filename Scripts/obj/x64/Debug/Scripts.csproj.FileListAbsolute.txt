@@ -1,0 +1,6 @@
+D:\UO\My Shards\OSU Servuo Transfer\ServUO-pub57\Scripts\obj\x64\Debug\Scripts.csproj.AssemblyReference.cache
+D:\UO\My Shards\OSU Servuo Transfer\ServUO-pub57\Scripts\obj\x64\Debug\Scripts.GeneratedMSBuildEditorConfig.editorconfig
+D:\UO\My Shards\OSU Servuo Transfer\ServUO-pub57\Scripts\obj\x64\Debug\Scripts.csproj.CoreCompileInputs.cache
+D:\UO\My Shards\OSU Servuo Transfer\ServUO-pub57\Scripts\obj\x64\Debug\Scripts.csproj.Up2Date
+D:\UO\My Shards\OSU Servuo Transfer\ServUO-pub57\Scripts\obj\x64\Debug\Scripts.dll
+D:\UO\My Shards\OSU Servuo Transfer\ServUO-pub57\Scripts.dll

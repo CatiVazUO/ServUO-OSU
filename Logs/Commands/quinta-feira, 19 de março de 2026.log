@@ -1,0 +1,171 @@
+##############################
+Log started on 19/03/2026 01:32:12
+
+19/03/2026 01:32:24: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'multi delete'
+19/03/2026 01:32:26: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A20 (CorreioPapel)
+19/03/2026 01:32:27: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A25 (HtmlLoosePage)
+19/03/2026 01:32:28: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A24 (HtmlLoosePage)
+19/03/2026 01:32:29: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A26 (HtmlCompilationBook2)
+19/03/2026 01:32:31: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A39 (Bag)
+19/03/2026 01:32:32: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A3E (Backpack)
+19/03/2026 01:32:43: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A13 (PaperCutterTool)
+19/03/2026 01:34:55: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add correio'
+19/03/2026 01:34:58: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1615, 9) in Trammel: "CorreioEnvelope"
+19/03/2026 01:34:58: 127.0.0.1: Serials: 0x4000046E; 
+19/03/2026 01:35:17: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlscrollpapel2'
+19/03/2026 01:35:18: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1615, 9) in Trammel: "htmlscrollpapel2"
+19/03/2026 01:35:18: 127.0.0.1: Serials: 0x40000485; 
+19/03/2026 01:41:05: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1615, 9) in Trammel: "CorreioSelo"
+19/03/2026 01:41:05: 127.0.0.1: Serials: 0x40000489; 
+19/03/2026 01:41:36: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1615, 9) in Trammel: "CorreioEnvelope"
+19/03/2026 01:41:36: 127.0.0.1: Serials: 0x40000494; 
+19/03/2026 01:41:44: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1615, 9) in Trammel: "CorreioSelo"
+19/03/2026 01:41:44: 127.0.0.1: Serials: 0x400009C8; 
+19/03/2026 01:43:51: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add bag'
+19/03/2026 01:43:53: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1615, 9) in Trammel: "bag"
+19/03/2026 01:43:53: 127.0.0.1: Serials: 0x400009D8; 
+19/03/2026 02:00:23: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add htmlscrollpapel3'
+19/03/2026 02:00:24: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1615, 9) in Trammel: "htmlscrollpapel3"
+19/03/2026 02:00:24: 127.0.0.1: Serials: 0x40000A05; 
+##############################
+Log started on 19/03/2026 02:29:49
+
+19/03/2026 02:34:16: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add pacote'
+19/03/2026 02:34:18: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1615, 9) in Trammel: "CorreioPacote"
+19/03/2026 02:34:18: 127.0.0.1: Serials: 0x40000489; 
+19/03/2026 02:35:11: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add gold 100'
+19/03/2026 02:35:13: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1615, 9) in Trammel: "gold" "100"
+19/03/2026 02:35:13: 127.0.0.1: Serials: 0x4000048D; 
+19/03/2026 02:35:21: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add plate'
+19/03/2026 02:35:23: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1615, 9) in Trammel: "plate"
+19/03/2026 02:35:23: 127.0.0.1: Serials: 0x4000048F; 
+19/03/2026 02:35:30: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add plateleggings'
+19/03/2026 02:35:37: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1615, 9) in Trammel: "BreastplateOfVirtuousEpiphany"
+19/03/2026 02:35:37: 127.0.0.1: Serials: 0x40000494; 
+19/03/2026 02:35:57: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1649, 1628, 10) in Trammel: "FemaleElvenPlateChest"
+19/03/2026 02:35:57: 127.0.0.1: Serials: 0x400009C8; 
+19/03/2026 02:35:58: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1615, 9) in Trammel: "FemaleElvenPlateChest"
+19/03/2026 02:35:58: 127.0.0.1: Serials: 0x400009CC; 
+19/03/2026 02:36:04: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1615, 9) in Trammel: "GargishPlateLegs"
+19/03/2026 02:36:04: 127.0.0.1: Serials: 0x400009CE; 
+19/03/2026 02:36:21: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1615, 9) in Trammel: "KnightsPlateGloves"
+19/03/2026 02:36:21: 127.0.0.1: Serials: 0x40000A06; 
+##############################
+Log started on 19/03/2026 02:53:54
+
+##############################
+Log started on 19/03/2026 03:24:15
+
+19/03/2026 03:24:32: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'multi delete'
+19/03/2026 03:24:34: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x400009CC (FemaleElvenPlateChest)
+19/03/2026 03:24:35: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x400009CE (GargishPlateLegs)
+19/03/2026 03:24:36: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A40 (MetalBox)
+19/03/2026 03:24:37: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A3F (MetalChest)
+19/03/2026 03:25:52: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add pacote'
+19/03/2026 03:25:54: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1616, 8) in Trammel: "CorreioPacote"
+19/03/2026 03:25:54: 127.0.0.1: Serials: 0x40000A22; 
+19/03/2026 03:27:12: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add correioselo'
+19/03/2026 03:27:14: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1616, 8) in Trammel: "correioselo"
+19/03/2026 03:27:14: 127.0.0.1: Serials: 0x40000A23; 
+19/03/2026 03:27:29: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add correiopacote'
+19/03/2026 03:27:30: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1616, 8) in Trammel: "correiopacote"
+19/03/2026 03:27:30: 127.0.0.1: Serials: 0x40000A24; 
+##############################
+Log started on 19/03/2026 03:55:48
+
+19/03/2026 04:02:25: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add pacote'
+19/03/2026 04:02:27: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1616, 8) in Trammel: "CorreioPacote"
+19/03/2026 04:02:27: 127.0.0.1: Serials: 0x40000A19; 
+19/03/2026 04:02:51: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+19/03/2026 04:03:10: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+19/03/2026 04:03:11: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+19/03/2026 04:03:13: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A19 (CorreioPacote)
+##############################
+Log started on 19/03/2026 04:12:04
+
+19/03/2026 04:12:26: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add breadloaft'
+19/03/2026 04:12:33: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1615, 9) in Trammel: "BreadLoaf"
+19/03/2026 04:12:33: 127.0.0.1: Serials: 0x40000A20; 
+19/03/2026 04:12:33: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1616, 8) in Trammel: "BreadLoaf"
+19/03/2026 04:12:33: 127.0.0.1: Serials: 0x40000A23; 
+19/03/2026 04:12:34: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1673, 1616, 8) in Trammel: "BreadLoaf"
+19/03/2026 04:12:34: 127.0.0.1: Serials: 0x40000A26; 
+19/03/2026 04:12:34: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1617, 6) in Trammel: "BreadLoaf"
+19/03/2026 04:12:34: 127.0.0.1: Serials: 0x40000A2C; 
+19/03/2026 04:12:35: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1616, 8) in Trammel: "BreadLoaf"
+19/03/2026 04:12:35: 127.0.0.1: Serials: 0x40000A2F; 
+19/03/2026 04:12:56: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'delete '
+19/03/2026 04:12:58: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') deleting 0x40000A24 (CorreioPacote)
+19/03/2026 04:13:05: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add candle'
+19/03/2026 04:13:06: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1616, 8) in Trammel: "candle"
+19/03/2026 04:13:06: 127.0.0.1: Serials: 0x40000A36; 
+19/03/2026 04:13:44: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add correioselo'
+19/03/2026 04:13:46: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1615, 9) in Trammel: "correioselo"
+19/03/2026 04:13:46: 127.0.0.1: Serials: 0x40000A38; 
+19/03/2026 04:39:21: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+##############################
+Log started on 19/03/2026 05:54:48
+
+19/03/2026 05:57:24: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add pacote'
+19/03/2026 05:57:27: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1615, 9) in Trammel: "CorreioPacote"
+19/03/2026 05:57:27: 127.0.0.1: Serials: 0x40000A19; 
+19/03/2026 05:57:38: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1672, 1616, 8) in Trammel: "CorreioSelo"
+19/03/2026 05:57:38: 127.0.0.1: Serials: 0x40000A1B; 
+##############################
+Log started on 19/03/2026 06:03:23
+
+##############################
+Log started on 19/03/2026 06:05:15
+
+19/03/2026 06:05:38: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'add correio'
+19/03/2026 06:05:41: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1616, 8) in Trammel: "CorreioPacote"
+19/03/2026 06:05:41: 127.0.0.1: Serials: 0x40000A19; 
+19/03/2026 06:05:45: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') building at (1671, 1616, 8) in Trammel: "CorreioSelo"
+19/03/2026 06:05:45: 127.0.0.1: Serials: 0x40000A1B; 
+19/03/2026 06:11:10: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+19/03/2026 06:16:02: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+##############################
+Log started on 19/03/2026 06:18:14
+
+19/03/2026 06:21:36: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+##############################
+Log started on 19/03/2026 17:04:15
+
+19/03/2026 17:05:02: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'deitar '
+19/03/2026 17:05:11: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'deitar '
+19/03/2026 17:05:20: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'deitar '
+19/03/2026 17:06:19: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'deitar '
+19/03/2026 17:06:30: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'deitar '
+19/03/2026 17:07:45: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'deitar '
+19/03/2026 17:07:49: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'deitar '
+19/03/2026 17:08:04: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'deitar '
+##############################
+Log started on 19/03/2026 20:19:31
+
+19/03/2026 20:23:13: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+19/03/2026 20:23:25: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'OSUAvatarId' of 0x19D "Sonhador" ('vaz3') to '906'
+19/03/2026 20:28:05: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set chosenname'
+19/03/2026 20:28:09: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set chosenname Angela'
+19/03/2026 20:33:12: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set name angela'
+19/03/2026 20:33:13: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'name' of 0x19D "Sonhador" ('vaz3') to 'angela'
+19/03/2026 20:34:49: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'admin '
+19/03/2026 20:42:36: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'admin '
+19/03/2026 20:42:56: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+19/03/2026 20:43:45: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'props '
+19/03/2026 20:50:48: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+##############################
+Log started on 19/03/2026 20:54:25
+
+##############################
+Log started on 19/03/2026 23:33:56
+
+19/03/2026 23:39:19: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'admin '
+19/03/2026 23:40:59: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'save '
+##############################
+Log started on 19/03/2026 23:48:32
+
+19/03/2026 23:58:04: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set hits 20'
+19/03/2026 23:58:06: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'hits' of 0x19F "Carmem" ('vaz4') to '20'
+19/03/2026 23:58:08: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set hits 20'
+19/03/2026 23:58:09: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') set property 'hits' of 0x19D "Joao" ('vaz3') to '20'
+20/03/2026 00:06:08: 127.0.0.1: Owner 0x77 "Vaz" ('vaz') used command 'set chosenname angel'

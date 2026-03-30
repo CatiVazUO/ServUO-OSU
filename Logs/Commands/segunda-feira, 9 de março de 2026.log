@@ -1,0 +1,218 @@
+##############################
+Log started on 09/03/2026 06:19:04
+
+09/03/2026 06:19:20: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 06:19:22: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x400020A8 (HouseSign)
+09/03/2026 06:19:25: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 06:19:26: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x40001D4E (TownHouseSign)
+09/03/2026 06:19:34: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'osuhouses '
+##############################
+Log started on 09/03/2026 06:42:15
+
+##############################
+Log started on 09/03/2026 06:58:24
+
+09/03/2026 06:58:44: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'osuhouses '
+09/03/2026 06:59:57: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'where '
+09/03/2026 07:07:07: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'add 0x0bd1'
+09/03/2026 07:07:40: 127.0.0.1: Owner 0x77 "vaz" ('vaz') building at (1648, 1609, 20) in Trammel: "CustomizableWallSign"
+09/03/2026 07:07:40: 127.0.0.1: Serials: 0x4000090C; 
+09/03/2026 07:08:17: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 07:08:18: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x4000090C (CustomizableWallSign)
+09/03/2026 07:08:26: 127.0.0.1: Owner 0x77 "vaz" ('vaz') building at (1648, 1609, 20) in Trammel: "Sign"
+09/03/2026 07:08:26: 127.0.0.1: Serials: 0x400009C0; 
+09/03/2026 07:08:33: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'flip '
+09/03/2026 07:08:36: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'flip '
+09/03/2026 07:08:39: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 07:08:39: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x400009C0 (Sign)
+09/03/2026 07:08:43: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'add housesign'
+09/03/2026 07:08:44: 127.0.0.1: Owner 0x77 "vaz" ('vaz') building at (1648, 1608, 20) in Trammel: "housesign"
+09/03/2026 07:09:03: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 07:09:04: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x4000007B (HonestyChest)
+09/03/2026 07:37:11: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'hide '
+09/03/2026 07:37:12: 127.0.0.1: Owner 0x77 "vaz" ('vaz') hiding 0x77 "vaz" ('vaz')
+##############################
+Log started on 09/03/2026 08:05:06
+
+##############################
+Log started on 09/03/2026 08:05:19
+
+##############################
+Log started on 09/03/2026 08:21:54
+
+##############################
+Log started on 09/03/2026 08:27:25
+
+##############################
+Log started on 09/03/2026 14:58:49
+
+##############################
+Log started on 09/03/2026 14:59:23
+
+##############################
+Log started on 09/03/2026 15:09:23
+
+##############################
+Log started on 09/03/2026 15:27:17
+
+09/03/2026 15:27:35: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'unhide '
+09/03/2026 15:27:36: 127.0.0.1: Owner 0x77 "vaz" ('vaz') unhiding 0x77 "vaz" ('vaz')
+09/03/2026 15:27:45: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 15:27:46: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x400009C4 (HouseSign)
+##############################
+Log started on 09/03/2026 15:28:02
+
+09/03/2026 15:28:14: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'osuhouses '
+09/03/2026 15:31:11: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'osuhouses '
+09/03/2026 15:44:08: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'osuhouses '
+##############################
+Log started on 09/03/2026 15:54:42
+
+##############################
+Log started on 09/03/2026 16:28:20
+
+09/03/2026 16:28:38: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'osurentcleanup '
+09/03/2026 16:28:45: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 16:28:47: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x400009C4 (HouseSign)
+##############################
+Log started on 09/03/2026 16:28:51
+
+09/03/2026 16:31:26: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'osurentcleanup '
+09/03/2026 16:31:31: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'save '
+##############################
+Log started on 09/03/2026 16:36:28
+
+09/03/2026 16:36:34: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 16:36:36: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x400009C4 (HouseSign)
+09/03/2026 16:36:37: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 16:36:39: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x400009C8 (HonestyChest)
+09/03/2026 16:36:41: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'save '
+##############################
+Log started on 09/03/2026 16:38:59
+
+09/03/2026 16:39:08: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'osuhouses '
+09/03/2026 16:40:49: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'osuhouses '
+##############################
+Log started on 09/03/2026 16:45:46
+
+09/03/2026 16:46:00: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'osuhouses '
+09/03/2026 16:46:24: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'adddoor '
+09/03/2026 16:46:28: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'Add StrongWoodDoor SouthCW'
+09/03/2026 16:46:29: 127.0.0.1: Owner 0x77 "vaz" ('vaz') building at (1663, 1578, 5) in Trammel: "StrongWoodDoor" "SouthCW"
+09/03/2026 16:46:29: 127.0.0.1: Serials: 0x400009C0; 
+09/03/2026 16:47:46: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'save '
+09/03/2026 16:48:36: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'adddoor '
+09/03/2026 16:48:38: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'Add StrongWoodDoor SouthCW'
+09/03/2026 16:48:40: 127.0.0.1: Owner 0x77 "vaz" ('vaz') building at (1647, 1580, 0) in Trammel: "StrongWoodDoor" "SouthCW"
+09/03/2026 16:48:40: 127.0.0.1: Serials: 0x40000A4A; 
+09/03/2026 16:48:47: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'tele '
+09/03/2026 16:48:53: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'osuhouses '
+09/03/2026 16:49:50: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'save '
+09/03/2026 16:50:03: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'osuhouses '
+09/03/2026 16:51:01: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'save '
+##############################
+Log started on 09/03/2026 16:52:37
+
+##############################
+Log started on 09/03/2026 17:04:43
+
+09/03/2026 17:04:53: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 17:04:55: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x400019FE (TownHouseSign)
+09/03/2026 17:04:59: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'osuhouses '
+##############################
+Log started on 09/03/2026 17:20:14
+
+09/03/2026 17:20:22: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 17:20:23: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x400019FE (TownHouseSign)
+09/03/2026 17:20:29: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'osuhouses '
+09/03/2026 17:20:49: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'osuhouses '
+09/03/2026 17:22:07: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'save '
+##############################
+Log started on 09/03/2026 17:24:14
+
+09/03/2026 17:26:31: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'save '
+##############################
+Log started on 09/03/2026 17:30:34
+
+09/03/2026 17:31:08: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'add gold 50000'
+09/03/2026 17:31:09: 127.0.0.1: Owner 0x77 "vaz" ('vaz') building at (1667, 1596, 0) in Trammel: "gold" "50000"
+09/03/2026 17:31:09: 127.0.0.1: Serials: 0x40000495; 
+09/03/2026 17:31:30: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'save '
+##############################
+Log started on 09/03/2026 17:46:35
+
+09/03/2026 17:48:31: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'add woodenchest'
+09/03/2026 17:48:33: 127.0.0.1: Owner 0x77 "vaz" ('vaz') building at (1659, 1578, 11) in Trammel: "woodenchest"
+09/03/2026 17:48:33: 127.0.0.1: Serials: 0x40000BC4; 
+09/03/2026 17:50:24: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'add woodenchest'
+09/03/2026 17:50:24: 127.0.0.1: Owner 0x77 "vaz" ('vaz') building at (1643, 1576, 0) in Trammel: "woodenchest"
+09/03/2026 17:50:24: 127.0.0.1: Serials: 0x40000D28; 
+09/03/2026 17:53:38: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'save '
+09/03/2026 17:57:27: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'add bag'
+09/03/2026 17:57:28: 127.0.0.1: Owner 0x77 "vaz" ('vaz') building at (1649, 1586, 0) in Trammel: "bag"
+09/03/2026 17:57:28: 127.0.0.1: Serials: 0x40000F32; 
+##############################
+Log started on 09/03/2026 19:30:32
+
+##############################
+Log started on 09/03/2026 19:42:37
+
+09/03/2026 19:43:22: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 19:43:24: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x40000BC4 (WoodenChest)
+09/03/2026 19:43:25: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 19:43:25: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x400009F3 (Skillet)
+09/03/2026 19:43:28: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 19:43:28: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x40000D28 (WoodenChest)
+##############################
+Log started on 09/03/2026 19:44:36
+
+09/03/2026 19:44:47: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 19:44:49: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x40000B17 (TownHouseSign)
+09/03/2026 19:46:55: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 19:46:58: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x40000B17 (TownHouseSign)
+09/03/2026 19:47:04: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 19:47:04: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x400009C4 (TownHouseSign)
+09/03/2026 19:47:32: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'save '
+09/03/2026 19:48:19: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'unhide '
+09/03/2026 19:48:21: 127.0.0.1: Owner 0x77 "vaz" ('vaz') unhiding 0x77 "vaz" ('vaz')
+09/03/2026 19:49:28: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 19:49:30: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x400009F3 (Skillet)
+09/03/2026 19:49:31: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 19:49:31: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x40000BC4 (WoodenChest)
+09/03/2026 19:49:48: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 19:49:50: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x400009C2 (TownHouseSign)
+09/03/2026 19:50:04: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 19:50:05: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x400009C2 (TownHouseSign)
+09/03/2026 19:51:06: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'save '
+09/03/2026 19:51:19: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'osuhouses '
+09/03/2026 19:51:23: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 19:51:27: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x40000B17 (TownHouseSign)
+##############################
+Log started on 09/03/2026 19:55:00
+
+09/03/2026 19:56:21: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 19:56:23: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x40000B17 (TownHouseSign)
+09/03/2026 19:56:24: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 19:56:25: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x400009C4 (TownHouseSign)
+09/03/2026 19:56:26: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 19:56:27: 127.0.0.1: Owner 0x77 "vaz" ('vaz') deleting 0x400009C2 (TownHouseSign)
+##############################
+Log started on 09/03/2026 19:57:19
+
+##############################
+Log started on 09/03/2026 20:29:31
+
+##############################
+Log started on 09/03/2026 20:42:44
+
+##############################
+Log started on 09/03/2026 23:09:44
+
+09/03/2026 23:32:06: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'delete '
+09/03/2026 23:32:26: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'save '
+##############################
+Log started on 09/03/2026 23:34:57
+
+##############################
+Log started on 09/03/2026 23:56:21
+

@@ -1,0 +1,49 @@
+##############################
+Log started on 13/01/2026 00:28:27
+
+13/01/2026 00:35:11: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'admin '
+13/01/2026 00:35:24: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add '
+13/01/2026 00:35:48: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'Add Zombie'
+13/01/2026 00:35:49: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1605, 1550, 22) in Trammel: "Zombie"
+13/01/2026 00:35:49: 127.0.0.1: Serials: 0x75; 
+##############################
+Log started on 13/01/2026 00:55:53
+
+##############################
+Log started on 13/01/2026 00:58:13
+
+##############################
+Log started on 13/01/2026 01:06:38
+
+13/01/2026 01:08:37: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'townhouses '
+13/01/2026 01:17:15: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'flip '
+13/01/2026 01:21:37: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'townhouses '
+13/01/2026 01:23:19: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'admin '
+13/01/2026 01:23:50: 127.0.0.1: Owner 0x74 "vaz" ('vaz') changing access level of account vaz to Player
+13/01/2026 01:24:24: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'townhouses '
+13/01/2026 01:24:29: 127.0.0.1: Owner 0x74 "vaz" ('vaz') changing access level of account vaz to Player
+13/01/2026 01:24:38: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'townhouses '
+13/01/2026 01:25:02: 127.0.0.1: Owner 0x74 "vaz" ('vaz') changing access level of account vaz to Owner
+13/01/2026 01:25:15: 127.0.0.1: Owner 0x74 "vaz" ('vaz') adding new account: vaz1
+13/01/2026 01:36:34: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'flip '
+13/01/2026 01:36:38: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'flip '
+13/01/2026 01:38:49: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add banker'
+13/01/2026 01:38:51: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1613, 1569, 20) in Trammel: "banker"
+13/01/2026 01:38:51: 127.0.0.1: Serials: 0x196; 
+13/01/2026 01:39:50: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add chest'
+13/01/2026 01:39:59: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1617, 1563, 30) in Trammel: "WoodenChest"
+13/01/2026 01:39:59: 127.0.0.1: Serials: 0x40002278; 
+13/01/2026 01:42:01: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'delete '
+13/01/2026 01:42:03: 127.0.0.1: Owner 0x74 "vaz" ('vaz') deleting 0x196 "Ciceron" (no account)
+13/01/2026 01:42:35: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'flip '
+13/01/2026 01:42:57: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add houseign'
+13/01/2026 01:43:14: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1618, 1564, 30) in Trammel: "TownHouseSign"
+13/01/2026 01:43:14: 127.0.0.1: Serials: 0x40002308; 
+13/01/2026 01:43:19: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'delete '
+13/01/2026 01:43:21: 127.0.0.1: Owner 0x74 "vaz" ('vaz') deleting 0x40002308 (TownHouseSign)
+13/01/2026 01:43:27: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add sign'
+13/01/2026 01:43:28: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1618, 1561, 30) in Trammel: "sign"
+13/01/2026 01:43:28: 127.0.0.1: Serials: 0x40002309; 
+13/01/2026 01:43:31: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'delete '
+13/01/2026 01:43:32: 127.0.0.1: Owner 0x74 "vaz" ('vaz') deleting 0x40002309 (Sign)
+13/01/2026 01:43:40: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add fancy'

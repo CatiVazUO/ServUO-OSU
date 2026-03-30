@@ -1,0 +1,35 @@
+##############################
+Log started on 25/02/2026 13:54:31
+
+25/02/2026 13:55:10: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'climehere '
+25/02/2026 13:55:15: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'climehere '
+25/02/2026 13:55:18: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'climehere '
+25/02/2026 13:55:31: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'climeadd teste -5 0'
+25/02/2026 13:55:47: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'add shirt'
+25/02/2026 13:55:49: 127.0.0.1: Owner 0x77 "vaz" ('vaz') building at (1670, 1615, 9) in Trammel: "shirt"
+25/02/2026 13:55:49: 127.0.0.1: Serials: 0x40000496; 
+25/02/2026 13:56:05: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'set OSUFabric 2'
+25/02/2026 13:56:16: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'props '
+25/02/2026 13:56:29: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'set osufabrictype 2'
+25/02/2026 13:56:31: 127.0.0.1: Owner 0x77 "vaz" ('vaz') set property 'osufabrictype' of 0x4000048B (Hakama) to '2'
+25/02/2026 13:56:35: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'set osufabrictype 2'
+25/02/2026 13:56:36: 127.0.0.1: Owner 0x77 "vaz" ('vaz') set property 'osufabrictype' of 0x40000496 (Shirt) to '2'
+25/02/2026 13:56:37: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'set osufabrictype 2'
+25/02/2026 13:56:38: 127.0.0.1: Owner 0x77 "vaz" ('vaz') set property 'osufabrictype' of 0x4000048D (TattsukeHakama) to '2'
+25/02/2026 13:56:39: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'set osufabrictype 2'
+25/02/2026 13:56:40: 127.0.0.1: Owner 0x77 "vaz" ('vaz') set property 'osufabrictype' of 0x4000048A (HakamaShita) to '2'
+25/02/2026 13:56:41: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'set osufabrictype 2'
+25/02/2026 13:56:43: 127.0.0.1: Owner 0x77 "vaz" ('vaz') set property 'osufabrictype' of 0x4000048C (SamuraiTabi) to '2'
+25/02/2026 13:56:51: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'needs '
+25/02/2026 13:56:56: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'climehere '
+25/02/2026 13:57:27: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'climehere '
+25/02/2026 14:10:42: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'save '
+##############################
+Log started on 25/02/2026 15:02:45
+
+25/02/2026 15:06:37: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'climehere '
+25/02/2026 15:07:31: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'climeadd teste -5 0'
+25/02/2026 15:07:36: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'climehere '
+25/02/2026 15:07:42: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'climehere '
+25/02/2026 15:07:46: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'needs '
+25/02/2026 15:07:53: 127.0.0.1: Owner 0x77 "vaz" ('vaz') used command 'climehere '

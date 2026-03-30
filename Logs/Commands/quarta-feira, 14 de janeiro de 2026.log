@@ -1,0 +1,113 @@
+##############################
+Log started on 14/01/2026 04:04:48
+
+14/01/2026 04:04:59: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add hitch'
+14/01/2026 04:05:08: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1606, 1596, 16) in Trammel: "HitchingPost"
+14/01/2026 04:05:08: 127.0.0.1: Serials: 0x40000470; 
+14/01/2026 04:05:44: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1606, 1597, 16) in Trammel: "StablePost"
+14/01/2026 04:05:44: 127.0.0.1: Serials: 0x40000471; 
+14/01/2026 04:05:53: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'delete '
+14/01/2026 04:05:56: 127.0.0.1: Owner 0x74 "vaz" ('vaz') deleting 0x40000470 (HitchingPost)
+14/01/2026 04:06:28: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1605, 1596, 18) in Trammel: "Horse"
+14/01/2026 04:06:28: 127.0.0.1: Serials: 0x196; 
+14/01/2026 04:06:42: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'setskill animaltaming 100'
+14/01/2026 04:06:43: 127.0.0.1: Owner 0x74 "vaz" ('vaz') set property 'AnimalTaming.Base' of 0x195 "ze" ('vaz1') to '100'
+14/01/2026 04:07:17: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add copper 300'
+14/01/2026 04:07:18: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1604, 1597, 19) in Trammel: "copper" "300"
+14/01/2026 04:07:18: 127.0.0.1: Serials: 0x40000473; 
+14/01/2026 04:07:26: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add banker'
+14/01/2026 04:07:28: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1603, 1596, 20) in Trammel: "banker"
+14/01/2026 04:07:28: 127.0.0.1: Serials: 0x197; 
+14/01/2026 04:08:22: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add bear'
+14/01/2026 04:08:25: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1603, 1596, 20) in Trammel: "BlackBear"
+14/01/2026 04:08:25: 127.0.0.1: Serials: 0x198; 
+##############################
+Log started on 14/01/2026 04:22:57
+
+14/01/2026 04:23:30: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'setskill animaltaming 100'
+14/01/2026 04:23:32: 127.0.0.1: Owner 0x74 "vaz" ('vaz') set property 'AnimalTaming.Base' of 0x195 "ze" ('vaz1') to '100'
+14/01/2026 04:23:38: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add horse'
+14/01/2026 04:23:39: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1607, 1596, 13) in Trammel: "horse"
+14/01/2026 04:23:39: 127.0.0.1: Serials: 0x196; 
+14/01/2026 04:24:03: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add post'
+14/01/2026 04:24:10: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1606, 1596, 16) in Trammel: "StablePost"
+14/01/2026 04:24:10: 127.0.0.1: Serials: 0x40000471; 
+14/01/2026 04:24:46: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add copper 3000'
+14/01/2026 04:24:47: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1607, 1594, 13) in Trammel: "copper" "3000"
+14/01/2026 04:24:47: 127.0.0.1: Serials: 0x40000472; 
+14/01/2026 04:24:52: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add banker'
+14/01/2026 04:24:53: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1605, 1594, 18) in Trammel: "banker"
+14/01/2026 04:24:53: 127.0.0.1: Serials: 0x197; 
+14/01/2026 04:26:32: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'save '
+14/01/2026 04:27:35: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add stablepost'
+14/01/2026 04:27:36: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1604, 1593, 20) in Trammel: "stablepost"
+14/01/2026 04:27:36: 127.0.0.1: Serials: 0x4000047A; 
+14/01/2026 04:28:55: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add horse'
+14/01/2026 04:28:57: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1604, 1593, 20) in Trammel: "horse"
+14/01/2026 04:28:57: 127.0.0.1: Serials: 0x198; 
+14/01/2026 04:29:54: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'save '
+14/01/2026 04:30:12: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'freeze '
+14/01/2026 04:30:47: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add copper 321312'
+14/01/2026 04:30:48: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1605, 1592, 18) in Trammel: "copper" "321312"
+14/01/2026 04:30:48: 127.0.0.1: Serials: 0x4000047D; 
+14/01/2026 04:31:03: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add copper 32131'
+14/01/2026 04:31:05: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1605, 1592, 18) in Trammel: "copper" "32131"
+14/01/2026 04:31:05: 127.0.0.1: Serials: 0x4000047F; 
+14/01/2026 04:31:09: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add copper 32131'
+14/01/2026 04:31:10: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1605, 1592, 18) in Trammel: "copper" "32131"
+14/01/2026 04:31:10: 127.0.0.1: Serials: 0x40000480; 
+##############################
+Log started on 14/01/2026 19:06:04
+
+14/01/2026 19:06:43: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'set str 100'
+14/01/2026 19:06:45: 127.0.0.1: Owner 0x74 "vaz" ('vaz') set property 'str' of 0x195 "ze" ('vaz1') to '100'
+14/01/2026 19:06:50: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'set dex 100'
+14/01/2026 19:06:51: 127.0.0.1: Owner 0x74 "vaz" ('vaz') set property 'dex' of 0x195 "ze" ('vaz1') to '100'
+14/01/2026 19:07:01: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'setskill swordmanship 100'
+14/01/2026 19:07:16: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'setskill swords 100'
+14/01/2026 19:07:17: 127.0.0.1: Owner 0x74 "vaz" ('vaz') set property 'Swords.Base' of 0x195 "ze" ('vaz1') to '100'
+14/01/2026 19:07:30: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'props '
+##############################
+Log started on 14/01/2026 19:32:46
+
+14/01/2026 19:34:03: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'props '
+14/01/2026 19:35:29: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'set str 100'
+14/01/2026 19:35:30: 127.0.0.1: Owner 0x74 "vaz" ('vaz') set property 'str' of 0x195 "ze" ('vaz1') to '100'
+14/01/2026 19:35:34: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'set dex 100'
+14/01/2026 19:35:35: 127.0.0.1: Owner 0x74 "vaz" ('vaz') set property 'dex' of 0x195 "ze" ('vaz1') to '100'
+14/01/2026 19:35:42: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'setskill swords 100'
+14/01/2026 19:35:43: 127.0.0.1: Owner 0x74 "vaz" ('vaz') set property 'Swords.Base' of 0x195 "ze" ('vaz1') to '100'
+14/01/2026 19:35:52: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'setskill anatomy 100'
+14/01/2026 19:35:52: 127.0.0.1: Owner 0x74 "vaz" ('vaz') set property 'Anatomy.Base' of 0x195 "ze" ('vaz1') to '100'
+14/01/2026 19:35:58: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'setskill tactcs 100'
+14/01/2026 19:36:02: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'setskill tactics 100'
+14/01/2026 19:36:03: 127.0.0.1: Owner 0x74 "vaz" ('vaz') set property 'Tactics.Base' of 0x195 "ze" ('vaz1') to '100'
+14/01/2026 19:36:16: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add zombie'
+14/01/2026 19:36:17: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1604, 1597, 19) in Trammel: "zombie"
+14/01/2026 19:36:17: 127.0.0.1: Serials: 0x196; 
+14/01/2026 19:36:30: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'props '
+14/01/2026 19:37:07: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add harpie'
+14/01/2026 19:37:12: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1605, 1598, 18) in Trammel: "Harpy"
+14/01/2026 19:37:12: 127.0.0.1: Serials: 0x198; 
+14/01/2026 19:37:41: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'props '
+14/01/2026 19:39:50: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add ettin'
+14/01/2026 19:39:51: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1603, 1595, 20) in Trammel: "ettin"
+14/01/2026 19:39:51: 127.0.0.1: Serials: 0x199; 
+14/01/2026 19:40:45: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'props '
+14/01/2026 19:40:49: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'props '
+14/01/2026 19:46:12: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'save '
+##############################
+Log started on 14/01/2026 20:26:37
+
+14/01/2026 20:27:40: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'set str 100'
+14/01/2026 20:27:41: 127.0.0.1: Owner 0x74 "vaz" ('vaz') set property 'str' of 0x195 "tester" ('vaz1') to '100'
+14/01/2026 20:27:47: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'setskill swords 100'
+14/01/2026 20:27:47: 127.0.0.1: Owner 0x74 "vaz" ('vaz') set property 'Swords.Base' of 0x195 "tester" ('vaz1') to '100'
+14/01/2026 20:27:53: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'setskill tactics 100'
+14/01/2026 20:27:54: 127.0.0.1: Owner 0x74 "vaz" ('vaz') set property 'Tactics.Base' of 0x195 "tester" ('vaz1') to '100'
+14/01/2026 20:27:59: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'save '
+14/01/2026 20:28:13: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'props '
+14/01/2026 20:28:25: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'add zombie'
+14/01/2026 20:28:26: 127.0.0.1: Owner 0x74 "vaz" ('vaz') building at (1603, 1596, 20) in Trammel: "zombie"
+14/01/2026 20:28:26: 127.0.0.1: Serials: 0x196; 
+14/01/2026 20:28:42: 127.0.0.1: Owner 0x74 "vaz" ('vaz') used command 'props '
