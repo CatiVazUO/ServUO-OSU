@@ -179,6 +179,13 @@ namespace Server.Mobiles
 
         #region OSU Getters and Setters
 
+        // Reinos
+        [CommandProperty(AccessLevel.GameMaster)]
+        public bool OSUAmbassador { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public bool OSUDispatcher { get; set; }
+
         // Statue
         public bool StatueCanBeLiveModel { get { return true; } }
         public int StatueMaterialAmount { get { return 10; } }
@@ -7581,6 +7588,12 @@ namespace Server.Mobiles
             switch (version)
             {
                 #region OSU Deserialize
+                case 53:
+                    {
+                        OSUAmbassador = reader.ReadBool();
+                        OSUDispatcher = reader.ReadBool();
+                        goto case 52;
+                    }
                 case 52:
                     {
                         OSUStrCapMax = reader.ReadInt();
@@ -8237,10 +8250,13 @@ namespace Server.Mobiles
 
             base.Serialize(writer);
 
-            writer.Write(52); // version
+            writer.Write(53); // version
 
             #region OSU Serialize
-
+            // Reinos
+            // Elections
+            writer.Write(OSUAmbassador);
+            writer.Write(OSUDispatcher);
 
             // DefQuals
             writer.Write(OSUStrCapMax);

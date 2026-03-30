@@ -44,11 +44,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO-pub57\\Server\\Server.csproj",
+      "projectUniqueName": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO OSU\\Server\\Server.csproj",
       "projectName": "ServUO",
-      "projectPath": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO-pub57\\Server\\Server.csproj",
+      "projectPath": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO OSU\\Server\\Server.csproj",
       "packagesPath": "C:\\Users\\vazbr\\.nuget\\packages\\",
-      "outputPath": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO-pub57\\Server\\obj\\",
+      "outputPath": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO OSU\\Server\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\vazbr\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -65,8 +65,8 @@
         "net48": {
           "targetAlias": "net48",
           "projectReferences": {
-            "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO-pub57\\Ultima\\Ultima.csproj": {
-              "projectPath": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO-pub57\\Ultima\\Ultima.csproj"
+            "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO OSU\\Ultima\\Ultima.csproj": {
+              "projectPath": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO OSU\\Ultima\\Ultima.csproj"
             }
           }
         }

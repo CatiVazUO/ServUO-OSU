@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "4jNEke7naB0=",
+  "dgSpecHash": "4dAzFZ1GvYk=",
   "success": true,
-  "projectFilePath": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO-pub57\\Scripts\\Scripts.csproj",
+  "projectFilePath": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO OSU\\Scripts\\Scripts.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\vazbr\\.nuget\\packages\\system.data.datasetextensions\\4.5.0\\system.data.datasetextensions.4.5.0.nupkg.sha512"
   ],

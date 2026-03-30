@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO-pub57\\Ultima\\Ultima.csproj",
+      "projectUniqueName": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO OSU\\Ultima\\Ultima.csproj",
       "projectName": "Ultima",
-      "projectPath": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO-pub57\\Ultima\\Ultima.csproj",
+      "projectPath": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO OSU\\Ultima\\Ultima.csproj",
       "packagesPath": "C:\\Users\\vazbr\\.nuget\\packages\\",
-      "outputPath": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO-pub57\\Ultima\\obj\\",
+      "outputPath": "D:\\UO\\My Shards\\OSU Servuo Transfer\\ServUO OSU\\Ultima\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\vazbr\\AppData\\Roaming\\NuGet\\NuGet.Config",
