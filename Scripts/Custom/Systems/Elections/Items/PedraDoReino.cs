@@ -70,8 +70,8 @@ namespace Server.Custom.Systems.Reinos
                 return;
             }
 
-            pm.CloseGump(typeof(PedraDoReinoGump));
-            pm.SendGump(new PedraDoReinoGump(pm, this));
+            pm.CloseGump(typeof(ReinoExpansionGump));
+            pm.SendGump(new ReinoExpansionGump(pm, CityId));
         }
 
         public override void Serialize(GenericWriter writer)
