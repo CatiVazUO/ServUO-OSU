@@ -1,7 +1,9 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Server;
 using Server.Items;
+using Server.Custom.Systems.Rent;
 
 namespace Server.Custom.Systems.Reinos
 {
@@ -106,11 +108,13 @@ namespace Server.Custom.Systems.Reinos
         public DateTime NextStageUtc;
         public int MultiSerial;
         public List<int> DoorSerials;
+        public List<int> RentalSignSerials;
 
         public ReinoAreaState()
         {
             ConstructionId = String.Empty;
             DoorSerials = new List<int>();
+            RentalSignSerials = new List<int>();
             Status = ReinoLotStatus.Locked;
             CurrentStageIndex = -1;
             NextStageUtc = DateTime.MinValue;
@@ -257,6 +261,7 @@ namespace Server.Custom.Systems.Reinos
         public int[] StageMultiIds;
         public TimeSpan[] StageDurations;
         public int FinishedMultiId;
+        public string FinishedPlacedTypeName;
         public int AbandonedMultiId;
         public string NpcTypeName;
         public Point3D NpcOffset;
@@ -265,6 +270,7 @@ namespace Server.Custom.Systems.Reinos
         public bool UseMultiDoors;
         public TimeSpan ReactivateDuration;
         public bool Permanent;
+        public ReinoRentalTemplate[] RentalTemplates;
 
         public ReinoConstructionDefinition()
         {
@@ -280,6 +286,7 @@ namespace Server.Custom.Systems.Reinos
             StageMultiIds = new int[0];
             StageDurations = new TimeSpan[0];
             FinishedMultiId = 0;
+            FinishedPlacedTypeName = String.Empty;
             AbandonedMultiId = 0;
             NpcTypeName = String.Empty;
             NpcOffset = Point3D.Zero;
@@ -288,6 +295,7 @@ namespace Server.Custom.Systems.Reinos
             UseMultiDoors = true;
             ReactivateDuration = TimeSpan.FromDays(3.0);
             Permanent = false;
+            RentalTemplates = new ReinoRentalTemplate[0];
         }
 
         public bool SupportsLot(ReinoLotDefinition lot)
@@ -321,6 +329,124 @@ namespace Server.Custom.Systems.Reinos
                 return false;
 
             return true;
+        }
+    }
+
+
+    public class ReinoRentalRectOffset
+    {
+        public int X;
+        public int Y;
+        public int Width;
+        public int Height;
+
+        public ReinoRentalRectOffset()
+        {
+        }
+
+        public ReinoRentalRectOffset(int x, int y, int width, int height)
+        {
+            X = x;
+            Y = y;
+            Width = width;
+            Height = height;
+        }
+
+        public Rectangle2D ToAbsoluteRect(Point3D anchor)
+        {
+            return new Rectangle2D(anchor.X + X, anchor.Y + Y, Width, Height);
+        }
+    }
+
+    public class ReinoRentalDoorTemplate
+    {
+        public int X;
+        public int Y;
+        public int Z;
+        public int ClosedID;
+        public int OpenedID;
+        public int OpenedSound;
+        public int ClosedSound;
+        public Point3D Offset;
+
+        public ReinoRentalDoorTemplate()
+        {
+            Offset = Point3D.Zero;
+        }
+
+        public ReinoRentalDoorTemplate(int x, int y, int z, int closedID, int openedID, int openedSound, int closedSound, Point3D offset)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+            ClosedID = closedID;
+            OpenedID = openedID;
+            OpenedSound = openedSound;
+            ClosedSound = closedSound;
+            Offset = offset;
+        }
+    }
+
+    public class ReinoRentalTemplate
+    {
+        public string TemplateId;
+        public string DisplayName;
+        public OSUPropertyType PropertyType;
+        public string GroupTag;
+        public Point3D SignOffset;
+        public Point3D BanLocOffset;
+        public ReinoRentalRectOffset[] BlockOffsets;
+        public int MinZOffset;
+        public int MaxZOffset;
+        public int Lockdowns;
+        public int Secures;
+        public int DefaultPrice;
+        public TimeSpan DefaultRentByTime;
+        public bool DefaultRecurRent;
+        public string DefaultAllowedCulturesCsv;
+        public bool GovernorManaged;
+        public bool Flip;
+        public bool StartConfigured;
+        public ReinoRentalDoorTemplate[] DoorTemplates;
+
+        public ReinoRentalTemplate()
+        {
+            TemplateId = String.Empty;
+            DisplayName = String.Empty;
+            PropertyType = OSUPropertyType.House;
+            GroupTag = "Residential";
+            SignOffset = Point3D.Zero;
+            BanLocOffset = Point3D.Zero;
+            BlockOffsets = new ReinoRentalRectOffset[0];
+            MinZOffset = 0;
+            MaxZOffset = 20;
+            Lockdowns = 125;
+            Secures = 4;
+            DefaultPrice = 0;
+            DefaultRentByTime = TimeSpan.FromDays(7.0);
+            DefaultRecurRent = true;
+            DefaultAllowedCulturesCsv = "Todos";
+            GovernorManaged = true;
+            Flip = false;
+            StartConfigured = false;
+            DoorTemplates = new ReinoRentalDoorTemplate[0];
+        }
+
+        public ArrayList BuildAbsoluteBlocks(Point3D anchor)
+        {
+            ArrayList list = new ArrayList();
+
+            if (BlockOffsets == null)
+                return list;
+
+            for (int i = 0; i < BlockOffsets.Length; i++)
+            {
+                ReinoRentalRectOffset rect = BlockOffsets[i];
+                if (rect != null)
+                    list.Add(rect.ToAbsoluteRect(anchor));
+            }
+
+            return list;
         }
     }
 
@@ -378,6 +504,7 @@ namespace Server.Custom.Systems.Reinos
         public int MultiSerial;
         public int NpcSerial;
         public List<int> DoorSerials;
+        public List<int> RentalSignSerials;
 
         public ReinoLotState()
         {
@@ -389,6 +516,7 @@ namespace Server.Custom.Systems.Reinos
             NextStageUtc = DateTime.MinValue;
             ReactivateReadyUtc = DateTime.MinValue;
             DoorSerials = new List<int>();
+            RentalSignSerials = new List<int>();
         }
 
         public ReinoLotState(int lotId) : this()

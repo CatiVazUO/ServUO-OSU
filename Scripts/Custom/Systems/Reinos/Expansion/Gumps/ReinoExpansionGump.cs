@@ -67,7 +67,7 @@ namespace Server.Custom.Systems.Reinos
 
             AddLabel(253, 170, 0, "Governo");
             AddLabel(250, 231, 0, "Expansão");
-            AddButton(211, 225, 439, 248, 0, GumpButtonType.Reply, 0);
+            AddButton(211, 225, 439, 439, 0, GumpButtonType.Reply, 0);
 
             AddLabel(250, 270, 0, "Visão Geral");
             AddLabel(250, 310, 0, "Tesouro");

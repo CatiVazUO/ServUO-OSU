@@ -23,15 +23,17 @@ namespace Server.Custom.Systems.Rent
 		{
 		}
 
-		public DecoreItemInfo( string typestring, string name, int itemid, int hue, Point3D loc, Map map )
-		{
-			c_TypeString = typestring;
-			c_ItemID = itemid;
-			c_Location = loc;
-			c_Map = map;
-		}
+        public DecoreItemInfo(string typestring, string name, int itemid, int hue, Point3D loc, Map map)
+        {
+            c_TypeString = typestring;
+            c_Name = name;
+            c_ItemID = itemid;
+            c_Hue = hue;
+            c_Location = loc;
+            c_Map = map;
+        }
 
-		public void Save( GenericWriter writer )
+        public void Save( GenericWriter writer )
 		{
 			writer.Write( (int)1 ); // Version
 

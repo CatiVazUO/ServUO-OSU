@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -780,7 +781,6 @@ namespace Server.Custom.Systems.Reinos
         private static void StartLotConstruction(ReinoLotDefinition lot, ReinoLotState state, ReinoConstructionDefinition def)
         {
             CleanupLotWorldObjects(state);
-            DeleteLotSign(state);
 
             state.Status = ReinoLotStatus.UnderConstruction;
             state.ConstructionId = def.Id;
@@ -795,7 +795,6 @@ namespace Server.Custom.Systems.Reinos
         private static void StartLotReactivation(ReinoLotDefinition lot, ReinoLotState state, ReinoConstructionDefinition def)
         {
             CleanupLotWorldObjects(state);
-            DeleteLotSign(state);
 
             state.Status = ReinoLotStatus.UnderConstruction;
             state.CurrentStageIndex = Math.Max(0, def.StageMultiIds.Length - 1);
@@ -1015,7 +1014,6 @@ namespace Server.Custom.Systems.Reinos
         private static void CompleteLotConstruction(ReinoLotDefinition lot, ReinoLotState state, ReinoConstructionDefinition def)
         {
             CleanupLotWorldObjects(state);
-            DeleteLotSign(state);
 
             state.Status = ReinoLotStatus.Active;
             state.CurrentStageIndex = def.StageMultiIds.Length;
@@ -1024,6 +1022,8 @@ namespace Server.Custom.Systems.Reinos
 
             PlaceLotFinishedMulti(lot, state, def, false);
             SpawnNpcIfNeeded(lot, state, def);
+            SpawnRentalSignsIfNeeded(lot, state, def);
+            EnsureLotSign(lot, state);
         }
 
         private static void CompleteAreaConstruction(ReinoAreaDefinition area, ReinoAreaState state, ReinoConstructionDefinition def)
@@ -1039,12 +1039,12 @@ namespace Server.Custom.Systems.Reinos
         private static void ConvertLotToAbandoned(ReinoLotDefinition lot, ReinoLotState state, ReinoConstructionDefinition def)
         {
             CleanupLotWorldObjects(state);
-            DeleteLotSign(state);
             state.Status = ReinoLotStatus.Abandoned;
             state.CurrentStageIndex = -1;
             state.NextStageUtc = DateTime.MinValue;
             state.ReactivateReadyUtc = DateTime.MinValue;
             PlaceLotFinishedMulti(lot, state, def, true);
+            EnsureLotSign(lot, state);
         }
 
         private static void ConvertAreaToAbandoned(ReinoAreaDefinition area, ReinoAreaState state, ReinoConstructionDefinition def)
@@ -1063,7 +1063,6 @@ namespace Server.Custom.Systems.Reinos
         {
             EjectLotMobiles(lot);
             CleanupLotWorldObjects(state);
-            DeleteLotSign(state);
 
             int multiId = def.StageMultiIds[stageIndex];
             Point3D anchor = GetAnchorForTopLeft(lot.NorthWest, multiId, null);
@@ -1071,27 +1070,69 @@ namespace Server.Custom.Systems.Reinos
             multi.Name = def.Name + " (fase " + (stageIndex + 1) + ")";
             multi.MoveToWorld(anchor, lot.Map);
             state.MultiSerial = multi.Serial.Value;
+            EnsureLotSign(lot, state);
+        }
+        private static Item CreateFinishedPlacedItem(ReinoConstructionDefinition def, int referenceId, int stageIndex)
+        {
+            if (def == null || String.IsNullOrWhiteSpace(def.FinishedPlacedTypeName))
+                return null;
+
+            Type t = ScriptCompiler.FindTypeByFullName(def.FinishedPlacedTypeName);
+
+            if (t == null)
+                t = ScriptCompiler.FindTypeByName(def.FinishedPlacedTypeName);
+
+            if (t == null || !typeof(Item).IsAssignableFrom(t))
+                return null;
+
+            try
+            {
+                object obj = Activator.CreateInstance(t, new object[] { referenceId, def.Id ?? String.Empty, stageIndex });
+                return obj as Item;
+            }
+            catch
+            {
+                try
+                {
+                    object obj = Activator.CreateInstance(t);
+                    return obj as Item;
+                }
+                catch
+                {
+                    return null;
+                }
+            }
         }
 
         private static void PlaceLotFinishedMulti(ReinoLotDefinition lot, ReinoLotState state, ReinoConstructionDefinition def, bool abandoned)
         {
             EjectLotMobiles(lot);
-            CleanupLotWorldObjects(state);
-            DeleteLotSign(state);
 
             int multiId = abandoned ? def.AbandonedMultiId : def.FinishedMultiId;
             Point3D anchor = GetAnchorForTopLeft(lot.NorthWest, multiId, null);
-            ReinoConstructionMulti multi = new ReinoConstructionMulti(multiId, lot.LotId, def.Id, abandoned ? -2 : -1);
-            multi.Name = abandoned ? def.Name + " abandonado" : def.Name;
-            multi.MoveToWorld(anchor, lot.Map);
-            state.MultiSerial = multi.Serial.Value;
+
+            Item placed = null;
+
+            if (!abandoned)
+                placed = CreateFinishedPlacedItem(def, lot.LotId, -1);
+
+            if (placed == null)
+                placed = new ReinoConstructionMulti(multiId, lot.LotId, def.Id, abandoned ? -2 : -1);
+
+            placed.Name = abandoned ? def.Name + " abandonado" : def.Name;
+            placed.MoveToWorld(anchor, lot.Map);
+            state.MultiSerial = placed.Serial.Value;
+
+            if (!abandoned && def.UseMultiDoors && def.FinishedDoors != null && def.FinishedDoors.Length > 0)
+                SpawnDoors(anchor, state.DoorSerials, def.FinishedDoors, lot.Map);
+
+            EnsureLotSign(lot, state);
         }
 
         private static void PlaceAreaStageMulti(ReinoAreaDefinition area, ReinoAreaState state, ReinoConstructionDefinition def, int stageIndex)
         {
             EjectAreaMobiles(area);
             CleanupAreaWorldObjects(state);
-
             int multiId = def.StageMultiIds[stageIndex];
             Point3D anchor = GetAnchorForTopLeft(area.GetNorthWestPoint(), multiId, null);
             ReinoConstructionMulti multi = new ReinoConstructionMulti(multiId, area.AreaId, def.Id, stageIndex);
@@ -1103,14 +1144,24 @@ namespace Server.Custom.Systems.Reinos
         private static void PlaceAreaFinishedMulti(ReinoAreaDefinition area, ReinoAreaState state, ReinoConstructionDefinition def, bool abandoned)
         {
             EjectAreaMobiles(area);
-            CleanupAreaWorldObjects(state);
 
             int multiId = abandoned ? def.AbandonedMultiId : def.FinishedMultiId;
             Point3D anchor = GetAnchorForTopLeft(area.GetNorthWestPoint(), multiId, null);
-            ReinoConstructionMulti multi = new ReinoConstructionMulti(multiId, area.AreaId, def.Id, abandoned ? -2 : -1);
-            multi.Name = abandoned ? def.Name + " abandonada" : def.Name;
-            multi.MoveToWorld(anchor, area.Map);
-            state.MultiSerial = multi.Serial.Value;
+
+            Item placed = null;
+
+            if (!abandoned)
+                placed = CreateFinishedPlacedItem(def, area.AreaId, -1);
+
+            if (placed == null)
+                placed = new ReinoConstructionMulti(multiId, area.AreaId, def.Id, abandoned ? -2 : -1);
+
+            placed.Name = abandoned ? def.Name + " abandonada" : def.Name;
+            placed.MoveToWorld(anchor, area.Map);
+            state.MultiSerial = placed.Serial.Value;
+
+            if (!abandoned && def.UseMultiDoors && def.FinishedDoors != null && def.FinishedDoors.Length > 0)
+                SpawnDoors(anchor, state.DoorSerials, def.FinishedDoors, area.Map);
         }
 
         private static Point3D GetAnchorForTopLeft(Point3D desiredTopLeft, int multiId, List<Point3D> skipOffsets)
@@ -1178,7 +1229,6 @@ namespace Server.Custom.Systems.Reinos
             Point3D southExit = new Point3D(lot.NorthWest.X + (lot.Side / 2), lot.NorthWest.Y + lot.Side, lot.NorthWest.Z);
             Point3D westExit = new Point3D(lot.NorthWest.X - 1, lot.NorthWest.Y + (lot.Side / 2), lot.NorthWest.Z);
             Point3D center = lot.GetCenter(lot.NorthWest.Z);
-
             EjectMobilesFromRect(lot.Map, lot.Rect, southExit, westExit, center);
         }
 
@@ -1190,7 +1240,6 @@ namespace Server.Custom.Systems.Reinos
             Point3D southExit = new Point3D(area.Rect.Start.X + (area.Rect.Width / 2), area.Rect.Start.Y + area.Rect.Height, area.Z);
             Point3D westExit = new Point3D(area.Rect.Start.X - 1, area.Rect.Start.Y + (area.Rect.Height / 2), area.Z);
             Point3D center = area.GetCenterPoint(area.Z);
-
             EjectMobilesFromRect(area.Map, area.Rect, southExit, westExit, center);
         }
 
@@ -1199,8 +1248,7 @@ namespace Server.Custom.Systems.Reinos
             if (map == null || map == Map.Internal || rect.Width <= 0 || rect.Height <= 0)
                 return;
 
-            List<Mobile> mobiles = new List<Mobile>();
-
+            List<Mobile> list = new List<Mobile>();
             IPooledEnumerable eable = map.GetMobilesInBounds(rect);
 
             foreach (Mobile m in eable)
@@ -1211,20 +1259,18 @@ namespace Server.Custom.Systems.Reinos
                 if (m.AccessLevel >= AccessLevel.GameMaster)
                     continue;
 
-                mobiles.Add(m);
+                list.Add(m);
             }
 
             eable.Free();
 
-            for (int i = 0; i < mobiles.Count; i++)
+            for (int i = 0; i < list.Count; i++)
             {
-                Mobile m = mobiles[i];
-
+                Mobile m = list[i];
                 if (m == null || m.Deleted || m.Map != map || !rect.Contains(new Point2D(m.X, m.Y)))
                     continue;
 
                 Point3D dest = FindBestEjectPoint(map, preferredPoints);
-
                 if (dest != Point3D.Zero)
                     m.MoveToWorld(dest, map);
             }
@@ -1238,7 +1284,6 @@ namespace Server.Custom.Systems.Reinos
             for (int i = 0; i < preferredPoints.Length; i++)
             {
                 Point3D p = FindNearbyWalkablePoint(map, preferredPoints[i]);
-
                 if (p != Point3D.Zero)
                     return p;
             }
@@ -1258,7 +1303,6 @@ namespace Server.Custom.Systems.Reinos
                     for (int y = origin.Y - range; y <= origin.Y + range; y++)
                     {
                         int z = map.GetAverageZ(x, y);
-
                         if (map.CanSpawnMobile(x, y, z))
                             return new Point3D(x, y, z);
                     }
@@ -1288,6 +1332,45 @@ namespace Server.Custom.Systems.Reinos
             Point3D p = new Point3D(lot.NorthWest.X + def.NpcOffset.X, lot.NorthWest.Y + def.NpcOffset.Y, lot.NorthWest.Z + def.NpcZOffset);
             mob.MoveToWorld(p, lot.Map);
             state.NpcSerial = mob.Serial.Value;
+        }
+
+        private static void SpawnDoors(Point3D anchor, List<int> store, ReinoDoorDefinition[] defs, Map map)
+        {
+            if (store == null)
+                return;
+
+            store.Clear();
+
+            if (defs == null || defs.Length == 0)
+                return;
+
+            BaseDoor firstDoor = null;
+
+            for (int i = 0; i < defs.Length; i++)
+            {
+                ReinoDoorDefinition def = defs[i];
+                if (def == null)
+                    continue;
+
+                BaseDoor door = def.DarkWood
+                    ? (BaseDoor)new GenericPublicDoor(def.Facing, 0x6A5, 0xEA, 0xF1)
+                    : new GenericPublicDoor(def.Facing, 0x675, 0xEC, 0xF3);
+
+                door.Locked = false;
+                door.KeyValue = 0;
+                door.MoveToWorld(new Point3D(anchor.X + def.X, anchor.Y + def.Y, anchor.Z + def.Z), map);
+                store.Add(door.Serial.Value);
+
+                if (firstDoor == null)
+                {
+                    firstDoor = door;
+                }
+                else if (i == 1)
+                {
+                    firstDoor.Link = door;
+                    door.Link = firstDoor;
+                }
+            }
         }
 
         private static void EnsureLotSign(ReinoLotDefinition lot, ReinoLotState state)
@@ -1372,6 +1455,18 @@ namespace Server.Custom.Systems.Reinos
                 }
 
                 state.DoorSerials.Clear();
+            }
+
+            if (state.RentalSignSerials != null)
+            {
+                for (int i = 0; i < state.RentalSignSerials.Count; i++)
+                {
+                    Item sign = state.RentalSignSerials[i] > 0 ? World.FindItem((Serial)state.RentalSignSerials[i]) : null;
+                    if (sign != null && !sign.Deleted)
+                        sign.Delete();
+                }
+
+                state.RentalSignSerials.Clear();
             }
         }
 
@@ -1605,6 +1700,97 @@ namespace Server.Custom.Systems.Reinos
             state.NextStageUtc = DateTime.MinValue;
             state.ReactivateReadyUtc = DateTime.MinValue;
             EnsureLotSign(lot, state);
+        }
+
+        private static void SpawnRentalSignsIfNeeded(ReinoLotDefinition lot, ReinoLotState state, ReinoConstructionDefinition def)
+        {
+            if (lot == null || state == null || def == null || def.RentalTemplates == null || def.RentalTemplates.Length == 0)
+                return;
+
+            if (state.RentalSignSerials == null)
+                state.RentalSignSerials = new List<int>();
+
+            state.RentalSignSerials.Clear();
+
+            Point3D anchor = GetAnchorForTopLeft(lot.NorthWest, def.FinishedMultiId, null);
+
+            for (int i = 0; i < def.RentalTemplates.Length; i++)
+            {
+                ReinoRentalTemplate tpl = def.RentalTemplates[i];
+                if (tpl == null)
+                    continue;
+
+                ReinoRentalSign sign = new ReinoRentalSign();
+                sign.ReinoCityId = lot.CityId;
+                sign.ParentLotId = lot.LotId;
+                sign.ConstructionId = def.Id;
+                sign.TemplateId = tpl.TemplateId;
+                sign.GroupTag = tpl.GroupTag;
+                sign.GovernorManaged = tpl.GovernorManaged;
+                sign.GovernorConfigured = tpl.StartConfigured;
+                sign.AllowedCulturesCsv = tpl.DefaultAllowedCulturesCsv;
+                sign.AllowedCulture = "Todos";
+                sign.Name = String.IsNullOrWhiteSpace(tpl.DisplayName) ? def.Name : tpl.DisplayName;
+                sign.PropertyType = tpl.PropertyType;
+                sign.Price = tpl.DefaultPrice;
+                sign.RentByTime = tpl.DefaultRentByTime;
+                sign.RecurRent = tpl.DefaultRecurRent;
+                sign.Flip = tpl.Flip;
+                sign.CitizenCityId = ReinoElectionsSystem.GetCityName(lot.CityId);
+                sign.Locks = tpl.Lockdowns;
+                sign.Secures = tpl.PropertyType == Server.Custom.Systems.Rent.OSUPropertyType.House ? tpl.Secures : 0;
+                sign.MinZ = anchor.Z + tpl.MinZOffset;
+                sign.MaxZ = anchor.Z + tpl.MaxZOffset;
+                sign.SignLoc = new Point3D(anchor.X + tpl.SignOffset.X, anchor.Y + tpl.SignOffset.Y, anchor.Z + tpl.SignOffset.Z);
+                sign.BanLoc = new Point3D(anchor.X + tpl.BanLocOffset.X, anchor.Y + tpl.BanLocOffset.Y, anchor.Z + tpl.BanLocOffset.Z);
+                sign.Blocks = tpl.BuildAbsoluteBlocks(anchor);
+                sign.MoveToWorld(sign.SignLoc, lot.Map);
+                SpawnRentalTemplateDoors(anchor, tpl, lot.Map, state.DoorSerials);
+                state.RentalSignSerials.Add(sign.Serial.Value);
+            }
+        }
+
+        private static void SpawnRentalTemplateDoors(Point3D anchor, ReinoRentalTemplate tpl, Map map, List<int> store)
+        {
+            if (tpl == null || tpl.DoorTemplates == null || tpl.DoorTemplates.Length == 0 || map == null || map == Map.Internal || store == null)
+                return;
+
+            for (int i = 0; i < tpl.DoorTemplates.Length; i++)
+            {
+                ReinoRentalDoorTemplate d = tpl.DoorTemplates[i];
+
+                if (d == null)
+                    continue;
+
+                StrongWoodDoor door = new StrongWoodDoor(DoorFacing.WestCW);
+                door.ClosedID = d.ClosedID;
+                door.OpenedID = d.OpenedID;
+                door.OpenedSound = d.OpenedSound;
+                door.ClosedSound = d.ClosedSound;
+                door.Offset = d.Offset;
+                door.ItemID = d.ClosedID;
+                door.KeyValue = 0;
+                door.Locked = false;
+
+                door.MoveToWorld(new Point3D(anchor.X + d.X, anchor.Y + d.Y, anchor.Z + d.Z), map);
+
+                // enquanto ninguém alugou, ela já nasce aberta
+                door.Open = true;
+
+                foreach (Item item in door.GetItemsInRange(1))
+                {
+                    BaseDoor other = item as BaseDoor;
+
+                    if (other != null && other != door && other.Z == door.Z)
+                    {
+                        door.Link = other;
+                        other.Link = door;
+                        break;
+                    }
+                }
+
+                store.Add(door.Serial.Value);
+            }
         }
 
         public static bool IsPointInsideKingdomArea(int cityId, Point3D point, Map map)
@@ -1930,7 +2116,7 @@ namespace Server.Custom.Systems.Reinos
                 using (FileStream fs = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.None))
                 using (BinaryWriter bw = new BinaryWriter(fs))
                 {
-                    bw.Write(2);
+                    bw.Write(3);
                     bw.Write(m_NextLotId);
                     bw.Write(m_NextAreaId);
 
@@ -2018,6 +2204,10 @@ namespace Server.Custom.Systems.Reinos
                         bw.Write(doorCount);
                         for (int i = 0; i < doorCount; i++)
                             bw.Write(st.DoorSerials[i]);
+                        int rentalCount = st.RentalSignSerials != null ? st.RentalSignSerials.Count : 0;
+                        bw.Write(rentalCount);
+                        for (int i = 0; i < rentalCount; i++)
+                            bw.Write(st.RentalSignSerials[i]);
                     }
                 }
             }
@@ -2133,6 +2323,12 @@ namespace Server.Custom.Systems.Reinos
                         int doorCount = br.ReadInt32();
                         for (int d = 0; d < doorCount; d++)
                             st.DoorSerials.Add(br.ReadInt32());
+                        if (version >= 3)
+                        {
+                            int rentalCount = br.ReadInt32();
+                            for (int r = 0; r < rentalCount; r++)
+                                st.RentalSignSerials.Add(br.ReadInt32());
+                        }
 
                         m_LotDefinitions[lotId] = def;
                         m_LotStates[lotId] = st;

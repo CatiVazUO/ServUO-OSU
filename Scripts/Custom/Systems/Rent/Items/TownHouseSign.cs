@@ -1950,27 +1950,59 @@ namespace Server.Custom.Systems.Rent
 		{
 			base.Deserialize( reader );
 
-			int version = reader.ReadInt();
+            int version = reader.ReadInt();
 
-            if (version >= 19)
-                m_CitizenCityId = reader.ReadString();
-            else
-                m_CitizenCityId = String.Empty;
+            m_CitizenCityId = String.Empty;
+            m_Flip = false;
+            m_PropertyType = OSUPropertyType.House;
+            m_AllowedCulture = "Todos";
+            m_TombSelectedItemID = 0;
+            m_TombSelectedGumpID = 0;
+            m_TombExtraCost = 0;
+            m_TombDeadName = "";
+            m_TombBirthYear = "";
+            m_TombDeathYear = "";
+            m_TombMessage = "";
+            m_TombFinalized = false;
+            m_Treasury = null;
 
-            if ( version >= 15 )
-				m_Flip = reader.ReadBool();
-			if( version >= 16 )
-				m_PropertyType = (OSUPropertyType)reader.ReadInt();
-			else
-				m_PropertyType = OSUPropertyType.House;
-
-			if ( version >= 17 )
-				m_AllowedCulture = reader.ReadString();
-			else
-				m_AllowedCulture = "Todos";
-
-            if (version >= 18)
+            // v20 em diante = formato correto novo
+            if (version >= 20)
             {
+                if (version >= 15)
+                    m_Flip = reader.ReadBool();
+
+                if (version >= 16)
+                    m_PropertyType = (OSUPropertyType)reader.ReadInt();
+
+                if (version >= 17)
+                    m_AllowedCulture = reader.ReadString();
+
+                m_CitizenCityId = reader.ReadString();
+
+                if (version >= 18)
+                {
+                    m_TombSelectedItemID = reader.ReadInt();
+                    m_TombSelectedGumpID = reader.ReadInt();
+                    m_TombExtraCost = reader.ReadInt();
+                    m_TombDeadName = reader.ReadString();
+                    m_TombBirthYear = reader.ReadString();
+                    m_TombDeathYear = reader.ReadString();
+                    m_TombMessage = reader.ReadString();
+                    m_TombFinalized = reader.ReadBool();
+                }
+
+                if (version >= 14)
+                    m_Treasury = (Container)reader.ReadItem();
+            }
+            // v19 = formato salvo com a ordem bugada do patch anterior
+            else if (version == 19)
+            {
+                m_Flip = reader.ReadBool();
+                m_PropertyType = (OSUPropertyType)reader.ReadInt();
+                m_AllowedCulture = reader.ReadString();
+                m_CitizenCityId = reader.ReadString();
+
                 m_TombSelectedItemID = reader.ReadInt();
                 m_TombSelectedGumpID = reader.ReadInt();
                 m_TombExtraCost = reader.ReadInt();
@@ -1979,25 +2011,37 @@ namespace Server.Custom.Systems.Rent
                 m_TombDeathYear = reader.ReadString();
                 m_TombMessage = reader.ReadString();
                 m_TombFinalized = reader.ReadBool();
+
+                m_Treasury = (Container)reader.ReadItem();
             }
+            // v18 ou menor = formato antigo
             else
             {
-                m_TombSelectedItemID = 0;
-                m_TombSelectedGumpID = 0;
-                m_TombExtraCost = 0;
-                m_TombDeadName = "";
-                m_TombBirthYear = "";
-                m_TombDeathYear = "";
-                m_TombMessage = "";
-                m_TombFinalized = false;
+                if (version >= 15)
+                    m_Flip = reader.ReadBool();
+
+                if (version >= 16)
+                    m_PropertyType = (OSUPropertyType)reader.ReadInt();
+
+                if (version >= 17)
+                    m_AllowedCulture = reader.ReadString();
+
+                if (version >= 18)
+                {
+                    m_TombSelectedItemID = reader.ReadInt();
+                    m_TombSelectedGumpID = reader.ReadInt();
+                    m_TombExtraCost = reader.ReadInt();
+                    m_TombDeadName = reader.ReadString();
+                    m_TombBirthYear = reader.ReadString();
+                    m_TombDeathYear = reader.ReadString();
+                    m_TombMessage = reader.ReadString();
+                    m_TombFinalized = reader.ReadBool();
+                }
+
+                if (version >= 14)
+                    m_Treasury = (Container)reader.ReadItem();
             }
 
-            if ( version >= 14 )
-			{
-			//	m_Nation = (Nation)reader.ReadInt();
-				m_Treasury = (Container)reader.ReadItem();
-			}
-			
             if (version >= 13)
             {
                 c_ForcePrivate = reader.ReadBool();

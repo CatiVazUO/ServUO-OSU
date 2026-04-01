@@ -142,8 +142,11 @@ namespace Server.Custom.Systems.Reinos
 
             MultiComponentList mcl = MultiData.GetComponents(m_MultiId);
 
-            if (mcl == null || mcl.List == null)
+            if (mcl == null || mcl.List == null || mcl.List.Length == 0)
+            {
+                Console.WriteLine("ReinoConstructionMulti: multi 0x{0:X} sem componentes no servidor.", m_MultiId);
                 return;
+            }
 
             List<BaseDoor> placedDoors = new List<BaseDoor>();
 
@@ -225,14 +228,14 @@ namespace Server.Custom.Systems.Reinos
 
                 switch (type)
                 {
-                    case 0: return new MetalDoor(facing);
-                    case 1: return new BarredMetalDoor(facing);
-                    case 2: return new RattanDoor(facing);
-                    case 3: return new DarkWoodDoor(facing);
-                    case 4: return new MediumWoodDoor(facing);
-                    case 5: return new MetalDoor2(facing);
-                    case 6: return new LightWoodDoor(facing);
-                    case 7: return new StrongWoodDoor(facing);
+                    case 0: return new GenericPublicDoor(facing, 0x675, 0xEC, 0xF3);
+                    case 1: return new GenericPublicDoor(facing, 0x685, 0xEC, 0xF3);
+                    case 2: return new GenericPublicDoor(facing, 0x695, 0xEB, 0xF2);
+                    case 3: return new GenericPublicDoor(facing, 0x6A5, 0xEA, 0xF1);
+                    case 4: return new GenericPublicDoor(facing, 0x6B5, 0xEA, 0xF1);
+                    case 5: return new GenericPublicDoor(facing, 0x6C5, 0xEC, 0xF3);
+                    case 6: return new GenericPublicDoor(facing, 0x6D5, 0xEA, 0xF1);
+                    case 7: return new GenericPublicDoor(facing, 0x6E5, 0xEA, 0xF1);
                 }
             }
             else if (itemID >= 0x314 && itemID < 0x364)
@@ -269,7 +272,7 @@ namespace Server.Custom.Systems.Reinos
             else if (itemID >= 0x1FED && itemID < 0x1FFD)
             {
                 DoorFacing facing = (DoorFacing)(((itemID - 0x1FED) / 2) % 8);
-                return new BarredMetalDoor2(facing);
+                return new GenericPublicDoor(facing, 0x1FED, 0xEC, 0xF3);
             }
             else if (itemID >= 0x241F && itemID < 0x2421)
             {
@@ -372,19 +375,13 @@ namespace Server.Custom.Systems.Reinos
 
         [Constructable]
         public GenericPublicDoor(DoorFacing facing, int baseItemID, int openedSound, int closedSound, bool autoAdjust)
-            : base(
-                baseItemID + (autoAdjust ? (2 * (int)facing) : 0),
-                baseItemID + 1 + (autoAdjust ? (2 * (int)facing) : 0),
-                openedSound,
-                closedSound,
-                BaseDoor.GetOffset(facing))
+            : base(baseItemID + (autoAdjust ? (2 * (int)facing) : 0), baseItemID + 1 + (autoAdjust ? (2 * (int)facing) : 0), openedSound, closedSound, BaseDoor.GetOffset(facing))
         {
             Locked = false;
             KeyValue = 0;
         }
 
-        public GenericPublicDoor(Serial serial)
-            : base(serial)
+        public GenericPublicDoor(Serial serial) : base(serial)
         {
         }
 
@@ -397,7 +394,7 @@ namespace Server.Custom.Systems.Reinos
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);
-            int version = reader.ReadInt();
+            reader.ReadInt();
             Locked = false;
             KeyValue = 0;
         }
