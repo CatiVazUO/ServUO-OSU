@@ -1,146 +1,77 @@
-using System;
-using System.Collections.Generic;
 using Server.Gumps;
 using Server.Mobiles;
 using Server.Network;
+using System;
+using System.Collections.Generic;
 
 namespace Server.Custom.Systems.Reinos
 {
-    public class ReinoExpansionGump : Gump
+    public partial class ReinoExpansionGump
     {
         private const int ButtonSelectLeftLotBase = 1000;
         private const int ButtonSelectRightLotBase = 10000;
-        private const int ButtonSelectWallBase = 20000;
         private const int ButtonSelectBuildingBase = 30000;
         private const int ButtonConstructionPrev = 40001;
         private const int ButtonConstructionConfirm = 40002;
         private const int ButtonConstructionNext = 40003;
 
-        private readonly PlayerMobile m_From;
-        private readonly int m_CityId;
-        private readonly int m_SelectedLotId;
-        private readonly int m_SelectedWallAreaId;
-        private readonly string m_SelectedBuildingId;
-        private readonly int m_BuildingPage;
-
-        public ReinoExpansionGump(PlayerMobile from, int cityId)
-            : this(from, cityId, -1, -1, String.Empty, 0)
-        {
-        }
-
-        public ReinoExpansionGump(PlayerMobile from, int cityId, int selectedLotId, int selectedWallAreaId, string selectedBuildingId, int buildingPage)
-            : base(0, 0)
-        {
-            m_From = from;
-            m_CityId = cityId;
-            m_SelectedLotId = selectedLotId;
-            m_SelectedWallAreaId = selectedWallAreaId;
-            m_SelectedBuildingId = selectedBuildingId ?? String.Empty;
-            m_BuildingPage = buildingPage < 0 ? 0 : buildingPage;
-
-            Closable = true;
-            Disposable = true;
-            Dragable = true;
-            Resizable = false;
-
-            BuildBase();
-            BuildExpansionPage();
-        }
-
-        private void BuildBase()
-        {
-            AddPage(0);
-            AddImageTiled(174, 151, 211, 565, 377);
-            AddImageTiled(385, 146, 870, 565, 384);
-            AddImageTiled(154, 645, 78, 89, 359);
-            AddImageTiled(1207, 645, 74, 90, 360);
-            AddImageTiled(1207, 128, 74, 82, 361);
-            AddImageTiled(154, 128, 74, 90, 362);
-            AddImageTiled(158, 208, 26, 441, 365);
-            AddImageTiled(1252, 205, 26, 441, 366);
-            AddImageTiled(223, 704, 985, 31, 367);
-            AddImageTiled(220, 130, 989, 31, 368);
-            AddImageTiled(1050, 193, 184, 21, 470);
-            AddImageTiled(203, 193, 178, 21, 469);
-            AddImageTiled(255, 193, 870, 21, 471);
-            AddImageTiled(380, 170, 6, 524, 365);
-
-            AddLabel(253, 170, 0, "Governo");
-            AddLabel(250, 231, 0, "Expansão");
-            AddButton(211, 225, 439, 439, 0, GumpButtonType.Reply, 0);
-
-            AddLabel(250, 270, 0, "Visão Geral");
-            AddLabel(250, 310, 0, "Tesouro");
-            AddLabel(250, 349, 0, "Manutenção");
-            AddLabel(250, 390, 0, "Empregados");
-            AddLabel(250, 429, 0, "Diplomacia");
-            AddLabel(250, 469, 0, "Visual");
-            AddLabel(250, 508, 0, "Slot 1");
-            AddLabel(250, 548, 0, "Slot 2");
-            AddLabel(250, 587, 0, "Slot 3");
-            AddLabel(250, 627, 0, "Slot 4");
-            AddLabel(250, 666, 0, "Slot 5");
-        }
-
         private void BuildExpansionPage()
         {
+            AddPage(4);
+
             List<ReinoLotDefinition> leftLots = ReinoExpansionSystem.GetVisibleLeftLotsForCity(m_CityId);
-            List<ReinoAreaDefinition> wallAreas = ReinoExpansionSystem.GetVisibleWallAreasForCity(m_CityId);
             List<ReinoLotDefinition> rightLots = ReinoExpansionSystem.GetUnavailableLotsForCity(m_CityId);
 
             ReinoLotDefinition selectedLot = ReinoExpansionSystem.GetLotDefinition(m_SelectedLotId);
             ReinoLotState selectedLotState = ReinoExpansionSystem.GetLotState(m_SelectedLotId);
-            ReinoAreaDefinition selectedWall = ReinoExpansionSystem.GetAreaDefinition(m_SelectedWallAreaId);
-            ReinoAreaState selectedWallState = ReinoExpansionSystem.GetAreaState(m_SelectedWallAreaId);
 
-            AddLabel(789, 173, 0, "Expansão");
-            AddLabel(554, 232, 0, "Lotes Disponíveis");
-            AddLabel(980, 232, 0, "Lotes Não Disponíveis");
+            AddLabel(789, 173, 0, @"Expansão");
+            AddLabel(554, 232, 0, @"Lotes Disponíveis");
+            AddLabel(980, 232, 0, @"Lotes Não Disponíveis");
             AddImageTiled(407, 261, 825, 5, 367);
-            AddImageTiled(814, 225, 6, 470, 365);
+            AddImageTiled(814, 225, 6, 258, 365);
             AddImageTiled(407, 483, 825, 5, 367);
-            AddLabel(554, 456, 0, "Construções");
-            AddLabel(1001, 455, 0, "Para Limpar");
+            AddLabel(482, 496, 0, @"Construções");
 
-            int yLeft = 278;
-            int leftIndex = 0;
-
-            for (int i = 0; i < leftLots.Count && leftIndex < 8; i++, leftIndex++)
+            int[] leftY = new int[] { 278, 303, 328, 352 };
+            for (int i = 0; i < leftLots.Count && i < leftY.Length; i++)
             {
                 ReinoLotDefinition lot = leftLots[i];
-                ReinoLotState st = ReinoExpansionSystem.GetLotState(lot.LotId);
-                AddButton(421, yLeft + (leftIndex * 25) + 3, 536, 435, ButtonSelectLeftLotBase + lot.LotId, GumpButtonType.Reply, 0);
-                AddLabel(449, yLeft + (leftIndex * 25), 0, ReinoExpansionSystem.GetLotListLabel(lot, st));
+                ReinoLotState state = ReinoExpansionSystem.GetLotState(lot.LotId);
+
+                AddButton(421, leftY[i] + 3, 536, 435, ButtonSelectLeftLotBase + lot.LotId, Server.Gumps.GumpButtonType.Reply, 0);
+                AddLabel(449, leftY[i], 0, ReinoExpansionSystem.GetLotListLabel(lot, state));
             }
 
-            for (int i = 0; i < wallAreas.Count && leftIndex < 8; i++, leftIndex++)
-            {
-                ReinoAreaDefinition area = wallAreas[i];
-                ReinoAreaState st = ReinoExpansionSystem.GetAreaState(area.AreaId);
-                AddButton(421, yLeft + (leftIndex * 25) + 3, 536, 435, ButtonSelectWallBase + area.AreaId, GumpButtonType.Reply, 0);
-                AddLabel(449, yLeft + (leftIndex * 25), 0, ReinoExpansionSystem.GetWallAreaLabel(area, st));
-            }
+            int[] rightColumn1Y = new int[] { 278, 303, 328, 352, 377, 402 };
+            int[] rightColumn2Y = new int[] { 278, 303, 328 };
 
-            int yRight = 278;
-            for (int i = 0; i < rightLots.Count && i < 8; i++)
+            for (int i = 0; i < rightLots.Count && i < rightColumn1Y.Length; i++)
             {
                 ReinoLotDefinition lot = rightLots[i];
-                AddButton(854, yRight + (i * 25) + 3, 536, 435, ButtonSelectRightLotBase + lot.LotId, GumpButtonType.Reply, 0);
-                AddLabel(882, yRight + (i * 25), 0, lot.Name);
+                AddButton(854, rightColumn1Y[i] + 3, 536, 435, ButtonSelectRightLotBase + lot.LotId, Server.Gumps.GumpButtonType.Reply, 0);
+                AddLabel(882, rightColumn1Y[i], 0, lot.Name);
             }
 
-            string leftHtml = "<BASEFONT COLOR=#000000>Selecione um lote disponível à esquerda para escolher uma construção, ou um lote à direita para ver o que falta limpar.</BASEFONT>";
-            string rightHtml = String.Empty;
+            for (int i = rightColumn1Y.Length; i < rightLots.Count && (i - rightColumn1Y.Length) < rightColumn2Y.Length; i++)
+            {
+                int index = i - rightColumn1Y.Length;
+                ReinoLotDefinition lot = rightLots[i];
+                AddButton(1076, rightColumn2Y[index] + 3, 536, 435, ButtonSelectRightLotBase + lot.LotId, Server.Gumps.GumpButtonType.Reply, 0);
+                AddLabel(1104, rightColumn2Y[index], 0, lot.Name);
+            }
+
+            string infoHtml = "<BASEFONT COLOR=#000000>Selecione um lote à esquerda para ver as construções possíveis, ou um lote à direita para ver o objetivo necessário para limpá-lo.</BASEFONT>";
             List<ReinoConstructionDefinition> buildingOptions = new List<ReinoConstructionDefinition>();
-            int pageCount = 1;
             bool showConfirm = false;
+            bool showPrev = false;
+            bool showNext = false;
 
             if (selectedLot != null && selectedLotState != null)
             {
                 if (selectedLotState.Status == ReinoLotStatus.Locked)
                 {
-                    leftHtml = "<BASEFONT COLOR=#000000>Esse terreno ainda não está pronto para construir. Veja à direita o que o reino precisa fazer.</BASEFONT>";
-                    rightHtml = ReinoExpansionDefinitions.FormatObjectiveHtml(selectedLot, selectedLotState);
+                    infoHtml = ReinoExpansionDefinitions.FormatObjectiveHtml(selectedLot, selectedLotState);
                 }
                 else if (selectedLotState.Status == ReinoLotStatus.Available)
                 {
@@ -154,92 +85,65 @@ namespace Server.Custom.Systems.Reinos
                     {
                         buildingOptions.Add(only);
                         showConfirm = true;
-                        rightHtml = "<BASEFONT COLOR=#000000>Essa construção está abandonada. Se você confirmar, o reino iniciará a reativação.</BASEFONT>";
                     }
                 }
                 else if (selectedLotState.Status == ReinoLotStatus.UnderConstruction || selectedLotState.Status == ReinoLotStatus.Active)
                 {
                     ReinoConstructionDefinition built = ReinoExpansionDefinitions.GetBuilding(selectedLotState.ConstructionId);
                     if (built != null)
-                    {
-                        leftHtml = ReinoExpansionDefinitions.FormatConstructionHtml(built);
-                        rightHtml = "<BASEFONT COLOR=#000000><B>Status:</B> " + ReinoExpansionSystem.GetStatusLabel(selectedLotState.Status) + "</BASEFONT>";
-                    }
-                }
-            }
-            else if (selectedWall != null && selectedWallState != null)
-            {
-                if (selectedWallState.Status == ReinoLotStatus.Locked)
-                {
-                    leftHtml = "<BASEFONT COLOR=#000000>Essa área de muralha ainda não está liberada.</BASEFONT>";
-                    rightHtml = ReinoExpansionSystem.BuildWallRequirementHtml(selectedWall.CityId);
-                }
-                else if (selectedWallState.Status == ReinoLotStatus.Available)
-                {
-                    buildingOptions = ReinoExpansionDefinitions.GetBuildingsForArea(selectedWall);
-                    showConfirm = true;
-                    rightHtml = ReinoExpansionSystem.BuildWallRequirementHtml(selectedWall.CityId);
-                }
-                else if (selectedWallState.Status == ReinoLotStatus.Abandoned)
-                {
-                    ReinoConstructionDefinition only = ReinoExpansionDefinitions.GetBuilding(selectedWallState.ConstructionId);
-                    if (only != null)
-                    {
-                        buildingOptions.Add(only);
-                        showConfirm = true;
-                        rightHtml = "<BASEFONT COLOR=#000000>Essa muralha foi abandonada e pode ser reativada.</BASEFONT>";
-                    }
-                }
-                else if (selectedWallState.Status == ReinoLotStatus.UnderConstruction || selectedWallState.Status == ReinoLotStatus.Active)
-                {
-                    ReinoConstructionDefinition built = ReinoExpansionDefinitions.GetBuilding(selectedWallState.ConstructionId);
-                    if (built != null)
-                    {
-                        leftHtml = ReinoExpansionDefinitions.FormatConstructionHtml(built);
-                        rightHtml = "<BASEFONT COLOR=#000000><B>Status:</B> " + ReinoExpansionSystem.GetStatusLabel(selectedWallState.Status) + "</BASEFONT>";
-                    }
+                        infoHtml = ReinoExpansionDefinitions.FormatConstructionHtml(built);
                 }
             }
 
             if (buildingOptions.Count > 0)
             {
-                pageCount = (buildingOptions.Count + 5) / 6;
+                int pageCount = (buildingOptions.Count + 5) / 6;
                 int page = m_BuildingPage;
+
                 if (page < 0)
                     page = 0;
                 if (page >= pageCount)
                     page = pageCount - 1;
 
                 int start = page * 6;
-                int yBuild = 515;
+                int[] buildY = new int[] { 533, 558, 583, 607, 630, 655 };
 
-                for (int i = start; i < buildingOptions.Count && i < start + 6; i++)
+                for (int i = 0; i < 6; i++)
                 {
-                    ReinoConstructionDefinition def = buildingOptions[i];
-                    AddButton(422, yBuild + ((i - start) * 25) + 3, 536, 435, ButtonSelectBuildingBase + i, GumpButtonType.Reply, 0);
-                    AddLabel(450, yBuild + ((i - start) * 25), 0, def.Name);
+                    int realIndex = start + i;
+                    if (realIndex >= buildingOptions.Count)
+                        break;
+
+                    ReinoConstructionDefinition def = buildingOptions[realIndex];
+                    AddButton(486, buildY[i] + 3, 536, 435, ButtonSelectBuildingBase + i, Server.Gumps.GumpButtonType.Reply, 0);
+                    AddLabel(514, buildY[i], 0, def.Name);
                 }
 
                 ReinoConstructionDefinition selectedBuilding = null;
+
                 if (!String.IsNullOrWhiteSpace(m_SelectedBuildingId))
                     selectedBuilding = ReinoExpansionDefinitions.GetBuilding(m_SelectedBuildingId);
 
-                if (selectedBuilding == null && buildingOptions.Count > 0)
+                if (selectedBuilding == null && start < buildingOptions.Count)
                     selectedBuilding = buildingOptions[start];
 
                 if (selectedBuilding != null)
-                    leftHtml = ReinoExpansionDefinitions.FormatConstructionHtml(selectedBuilding);
+                    infoHtml = ReinoExpansionDefinitions.FormatConstructionHtml(selectedBuilding);
 
-                if (showConfirm)
-                {
-                    AddButton(396, 666, 453, 453, ButtonConstructionPrev, GumpButtonType.Reply, 0);
-                    AddButton(535, 666, 452, 452, ButtonConstructionNext, GumpButtonType.Reply, 0);
-                    AddButton(431, 667, 492, 492, ButtonConstructionConfirm, GumpButtonType.Reply, 0);
-                }
+                showPrev = page > 0;
+                showNext = (start + 6) < buildingOptions.Count;
             }
 
-            AddHtml(567, 503, 232, 186, leftHtml, false, false);
-            AddHtml(845, 504, 375, 182, rightHtml, false, false);
+            AddHtml(686, 503, 434, 186, infoHtml, false, false);
+
+            if (showPrev)
+                AddButton(399, 584, 453, 453, ButtonConstructionPrev, Server.Gumps.GumpButtonType.Reply, 0);
+
+            if (showNext)
+                AddButton(648, 584, 452, 452, ButtonConstructionNext, Server.Gumps.GumpButtonType.Reply, 0);
+
+            if (showConfirm)
+                AddButton(1141, 580, 492, 492, ButtonConstructionConfirm, Server.Gumps.GumpButtonType.Reply, 0);
         }
 
         public override void OnResponse(NetState sender, RelayInfo info)
@@ -257,29 +161,24 @@ namespace Server.Custom.Systems.Reinos
                 return;
             }
 
-            if (button >= ButtonSelectRightLotBase && button < ButtonSelectWallBase)
+            if (button >= ButtonSelectRightLotBase && button < ButtonSelectBuildingBase)
             {
                 int lotId = button - ButtonSelectRightLotBase;
                 from.SendGump(new ReinoExpansionGump(from, m_CityId, lotId, -1, String.Empty, 0));
                 return;
             }
 
-            if (button >= ButtonSelectWallBase && button < ButtonSelectBuildingBase)
-            {
-                int areaId = button - ButtonSelectWallBase;
-                from.SendGump(new ReinoExpansionGump(from, m_CityId, -1, areaId, String.Empty, 0));
-                return;
-            }
-
             if (button >= ButtonSelectBuildingBase && button < ButtonConstructionPrev)
             {
-                int index = button - ButtonSelectBuildingBase;
+                int slot = button - ButtonSelectBuildingBase;
                 List<ReinoConstructionDefinition> options = GetCurrentBuildingOptions();
+                int start = m_BuildingPage * 6;
+                int realIndex = start + slot;
 
-                if (index >= 0 && index < options.Count)
-                    from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, options[index].Id, m_BuildingPage));
+                if (realIndex >= 0 && realIndex < options.Count)
+                    from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, -1, options[realIndex].Id, m_BuildingPage));
                 else
-                    from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage));
+                    from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, -1, m_SelectedBuildingId, m_BuildingPage));
 
                 return;
             }
@@ -290,13 +189,14 @@ namespace Server.Custom.Systems.Reinos
                 if (page < 0)
                     page = 0;
 
-                from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, page));
+                from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, -1, m_SelectedBuildingId, page));
                 return;
             }
 
             if (button == ButtonConstructionNext)
             {
-                from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage + 1));
+                int page = m_BuildingPage + 1;
+                from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, -1, m_SelectedBuildingId, page));
                 return;
             }
 
@@ -308,11 +208,7 @@ namespace Server.Custom.Systems.Reinos
 
                 if (String.IsNullOrWhiteSpace(buildingId) && options.Count > 0)
                 {
-                    int page = m_BuildingPage;
-                    if (page < 0)
-                        page = 0;
-
-                    int start = page * 6;
+                    int start = m_BuildingPage * 6;
                     if (start < 0 || start >= options.Count)
                         start = 0;
 
@@ -321,14 +217,11 @@ namespace Server.Custom.Systems.Reinos
 
                 if (m_SelectedLotId > 0)
                     ReinoExpansionSystem.TryConfirmLotConstruction(from, m_CityId, m_SelectedLotId, buildingId, out message);
-                else if (m_SelectedWallAreaId > 0)
-                    ReinoExpansionSystem.TryConfirmAreaConstruction(from, m_CityId, m_SelectedWallAreaId, buildingId, out message);
                 else
-                    message = "Selecione um lote ou uma muralha primeiro.";
+                    message = "Selecione um lote primeiro.";
 
                 from.SendMessage(message);
-                from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, buildingId, m_BuildingPage));
-                return;
+                from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, -1, buildingId, m_BuildingPage));
             }
         }
 
@@ -345,23 +238,6 @@ namespace Server.Custom.Systems.Reinos
                 {
                     if (st.Status == ReinoLotStatus.Available)
                         list = ReinoExpansionDefinitions.GetBuildingsForLot(lot);
-                    else if (st.Status == ReinoLotStatus.Abandoned || st.Status == ReinoLotStatus.Active || st.Status == ReinoLotStatus.UnderConstruction)
-                    {
-                        ReinoConstructionDefinition built = ReinoExpansionDefinitions.GetBuilding(st.ConstructionId);
-                        if (built != null)
-                            list.Add(built);
-                    }
-                }
-            }
-            else if (m_SelectedWallAreaId > 0)
-            {
-                ReinoAreaDefinition area = ReinoExpansionSystem.GetAreaDefinition(m_SelectedWallAreaId);
-                ReinoAreaState st = ReinoExpansionSystem.GetAreaState(m_SelectedWallAreaId);
-
-                if (area != null && st != null)
-                {
-                    if (st.Status == ReinoLotStatus.Available)
-                        list = ReinoExpansionDefinitions.GetBuildingsForArea(area);
                     else if (st.Status == ReinoLotStatus.Abandoned || st.Status == ReinoLotStatus.Active || st.Status == ReinoLotStatus.UnderConstruction)
                     {
                         ReinoConstructionDefinition built = ReinoExpansionDefinitions.GetBuilding(st.ConstructionId);

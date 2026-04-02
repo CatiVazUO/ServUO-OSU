@@ -117,10 +117,12 @@ namespace Server.Custom.Systems.Rent
 
         private void EditSign(object obj)
         {
-            if (!(obj is TownHouseSign))
+            TownHouseSign sign = obj as TownHouseSign;
+            if (sign == null)
                 return;
 
-            new TownHouseSetupGump(Owner, (TownHouseSign)obj);
+            bool governmentReduced = sign.GovernmentManaged && sign.IsGovernmentManager(Owner) && Owner.AccessLevel == AccessLevel.Player;
+            new TownHouseSetupGump(Owner, sign, governmentReduced);
         }
 
         private void PrevType()

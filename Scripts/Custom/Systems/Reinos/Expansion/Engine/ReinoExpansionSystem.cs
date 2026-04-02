@@ -1373,10 +1373,26 @@ namespace Server.Custom.Systems.Reinos
             }
         }
 
+        private static Point3D GetLotSignLocation(ReinoLotDefinition lot)
+        {
+            if (lot == null)
+                return Point3D.Zero;
+
+            return new Point3D(lot.NorthWest.X + lot.Side - 2, lot.NorthWest.Y + lot.Side, lot.NorthWest.Z);
+        }
+
+        private static Point3D GetLotPostLocation(ReinoLotDefinition lot)
+        {
+            return GetLotSignLocation(lot);
+        }
+
         private static void EnsureLotSign(ReinoLotDefinition lot, ReinoLotState state)
         {
             if (lot == null || state == null)
                 return;
+
+            Point3D signLoc = GetLotSignLocation(lot);
+            Point3D postLoc = GetLotPostLocation(lot);
 
             Item existing = state.SignSerial > 0 ? World.FindItem((Serial)state.SignSerial) : null;
             ReinoLotSign sign = existing as ReinoLotSign;
@@ -1384,32 +1400,59 @@ namespace Server.Custom.Systems.Reinos
             if (sign == null || sign.Deleted)
             {
                 sign = new ReinoLotSign(lot.LotId, lot.CityId);
-                sign.MoveToWorld(lot.NorthWest, lot.Map);
+                sign.MoveToWorld(signLoc, lot.Map);
                 state.SignSerial = sign.Serial.Value;
             }
             else
             {
                 sign.LotId = lot.LotId;
                 sign.CityId = lot.CityId;
+                sign.MoveToWorld(signLoc, lot.Map);
             }
 
-            sign.Visible = !(state.Status == ReinoLotStatus.UnderConstruction || state.Status == ReinoLotStatus.Active || state.Status == ReinoLotStatus.Abandoned);
+            Item post = state.PostSerial > 0 ? World.FindItem((Serial)state.PostSerial) : null;
+            if (post == null || post.Deleted)
+            {
+                post = new Static(0x012A);
+                post.Movable = false;
+                post.MoveToWorld(postLoc, lot.Map);
+                state.PostSerial = post.Serial.Value;
+            }
+            else
+            {
+                post.MoveToWorld(postLoc, lot.Map);
+            }
+
+            bool visible = !(state.Status == ReinoLotStatus.UnderConstruction || state.Status == ReinoLotStatus.Active || state.Status == ReinoLotStatus.Abandoned);
+            sign.Visible = visible;
+            post.Visible = visible;
         }
 
         private static void DeleteLotSign(ReinoLotState state)
         {
-            if (state == null || state.SignSerial <= 0)
+            if (state == null)
                 return;
 
-            int serial = state.SignSerial;
-            Item sign = World.FindItem((Serial)serial);
-            if (sign != null && !sign.Deleted)
+            if (state.SignSerial > 0)
             {
-                m_InternalLotSignDeletes.Add(serial);
-                sign.Delete();
+                int serial = state.SignSerial;
+                Item sign = World.FindItem((Serial)serial);
+                if (sign != null && !sign.Deleted)
+                {
+                    m_InternalLotSignDeletes.Add(serial);
+                    sign.Delete();
+                }
+
+                state.SignSerial = 0;
             }
 
-            state.SignSerial = 0;
+            if (state.PostSerial > 0)
+            {
+                Item post = World.FindItem((Serial)state.PostSerial);
+                if (post != null && !post.Deleted)
+                    post.Delete();
+                state.PostSerial = 0;
+            }
         }
 
         public static void OnLotSignDeleted(int signSerial, int lotId)
@@ -1444,6 +1487,14 @@ namespace Server.Custom.Systems.Reinos
             if (npc != null && !npc.Deleted)
                 npc.Delete();
             state.NpcSerial = 0;
+
+            if (state.PostSerial > 0)
+            {
+                Item post = World.FindItem((Serial)state.PostSerial);
+                if (post != null && !post.Deleted)
+                    post.Delete();
+                state.PostSerial = 0;
+            }
 
             if (state.DoorSerials != null)
             {
@@ -1672,6 +1723,26 @@ namespace Server.Custom.Systems.Reinos
             return true;
         }
 
+        public static bool CleanLotForTesting(int lotId, out string message)
+        {
+            message = String.Empty;
+            ReinoLotDefinition lot = GetLotDefinition(lotId);
+            ReinoLotState state = GetLotState(lotId);
+
+            if (lot == null || state == null)
+            {
+                message = "Lote inválido.";
+                return false;
+            }
+
+            state.ObjectiveProgress = lot.Objective != null ? lot.Objective.RequiredAmount : 0;
+            state.Status = ReinoLotStatus.Available;
+            state.AvailableUntilUtc = DateTime.UtcNow + TimeSpan.FromDays(7.0);
+            EnsureLotSign(lot, state);
+            message = String.Format("Lote {0} ficou limpo e disponível para construção.", lotId);
+            return true;
+        }
+
         public static bool ResetLot(int lotId, out string message)
         {
             message = String.Empty;
@@ -1720,21 +1791,17 @@ namespace Server.Custom.Systems.Reinos
                 if (tpl == null)
                     continue;
 
-                ReinoRentalSign sign = new ReinoRentalSign();
-                sign.ReinoCityId = lot.CityId;
-                sign.ParentLotId = lot.LotId;
-                sign.ConstructionId = def.Id;
-                sign.TemplateId = tpl.TemplateId;
-                sign.GroupTag = tpl.GroupTag;
-                sign.GovernorManaged = tpl.GovernorManaged;
+                TownHouseSign sign = new TownHouseSign();
+                sign.GovernmentManaged = tpl.GovernorManaged;
+                sign.GovernmentCityId = lot.CityId;
                 sign.GovernorConfigured = tpl.StartConfigured;
                 sign.AllowedCulturesCsv = tpl.DefaultAllowedCulturesCsv;
                 sign.AllowedCulture = "Todos";
                 sign.Name = String.IsNullOrWhiteSpace(tpl.DisplayName) ? def.Name : tpl.DisplayName;
                 sign.PropertyType = tpl.PropertyType;
                 sign.Price = tpl.DefaultPrice;
-                sign.RentByTime = tpl.DefaultRentByTime;
-                sign.RecurRent = tpl.DefaultRecurRent;
+                sign.RentByTime = TimeSpan.FromDays(7.0);
+                sign.RecurRent = true;
                 sign.Flip = tpl.Flip;
                 sign.CitizenCityId = ReinoElectionsSystem.GetCityName(lot.CityId);
                 sign.Locks = tpl.Lockdowns;
@@ -1758,7 +1825,6 @@ namespace Server.Custom.Systems.Reinos
             for (int i = 0; i < tpl.DoorTemplates.Length; i++)
             {
                 ReinoRentalDoorTemplate d = tpl.DoorTemplates[i];
-
                 if (d == null)
                     continue;
 
@@ -1769,18 +1835,14 @@ namespace Server.Custom.Systems.Reinos
                 door.ClosedSound = d.ClosedSound;
                 door.Offset = d.Offset;
                 door.ItemID = d.ClosedID;
-                door.KeyValue = 0;
                 door.Locked = false;
-
+                door.KeyValue = 0;
                 door.MoveToWorld(new Point3D(anchor.X + d.X, anchor.Y + d.Y, anchor.Z + d.Z), map);
-
-                // enquanto ninguém alugou, ela já nasce aberta
                 door.Open = true;
 
                 foreach (Item item in door.GetItemsInRange(1))
                 {
                     BaseDoor other = item as BaseDoor;
-
                     if (other != null && other != door && other.Z == door.Z)
                     {
                         door.Link = other;
@@ -2116,7 +2178,7 @@ namespace Server.Custom.Systems.Reinos
                 using (FileStream fs = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.None))
                 using (BinaryWriter bw = new BinaryWriter(fs))
                 {
-                    bw.Write(3);
+                    bw.Write(4);
                     bw.Write(m_NextLotId);
                     bw.Write(m_NextAreaId);
 
@@ -2198,6 +2260,7 @@ namespace Server.Custom.Systems.Reinos
                         bw.Write(st.NextStageUtc.ToBinary());
                         bw.Write(st.ReactivateReadyUtc.ToBinary());
                         bw.Write(st.SignSerial);
+                        bw.Write(st.PostSerial);
                         bw.Write(st.MultiSerial);
                         bw.Write(st.NpcSerial);
                         int doorCount = st.DoorSerials != null ? st.DoorSerials.Count : 0;
@@ -2318,6 +2381,7 @@ namespace Server.Custom.Systems.Reinos
                         st.NextStageUtc = DateTime.FromBinary(br.ReadInt64());
                         st.ReactivateReadyUtc = DateTime.FromBinary(br.ReadInt64());
                         st.SignSerial = br.ReadInt32();
+                        st.PostSerial = version >= 4 ? br.ReadInt32() : 0;
                         st.MultiSerial = br.ReadInt32();
                         st.NpcSerial = br.ReadInt32();
                         int doorCount = br.ReadInt32();

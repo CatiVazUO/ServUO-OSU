@@ -29,7 +29,7 @@ namespace Server.Custom.Systems.Reinos
         }
 
         [Constructable]
-        public ReinoLotSign(int lotId, int cityId) : base(0xBD2)
+        public ReinoLotSign(int lotId, int cityId) : base(0x0BD1)
         {
             m_LotId = lotId;
             m_CityId = cityId;

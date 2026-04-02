@@ -41,6 +41,7 @@ namespace Server.Custom.Systems.Rent
         public enum TargetType { SignLoc, MinZ, MaxZ, BlockOne, BlockTwo }
 
         private readonly TownHouseSign c_Sign;
+        private readonly bool c_GovernmentReduced;
 
         private bool RentOnly
         {
@@ -51,12 +52,17 @@ namespace Server.Custom.Systems.Rent
             }
         }
 
-        public TownHouseSetupGump(Mobile m, TownHouseSign sign) : base(m, 0, 0)
+        public TownHouseSetupGump(Mobile m, TownHouseSign sign) : this(m, sign, false)
+        {
+        }
+
+        public TownHouseSetupGump(Mobile m, TownHouseSign sign, bool governmentReduced) : base(m, 0, 0)
         {
             m.CloseGump(typeof(TownHouseSetupGump));
             c_Sign = sign;
+            c_GovernmentReduced = governmentReduced && sign != null && sign.GovernmentManaged && m.AccessLevel == AccessLevel.Player;
 
-            while (RentOnly && c_Sign.PriceType == "Sale")
+            while (!c_GovernmentReduced && RentOnly && c_Sign.PriceType == "Sale")
                 c_Sign.NextPriceType();
 
             if (c_Sign != null && c_Sign.Map != null && c_Sign.Map != Map.Internal && c_Sign.RootParent == null)
@@ -71,6 +77,53 @@ namespace Server.Custom.Systems.Rent
             if (c_Sign == null)
                 return;
 
+            if (c_GovernmentReduced)
+                BuildGovernmentGump();
+            else
+                BuildFullGump();
+        }
+
+        private void BuildGovernmentGump()
+        {
+            AddPage(0);
+            AddImageTiled(276, 132, 450, 338, 398);
+            AddImageTiled(716, 138, 25, 321, 369);
+            AddImageTiled(254, 140, 26, 320, 370);
+            AddImageTiled(269, 115, 450, 25, 371);
+            AddImageTiled(281, 459, 443, 30, 372);
+            AddImage(246, 107, 415);
+            AddImage(679, 105, 414);
+            AddImage(249, 425, 412);
+            AddImage(680, 423, 413);
+            AddLabel(453, 147, 0, @"OSU Houses");
+            AddImage(297, 236, 443);
+            AddImage(297, 363, 443);
+
+            AddLabel(317, 181, 0, @"Imóvel:");
+            AddLabel(390, 181, 0, c_Sign.Name);
+
+            AddTextField(424, 204, 155, 20, 0, 0, "Price", c_Sign.Price.ToString());
+            AddLabel(317, 203, 0, @"Valor Semanal:");
+            AddButton(604, 204, 559, 559, "Price", new GumpCallback(Price));
+
+            DrawCultureButton(384, 269, "Mataluns");
+            DrawCultureButton(384, 319, "Kamay");
+            DrawCultureButton(520, 269, "Sarangs");
+            DrawCultureButton(520, 319, "Zorteros");
+            DrawCultureButton(639, 269, "Todos");
+
+            AddLabel(315, 278, 0, @"Mataluns");
+            AddLabel(317, 331, 0, @"Kamay");
+            AddLabel(454, 278, 0, @"Sarangs");
+            AddLabel(456, 331, 0, @"Zorteros");
+            AddLabel(591, 278, 0, @"Todos");
+
+            AddButton(599, 412, 559, 559, "GovernmentSave", new GumpCallback(GovernmentSave));
+            AddLabel(518, 412, 0, @"Salvar Casa");
+        }
+
+        private void BuildFullGump()
+        {
             AddImageTiled(275, 131, 450, 640, 398);
             AddImageTiled(716, 138, 25, 607, 369);
             AddImageTiled(254, 140, 26, 618, 370);
@@ -123,14 +176,11 @@ namespace Server.Custom.Systems.Rent
                 AddButton(596, 456, 559, 559, "Secures", new GumpCallback(Secures));
             }
 
-
             string shownPriceType = c_Sign.PriceType;
-
             if (RentOnly && shownPriceType == "Sale")
                 shownPriceType = "Daily";
 
             AddLabel(480, 516, 0, shownPriceType == "Sale" ? "Venda" : (shownPriceType == "Daily" ? "Diária" : (shownPriceType == "Weekly" ? "Semanal" : "Mensal")));
-
             AddButton(410, 513, 453, 453, "LengthDown", new GumpCallback(PriceDown));
             AddButton(570, 513, 452, 452, "LengthUp", new GumpCallback(PriceUp));
 
@@ -139,11 +189,11 @@ namespace Server.Custom.Systems.Rent
             AddButton(602, 556, 559, 559, "Price", new GumpCallback(Price));
 
             AddImage(296, 583, 443);
-            DrawCultureButton(379, 605, "Mataluns", "Mataluns");
-            DrawCultureButton(379, 653, "Kamay", "Kamay");
-            DrawCultureButton(521, 607, "Sarangs", "Sarangs");
-            DrawCultureButton(521, 655, "Zorteros", "Zorteros");
-            DrawCultureButton(642, 609, "Todos", "Todos");
+            DrawCultureButton(379, 605, "Mataluns");
+            DrawCultureButton(379, 653, "Kamay");
+            DrawCultureButton(521, 607, "Sarangs");
+            DrawCultureButton(521, 655, "Zorteros");
+            DrawCultureButton(642, 609, "Todos");
             AddLabel(314, 615, 0, "Mataluns");
             AddLabel(316, 659, 0, "Kamay");
             AddLabel(455, 617, 0, "Sarangs");
@@ -154,16 +204,16 @@ namespace Server.Custom.Systems.Rent
             AddLabel(419, 734, 0, c_Sign.Owned ? "Salvar Alterações" : (c_Sign.PropertyType == OSUPropertyType.Tomb ? "Criar Tumba" : (c_Sign.PropertyType == OSUPropertyType.Commercial ? "Criar Comercial" : "Criar Casa")));
         }
 
-        private void DrawCultureButton(int x, int y, string cultureValue, string label)
+        private void DrawCultureButton(int x, int y, string cultureValue)
         {
-            bool selected = String.Equals(c_Sign.AllowedCulture, cultureValue, StringComparison.OrdinalIgnoreCase);
+            bool selected = TownHouseSign.ContainsCulture(c_Sign.AllowedCulturesCsv, cultureValue);
             AddButton(x, y, selected ? 440 : 442, selected ? 440 : 442, "Culture " + cultureValue, new GumpStateCallback(CultureSelect), cultureValue);
         }
 
         private string GetNameLabel()
         {
             if (c_Sign.PropertyType == OSUPropertyType.Commercial)
-                return "Nome da Lojal:";
+                return "Nome da Loja:";
             if (c_Sign.PropertyType == OSUPropertyType.Tomb)
                 return "Nome da Lápide:";
             return "Nome da Casa:";
@@ -196,7 +246,8 @@ namespace Server.Custom.Systems.Rent
         {
             if (obj is string)
             {
-                c_Sign.AllowedCulture = (string)obj;
+                c_Sign.AllowedCulturesCsv = TownHouseSign.ToggleCulture(c_Sign.AllowedCulturesCsv, (string)obj);
+                c_Sign.AllowedCulture = "Todos";
                 NewGump();
             }
         }
@@ -277,6 +328,18 @@ namespace Server.Custom.Systems.Rent
             NewGump();
         }
 
+        private void GovernmentSave()
+        {
+            c_Sign.RentByTime = TimeSpan.FromDays(7.0);
+            c_Sign.RecurRent = true;
+            c_Sign.Price = GetTextFieldInt("Price");
+            c_Sign.AllowedCulture = "Todos";
+            c_Sign.AllowedCulturesCsv = TownHouseSign.NormalizeCulturesCsv(c_Sign.AllowedCulturesCsv);
+            c_Sign.GovernorConfigured = true;
+            Owner.SendMessage("Casa configurada pelo governo.");
+            OnClose();
+        }
+
         private void ClaimOrSave()
         {
             Name();
@@ -285,6 +348,8 @@ namespace Server.Custom.Systems.Rent
                 Secures();
 
             Price();
+            c_Sign.AllowedCulture = "Todos";
+            c_Sign.AllowedCulturesCsv = TownHouseSign.NormalizeCulturesCsv(c_Sign.AllowedCulturesCsv);
 
             while (RentOnly && c_Sign.PriceType == "Sale")
                 c_Sign.NextPriceType();

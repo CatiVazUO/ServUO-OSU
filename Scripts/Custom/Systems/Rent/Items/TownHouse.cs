@@ -135,10 +135,16 @@ namespace Server.Custom.Systems.Rent
             }
         }
 
-		public override int GetNewVendorSystemMaxVendors()
-		{
-			return 50;
-		}
+        public override int GetNewVendorSystemMaxVendors()
+        {
+            if (c_Sign == null)
+                return 0;
+
+            if (c_Sign.PropertyType == OSUPropertyType.Commercial)
+                return 2;
+
+            return 0;
+        }
 
         public override int GetAosMaxSecures()
         {

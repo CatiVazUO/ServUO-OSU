@@ -29,6 +29,8 @@ namespace Server.Custom.Systems.Reinos
             CommandSystem.Register("ReinoLotInfo", AccessLevel.GameMaster, OnLotInfo);
             CommandSystem.Register("ReinoLotProgress", AccessLevel.GameMaster, OnLotProgress);
             CommandSystem.Register("ReinoLotReset", AccessLevel.GameMaster, OnLotReset);
+            CommandSystem.Register("ReinoLotClean", AccessLevel.GameMaster, OnLotClean);
+            CommandSystem.Register("ReinoRecursosAddAll", AccessLevel.GameMaster, OnAddAllResources);
         }
 
         private static bool TryParseCity(string raw, out int cityId)
@@ -36,6 +38,60 @@ namespace Server.Custom.Systems.Reinos
             return ReinoExpansionSystem.TryParseCityId(raw, out cityId);
         }
 
+
+        private static void OnAddAllResources(CommandEventArgs e)
+        {
+            if (e.Arguments == null || e.Arguments.Length < 2)
+            {
+                e.Mobile.SendMessage("Use [ReinoRecursosAddAll <cidade> <valor>.");
+                return;
+            }
+
+            int cityId;
+            if (!TryParseCity(e.Arguments[0], out cityId))
+            {
+                e.Mobile.SendMessage("Cidade inválida.");
+                return;
+            }
+
+            int amount;
+            if (!Int32.TryParse(e.Arguments[1], out amount))
+            {
+                e.Mobile.SendMessage("Valor inválido.");
+                return;
+            }
+
+            ReinoExpansionSystem.AddLedgerResource(cityId, ReinoResourceType.Wood, amount);
+            ReinoExpansionSystem.AddLedgerResource(cityId, ReinoResourceType.Iron, amount);
+            ReinoExpansionSystem.AddLedgerResource(cityId, ReinoResourceType.Cloth, amount);
+            ReinoExpansionSystem.AddLedgerResource(cityId, ReinoResourceType.Gold, amount);
+            e.Mobile.SendMessage("Recursos ajustados. {0}: {1}", ReinoElectionsSystem.GetCityName(cityId), ReinoExpansionSystem.GetLedger(cityId).GetDebugLine());
+        }
+
+        private static void OnLotClean(CommandEventArgs e)
+        {
+            if (e.Arguments == null || e.Arguments.Length < 1)
+            {
+                e.Mobile.SendMessage("Use [ReinoLotClean <idDoLote>.");
+                return;
+            }
+
+            int lotId;
+            if (!Int32.TryParse(e.Arguments[0], out lotId))
+            {
+                e.Mobile.SendMessage("ID inválido.");
+                return;
+            }
+
+            string message;
+            if (!ReinoExpansionSystem.CleanLotForTesting(lotId, out message))
+            {
+                e.Mobile.SendMessage(message);
+                return;
+            }
+
+            e.Mobile.SendMessage(message);
+        }
         private static void OnAreaAdd(CommandEventArgs e)
         {
             if (e.Arguments == null || e.Arguments.Length < 1)

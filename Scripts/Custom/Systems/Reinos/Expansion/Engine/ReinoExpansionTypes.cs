@@ -270,6 +270,7 @@ namespace Server.Custom.Systems.Reinos
         public bool UseMultiDoors;
         public TimeSpan ReactivateDuration;
         public bool Permanent;
+        public int MaintenancePriority;
         public ReinoRentalTemplate[] RentalTemplates;
 
         public ReinoConstructionDefinition()
@@ -295,6 +296,7 @@ namespace Server.Custom.Systems.Reinos
             UseMultiDoors = true;
             ReactivateDuration = TimeSpan.FromDays(3.0);
             Permanent = false;
+            MaintenancePriority = 5;
             RentalTemplates = new ReinoRentalTemplate[0];
         }
 
@@ -503,6 +505,7 @@ namespace Server.Custom.Systems.Reinos
         public int SignSerial;
         public int MultiSerial;
         public int NpcSerial;
+        public int PostSerial;
         public List<int> DoorSerials;
         public List<int> RentalSignSerials;
 

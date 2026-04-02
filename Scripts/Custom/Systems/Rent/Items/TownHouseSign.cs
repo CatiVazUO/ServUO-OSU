@@ -33,7 +33,11 @@ namespace Server.Custom.Systems.Rent
 		private bool m_Flip;
         private OSUPropertyType m_PropertyType;
         private string m_AllowedCulture;
+        private string m_AllowedCulturesCsv;
         private string m_CitizenCityId;
+        private bool m_GovernmentManaged;
+        private int m_GovernmentCityId;
+        private bool m_GovernorConfigured;
 
         private int m_TombSelectedItemID;
         private int m_TombSelectedGumpID;
@@ -130,6 +134,34 @@ namespace Server.Custom.Systems.Rent
         {
             get { return m_CitizenCityId; }
             set { m_CitizenCityId = value; InvalidateProperties(); }
+        }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public string AllowedCulturesCsv
+        {
+            get { return m_AllowedCulturesCsv; }
+            set { m_AllowedCulturesCsv = NormalizeCulturesCsv(value); InvalidateProperties(); }
+        }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public bool GovernmentManaged
+        {
+            get { return m_GovernmentManaged; }
+            set { m_GovernmentManaged = value; InvalidateProperties(); }
+        }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int GovernmentCityId
+        {
+            get { return m_GovernmentCityId; }
+            set { m_GovernmentCityId = value; InvalidateProperties(); }
+        }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public bool GovernorConfigured
+        {
+            get { return m_GovernorConfigured; }
+            set { m_GovernorConfigured = value; InvalidateProperties(); }
         }
 
         [CommandProperty( AccessLevel.GameMaster )]
@@ -491,6 +523,10 @@ namespace Server.Custom.Systems.Rent
 			c_RentByTime = TimeSpan.Zero;
 			c_RecurRent = true;
             m_CitizenCityId = String.Empty;
+            m_AllowedCulturesCsv = "Todos";
+            m_GovernmentManaged = false;
+            m_GovernmentCityId = -1;
+            m_GovernorConfigured = true;
 
             m_PropertyType = OSUPropertyType.House;
 			m_AllowedCulture = "Todos";
@@ -722,8 +758,8 @@ namespace Server.Custom.Systems.Rent
 
                 if (m.AccessLevel == AccessLevel.Player)
                 {
-                    m.SendMessage( "A total of " + price.ToString() + " copper coins has been withdrawn from your bank box." );
-					m.SendMessage("Para definir uma chave é necessário dar 2 cliques numa chave em branco e apontar sua porta. Para trancar, repita com a chave já definida");
+                    m.SendMessage( "Um total de " + price.ToString() + " moedas de outro foi retirado do seu banco." );
+					m.SendMessage("Para trancar as portas, clique em casa uma delas e defina as permissões.");
                     OnRentPaid();
                 }
 
@@ -810,20 +846,101 @@ namespace Server.Custom.Systems.Rent
             }
         }
 
+        public static string NormalizeCulturesCsv(string csv)
+        {
+            if (String.IsNullOrWhiteSpace(csv))
+                return "Todos";
+
+            string[] parts = csv.Split(new char[] { ',', ';', '|' }, StringSplitOptions.RemoveEmptyEntries);
+            List<string> list = new List<string>();
+
+            for (int i = 0; i < parts.Length; i++)
+            {
+                string part = parts[i].Trim();
+                if (part.Length == 0)
+                    continue;
+                if (String.Equals(part, "Todos", StringComparison.OrdinalIgnoreCase))
+                    return "Todos";
+                if (!list.Exists(s => String.Equals(s, part, StringComparison.OrdinalIgnoreCase)))
+                    list.Add(part);
+            }
+
+            return list.Count == 0 ? "Todos" : String.Join(",", list.ToArray());
+        }
+
+        public static bool ContainsCulture(string csv, string culture)
+        {
+            csv = NormalizeCulturesCsv(csv);
+            if (String.Equals(csv, "Todos", StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (String.IsNullOrWhiteSpace(culture))
+                return false;
+
+            string[] parts = csv.Split(',');
+            for (int i = 0; i < parts.Length; i++)
+                if (String.Equals(parts[i].Trim(), culture, StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+            return false;
+        }
+
+        public static string ToggleCulture(string csv, string culture)
+        {
+            csv = NormalizeCulturesCsv(csv);
+            if (String.IsNullOrWhiteSpace(culture))
+                return csv;
+            if (String.Equals(culture, "Todos", StringComparison.OrdinalIgnoreCase))
+                return "Todos";
+
+            List<string> list = new List<string>();
+            if (!String.Equals(csv, "Todos", StringComparison.OrdinalIgnoreCase))
+            {
+                string[] parts = csv.Split(',');
+                for (int i = 0; i < parts.Length; i++)
+                {
+                    string part = parts[i].Trim();
+                    if (part.Length > 0 && !list.Exists(s => String.Equals(s, part, StringComparison.OrdinalIgnoreCase)))
+                        list.Add(part);
+                }
+            }
+
+            int idx = list.FindIndex(s => String.Equals(s, culture, StringComparison.OrdinalIgnoreCase));
+            if (idx >= 0)
+                list.RemoveAt(idx);
+            else
+                list.Add(culture);
+
+            return list.Count == 0 ? "Todos" : String.Join(",", list.ToArray());
+        }
+
+        public bool IsGovernmentManager(Mobile m)
+        {
+            if (!(m is PlayerMobile))
+                return false;
+
+            if (m.AccessLevel >= AccessLevel.GameMaster)
+                return true;
+
+            if (!m_GovernmentManaged)
+                return false;
+
+            return Server.Custom.Systems.Reinos.ReinoAccessHelper.HasGovernmentAccess((PlayerMobile)m, m_GovernmentCityId);
+        }
+
         public bool IsCultureAllowed(Mobile m)
         {
             if (m == null)
                 return false;
 
-            if (string.IsNullOrWhiteSpace(m_AllowedCulture) || m_AllowedCulture == "Todos")
-                return true;
-
             PlayerMobile pm = m as PlayerMobile;
-
             if (pm == null)
                 return false;
 
-            return string.Equals(pm.OSUCultureId, m_AllowedCulture, StringComparison.OrdinalIgnoreCase);
+            string csv = NormalizeCulturesCsv(m_AllowedCulturesCsv);
+            if (!String.IsNullOrWhiteSpace(csv) && !String.Equals(csv, "Todos", StringComparison.OrdinalIgnoreCase))
+                return ContainsCulture(csv, pm.OSUCultureId);
+
+            return String.IsNullOrWhiteSpace(m_AllowedCulture) || m_AllowedCulture == "Todos" || String.Equals(pm.OSUCultureId, m_AllowedCulture, StringComparison.OrdinalIgnoreCase);
         }
 
         private void HideOtherSigns()
@@ -1740,10 +1857,9 @@ namespace Server.Custom.Systems.Rent
             if (m == null)
                 return;
 
-            // GM
             if (m.AccessLevel != AccessLevel.Player)
             {
-                new TownHouseSetupGump(m, this);
+                new TownHouseSetupGump(m, this, false);
 
                 if (Owned && c_House != null && c_House.Owner == m)
                     m.SendGump(new HouseGumpAOS(HouseGumpPageAOS.Information, m, c_House));
@@ -1754,7 +1870,25 @@ namespace Server.Custom.Systems.Rent
             if (!Visible)
                 return;
 
-            // TUMBAS: sempre tratar primeiro e sair do método
+            if (!m.InRange(GetWorldLocation(), 2))
+            {
+                m.SendLocalizedMessage(500446); // That is too far away.
+                return;
+            }
+
+            if (m_GovernmentManaged && IsGovernmentManager(m))
+            {
+                new TownHouseSetupGump(m, this, true);
+                new TownHouseConfirmGump(m, this);
+                return;
+            }
+
+            if (m_GovernmentManaged && !m_GovernorConfigured)
+            {
+                m.SendMessage("Este imóvel ainda não foi liberado pelo governo.");
+                return;
+            }
+
             if (IsTomb)
             {
                 if (!IsCultureAllowed(m))
@@ -1782,7 +1916,6 @@ namespace Server.Custom.Systems.Rent
                 return;
             }
 
-            // fluxo normal de casas/comercial
             if (!IsCultureAllowed(m))
                 new TownHouseConfirmGump(m, this);
             else if (CanBuyHouse(m) && CanOwnThisProperty(m))
@@ -1863,12 +1996,16 @@ namespace Server.Custom.Systems.Rent
 		{
 			base.Serialize( writer );
 
-			writer.Write( 19 );
+			writer.Write( 21 );
 
 			writer.Write(  m_Flip );
 			writer.Write( (int)m_PropertyType );
 			writer.Write( m_AllowedCulture );
             writer.Write((string)m_CitizenCityId);
+            writer.Write(m_AllowedCulturesCsv ?? "Todos");
+            writer.Write(m_GovernmentManaged);
+            writer.Write(m_GovernmentCityId);
+            writer.Write(m_GovernorConfigured);
             writer.Write(m_TombSelectedItemID);
             writer.Write(m_TombSelectedGumpID);
             writer.Write(m_TombExtraCost);
@@ -1956,6 +2093,10 @@ namespace Server.Custom.Systems.Rent
             m_Flip = false;
             m_PropertyType = OSUPropertyType.House;
             m_AllowedCulture = "Todos";
+            m_AllowedCulturesCsv = "Todos";
+            m_GovernmentManaged = false;
+            m_GovernmentCityId = -1;
+            m_GovernorConfigured = true;
             m_TombSelectedItemID = 0;
             m_TombSelectedGumpID = 0;
             m_TombExtraCost = 0;
@@ -1966,8 +2107,34 @@ namespace Server.Custom.Systems.Rent
             m_TombFinalized = false;
             m_Treasury = null;
 
-            // v20 em diante = formato correto novo
-            if (version >= 20)
+            // v21 em diante = formato correto novo com governo e múltiplos povos
+            if (version >= 21)
+            {
+                m_Flip = reader.ReadBool();
+                m_PropertyType = (OSUPropertyType)reader.ReadInt();
+                m_AllowedCulture = reader.ReadString();
+                m_CitizenCityId = reader.ReadString();
+                m_AllowedCulturesCsv = reader.ReadString();
+                m_GovernmentManaged = reader.ReadBool();
+                m_GovernmentCityId = reader.ReadInt();
+                m_GovernorConfigured = reader.ReadBool();
+
+                if (version >= 18)
+                {
+                    m_TombSelectedItemID = reader.ReadInt();
+                    m_TombSelectedGumpID = reader.ReadInt();
+                    m_TombExtraCost = reader.ReadInt();
+                    m_TombDeadName = reader.ReadString();
+                    m_TombBirthYear = reader.ReadString();
+                    m_TombDeathYear = reader.ReadString();
+                    m_TombMessage = reader.ReadString();
+                    m_TombFinalized = reader.ReadBool();
+                }
+
+                if (version >= 14)
+                    m_Treasury = (Container)reader.ReadItem();
+            }
+            else if (version >= 20)
             {
                 if (version >= 15)
                     m_Flip = reader.ReadBool();
@@ -2041,6 +2208,10 @@ namespace Server.Custom.Systems.Rent
                 if (version >= 14)
                     m_Treasury = (Container)reader.ReadItem();
             }
+
+            m_AllowedCulturesCsv = NormalizeCulturesCsv(m_AllowedCulturesCsv);
+            if (String.IsNullOrWhiteSpace(m_AllowedCulture))
+                m_AllowedCulture = "Todos";
 
             if (version >= 13)
             {

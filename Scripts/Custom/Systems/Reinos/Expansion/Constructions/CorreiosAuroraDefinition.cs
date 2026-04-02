@@ -14,7 +14,7 @@ namespace Server.Custom.Systems.Reinos
 
         // NPC
         private const string NPC_TYPE_NAME = "Server.Custom.Correios.CorreioNPC";
-        private static readonly Point3D NPC_OFFSET = new Point3D(7, 7, 0); // meio do lote 15x15
+        private static readonly Point3D NPC_OFFSET = new Point3D(7, 3, 0); // meio do lote 15x15
         private const int NPC_Z_OFFSET = 5; // sempre +5 do chão
 
         // Custos
@@ -35,20 +35,22 @@ namespace Server.Custom.Systems.Reinos
         // Multis
         private static readonly int[] STAGE_MULTI_IDS = new int[]
         {
-            0x68, // small brick house
-            0x6A, // small wood house
-            0x64  // small stone and plaster house
+            0xA3, 
+            0xA4, 
+            0xA5,
+            0xA6
         };
 
         private static readonly TimeSpan[] STAGE_DURATIONS = new TimeSpan[]
         {
-            TimeSpan.FromMinutes(1.0),
-            TimeSpan.FromMinutes(1.0),
-            TimeSpan.FromMinutes(1.0)
+            TimeSpan.FromSeconds(20.0),
+            TimeSpan.FromSeconds(20.0),
+            TimeSpan.FromSeconds(20.0),
+            TimeSpan.FromSeconds(20.0)
         };
 
-        private const int FINISHED_MULTI_ID = 0x8C;   // large patio house
-        private const int ABANDONED_MULTI_ID = 0x98;  // small tower
+        private const int FINISHED_MULTI_ID = 0xA7;   
+        private const int ABANDONED_MULTI_ID = 0xA8;  
         private static readonly TimeSpan REACTIVATE_DURATION = TimeSpan.FromMinutes(3.0);
 
         public static ReinoConstructionDefinition Create()
@@ -83,6 +85,7 @@ namespace Server.Custom.Systems.Reinos
             def.UseMultiDoors = true;
             def.ReactivateDuration = REACTIVATE_DURATION;
             def.Permanent = false;
+            def.MaintenancePriority = 5;
             return def;
         }
     }

@@ -51,45 +51,44 @@ namespace Server.Custom.Systems.Reinos
         {
             new ReinoRentalTemplate
             {
-                  TemplateId = "casa01",
-                    DisplayName = "Casa Terrea",
-                    PropertyType = OSUPropertyType.House,
-                    GroupTag = "Residential",
-                    SignOffset = new Point3D(9, 7, 7), //x, y, z placas
-                    BanLocOffset = new Point3D(8, 6, 0),
-                    BlockOffsets = new ReinoRentalRectOffset[]
-                    {
-                        new ReinoRentalRectOffset(0, 0, 11, 12), // x,y,width, height area da casa
-                    },
-                    DoorTemplates = new ReinoRentalDoorTemplate[]
-                    {
-                        new ReinoRentalDoorTemplate(8, 4, 7, 1775, 1776, 234, 241, new Point3D(1, -1, 0)), // x,y, z portas 
-                        new ReinoRentalDoorTemplate(8, 5, 7, 1773, 1774, 234, 241, new Point3D(1, 1, 0)), // oeste diminui x, sul aumenta y, 
-                    },
-                    MinZOffset = 7,
-                    MaxZOffset = 26,
-                    Lockdowns = 200,
-                    Secures = 5,
-                    DefaultPrice = 350,
-                    DefaultRentByTime = TimeSpan.FromDays(7.0),
-                    DefaultAllowedCulturesCsv = "Todos",
-                    GovernorManaged = true,
-                    StartConfigured = false
-
+                TemplateId = "casa01",
+                DisplayName = "Aurora Residential Casa 1",
+                PropertyType = OSUPropertyType.House,
+                GroupTag = "Residential",
+                SignOffset = new Point3D(9, 7, 7),
+                BanLocOffset = new Point3D(9, 7, 7),
+                BlockOffsets = new ReinoRentalRectOffset[]
+                {
+                    new ReinoRentalRectOffset(1, 1, 11, 12),
+                },
+                DoorTemplates = new ReinoRentalDoorTemplate[]
+                {
+                    new ReinoRentalDoorTemplate(8, 4, 7, 1775, 1776, 234, 241, new Point3D(1, -1, 0)),
+                    new ReinoRentalDoorTemplate(8, 5, 7, 1773, 1774, 234, 241, new Point3D(1, 1, 0)),
+                },
+                MinZOffset = 7,
+                MaxZOffset = 26,
+                Lockdowns = 200,
+                Secures = 5,
+                DefaultPrice = 50,
+                DefaultRentByTime = TimeSpan.FromDays(7.0),
+                DefaultAllowedCulturesCsv = "Todos",
+                GovernorManaged = true,
+                StartConfigured = false
             },
             new ReinoRentalTemplate
             {
-                TemplateId = "casa02",
-                DisplayName = "Casa Primeiro Andar",
+                TemplateId = "casa01",
+                DisplayName = "Aurora Residential Casa 2",
                 PropertyType = OSUPropertyType.House,
                 GroupTag = "Residential",
                 SignOffset = new Point3D(8, 5, 27),
-                BanLocOffset = new Point3D(7, 4, 0),
+                BanLocOffset = new Point3D(8, 5, 27),
                 BlockOffsets = new ReinoRentalRectOffset[]
                 {
-                    new ReinoRentalRectOffset(0, 0, 10, 11),
+                    new ReinoRentalRectOffset(1, 1, 10, 11),
                 },
-                 DoorTemplates = new ReinoRentalDoorTemplate[]
+                DoorTemplates = new ReinoRentalDoorTemplate[]
                 {
                     new ReinoRentalDoorTemplate(6, 6, 27, 1775, 1776, 234, 241, new Point3D(1, -1, 0)),
                 },
@@ -97,7 +96,7 @@ namespace Server.Custom.Systems.Reinos
                 MaxZOffset = 66,
                 Lockdowns = 300,
                 Secures = 8,
-                DefaultPrice = 450,
+                DefaultPrice = 80,
                 DefaultRentByTime = TimeSpan.FromDays(7.0),
                 DefaultAllowedCulturesCsv = "Todos",
                 GovernorManaged = true,
@@ -141,79 +140,10 @@ namespace Server.Custom.Systems.Reinos
                     new ReinoDoorDefinition(0, 3, 7, DoorFacing.EastCCW, true)
                 };
             def.ReactivateDuration = TimeSpan.FromMinutes(3.0);
-            def.Permanent = true;
+            def.Permanent = false;
+            def.MaintenancePriority = 1;
             def.RentalTemplates = RENTALS;
             return def;
-        }
-    }
-
-    public class ResidencialAuroraTestePlacedMulti : BaseMulti
-    {
-        private int m_ReferenceId;
-        private string m_ConstructionId;
-        private int m_StageIndex;
-
-        [CommandProperty(AccessLevel.GameMaster)]
-        public int ReferenceId
-        {
-            get { return m_ReferenceId; }
-            set { m_ReferenceId = value; }
-        }
-
-        [CommandProperty(AccessLevel.GameMaster)]
-        public string ConstructionId
-        {
-            get { return m_ConstructionId; }
-            set { m_ConstructionId = value; }
-        }
-
-        [CommandProperty(AccessLevel.GameMaster)]
-        public int StageIndex
-        {
-            get { return m_StageIndex; }
-            set { m_StageIndex = value; }
-        }
-
-        [Constructable]
-        public ResidencialAuroraTestePlacedMulti()
-            : this(0, String.Empty, -1)
-        {
-        }
-
-        public ResidencialAuroraTestePlacedMulti(int referenceId, string constructionId, int stageIndex)
-            : base(0xA3)
-        {
-            Name = "Residencial Aurora";
-
-            m_ReferenceId = referenceId;
-            m_ConstructionId = constructionId ?? String.Empty;
-            m_StageIndex = stageIndex;
-        }
-
-        public ResidencialAuroraTestePlacedMulti(Serial serial)
-            : base(serial)
-        {
-        }
-
-        public override void Serialize(GenericWriter writer)
-        {
-            base.Serialize(writer);
-
-            writer.Write(0);
-            writer.Write(m_ReferenceId);
-            writer.Write(m_ConstructionId);
-            writer.Write(m_StageIndex);
-        }
-
-        public override void Deserialize(GenericReader reader)
-        {
-            base.Deserialize(reader);
-
-            int version = reader.ReadInt();
-            m_ReferenceId = reader.ReadInt();
-            m_ConstructionId = reader.ReadString();
-            m_StageIndex = reader.ReadInt();
-
         }
     }
 }

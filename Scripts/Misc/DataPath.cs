@@ -17,7 +17,7 @@ namespace Server.Misc
         * Example:
         *  private static string CustomPath = @"C:\Program Files\Ultima Online";
         */
-		private static string CustomPath = @"D:\UO\Electronic Arts\Uo Clients\Ultima Online Classic Limpo";
+		private static string CustomPath = @"D:\UO\My Shards\OSU Servuo Transfer\ServUO OSU Client";
 
 		static DataPath()
 		{
