@@ -54,14 +54,26 @@ namespace Server.Custom.Systems.Postos
             e.Mobile.SendMessage("Baú: {0}", PostoSystem.GetStoredAmount(def.Id));
             e.Mobile.SendMessage("Protegido até UTC: {0}", st.ProtectedUntilUtc);
 
+            if (PostoSystem.IsContestActive(st))
+            {
+                e.Mobile.SendMessage("Disputa até UTC: {0}", st.ContestEndsUtc);
+                if (st.ContestScores != null)
+                {
+                    for (int i = 0; i < st.ContestScores.Count; i++)
+                    {
+                        PostoContestScore score = st.ContestScores[i];
+                        if (score == null)
+                            continue;
+
+                        e.Mobile.SendMessage("  {0}: {1}", PostoSystem.NormalizeCityId(score.CityId), score.Score);
+                    }
+                }
+            }
+
             if (npc != null && !npc.Deleted)
-            {
                 e.Mobile.SendMessage("NPC encontrado para esse posto.");
-            }
             else
-            {
                 e.Mobile.SendMessage("Nenhum NPC carregado encontrado para esse posto.");
-            }
         }
 
         private static void OnReset(CommandEventArgs e)

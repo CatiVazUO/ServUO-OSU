@@ -41,9 +41,10 @@ namespace Server.Custom.Systems.Postos
                 return;
             }
 
-            string progressText = PostoSystem.GetObjectiveProgressText(def, state);
             string htmlText = PostoSystem.BuildMainHtml(_from, def, state);
-            string objectiveTarget = def.ObjectiveDisplayName;
+            bool contest = PostoSystem.IsContestActive(state);
+            string objectiveTarget = contest ? "Disputa aberta" : def.ObjectiveDisplayName;
+            string progressText = contest ? "Veja o html" : PostoSystem.GetObjectiveProgressText(def, state);
 
             AddLabel(504, 225, 0, "Posto " + def.Name);
             AddImage(352, 240, 443);

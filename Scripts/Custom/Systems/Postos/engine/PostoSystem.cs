@@ -15,9 +15,11 @@ namespace Server.Custom.Systems.Postos
     public static class PostoSystem
     {
         private static readonly string FilePath = Path.Combine(Core.BaseDirectory, "Data", "OSU_Postos.bin");
+        private static readonly TimeSpan ContestDuration = TimeSpan.FromDays(3.0);
 
         private static readonly Dictionary<string, PostoState> m_States = new Dictionary<string, PostoState>(StringComparer.OrdinalIgnoreCase);
         private static readonly Dictionary<string, PostoKingdomResourceLedger> m_Ledgers = new Dictionary<string, PostoKingdomResourceLedger>(StringComparer.OrdinalIgnoreCase);
+        private static readonly List<PostoLeaderAlert> m_PendingLeaderAlerts = new List<PostoLeaderAlert>();
 
         public static void Initialize()
         {
@@ -25,30 +27,64 @@ namespace Server.Custom.Systems.Postos
             Load();
             EventSink.WorldSave += delegate { Save(); };
             EventSink.CreatureDeath += OnCreatureDeath;
+            EventSink.Login += OnLogin;
 
             Timer.DelayCall(
-                TimeSpan.FromHours(1.0),
-                TimeSpan.FromHours(1.0),
-                ProductionPulse);
+                TimeSpan.FromMinutes(5.0),
+                TimeSpan.FromMinutes(5.0),
+                SystemPulse);
         }
 
-        private static void ProductionPulse()
+        private static void SystemPulse()
         {
             foreach (PostoDefinition def in PostoRegistry.All)
             {
                 if (def == null)
                     continue;
 
+                PostoState state = GetState(def.Id);
+                ResolveContestIfNeeded(def, state);
                 TouchProduction(def.Id);
             }
+        }
+
+        private static void OnLogin(LoginEventArgs e)
+        {
+            PlayerMobile pm = e.Mobile as PlayerMobile;
+
+            if (pm == null || pm.Deleted || !pm.OSUReinoLeader)
+                return;
+
+            int leaderCityId = pm.OSUReinoLeaderCityId;
+            string leaderCityName = GetCityNameByIndex(leaderCityId);
+
+            if (String.IsNullOrWhiteSpace(leaderCityName))
+                return;
+
+            List<PostoLeaderAlert> alerts = new List<PostoLeaderAlert>();
+
+            for (int i = m_PendingLeaderAlerts.Count - 1; i >= 0; i--)
+            {
+                PostoLeaderAlert alert = m_PendingLeaderAlerts[i];
+
+                if (alert == null)
+                    continue;
+
+                if (!SameCity(alert.DefenderCityId, leaderCityName))
+                    continue;
+
+                alerts.Add(alert);
+                m_PendingLeaderAlerts.RemoveAt(i);
+            }
+
+            for (int i = alerts.Count - 1; i >= 0; i--)
+                SendLeaderAlertGump(pm, alerts[i]);
         }
 
         private static void EnsureDefaults()
         {
             foreach (PostoDefinition def in PostoRegistry.All)
-            {
                 EnsureState(def.Id);
-            }
 
             EnsureLedger("Aurora");
             EnsureLedger("Xetá");
@@ -87,6 +123,9 @@ namespace Server.Custom.Systems.Postos
                 state = new PostoState(postoId);
                 m_States[postoId] = state;
             }
+
+            if (state.ContestScores == null)
+                state.ContestScores = new List<PostoContestScore>();
 
             return state;
         }
@@ -226,6 +265,8 @@ namespace Server.Custom.Systems.Postos
             if (state == null)
                 return 0;
 
+            PostoDefinition def = GetDefinition(postoId);
+            ResolveContestIfNeeded(def, state);
             TouchProduction(postoId);
             return state.StoredAmount;
         }
@@ -237,6 +278,8 @@ namespace Server.Custom.Systems.Postos
 
             if (def == null || state == null)
                 return;
+
+            ResolveContestIfNeeded(def, state);
 
             if (String.IsNullOrWhiteSpace(state.OwnerCityId))
                 return;
@@ -252,8 +295,6 @@ namespace Server.Custom.Systems.Postos
                 return;
             }
 
-
-            // TEMPO CERTO POR DIAS 
             TimeSpan elapsed = now - state.LastProductionUtc;
             TimeSpan productionInterval = TimeSpan.FromDays(1.0);
 
@@ -275,32 +316,166 @@ namespace Server.Custom.Systems.Postos
             state.LastProductionUtc = state.LastProductionUtc.AddTicks(productionInterval.Ticks * cycles);
 
             if (state.StoredAmount != oldAmount)
-            RefreshPostoChests(postoId);
+                RefreshPostoChests(postoId);
+        }
 
+        public static bool IsContestActive(PostoState state)
+        {
+            return state != null
+                && !String.IsNullOrWhiteSpace(state.OwnerCityId)
+                && state.ContestScores != null
+                && state.ContestScores.Count > 0
+                && state.ContestEndsUtc > DateTime.UtcNow;
+        }
+
+        private static bool HasContestParticipant(PostoState state, string cityId)
+        {
+            if (state == null || state.ContestScores == null || String.IsNullOrWhiteSpace(cityId))
+                return false;
+
+            string normalized = NormalizeCityId(cityId);
+
+            for (int i = 0; i < state.ContestScores.Count; i++)
+            {
+                if (SameCity(state.ContestScores[i].CityId, normalized))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static int GetContestScore(PostoState state, string cityId)
+        {
+            if (state == null || state.ContestScores == null || String.IsNullOrWhiteSpace(cityId))
+                return 0;
+
+            for (int i = 0; i < state.ContestScores.Count; i++)
+            {
+                if (SameCity(state.ContestScores[i].CityId, cityId))
+                    return state.ContestScores[i].Score;
+            }
+
+            return 0;
+        }
+
+        private static void AddContestParticipant(PostoState state, string cityId)
+        {
+            if (state == null || String.IsNullOrWhiteSpace(cityId))
+                return;
+
+            if (state.ContestScores == null)
+                state.ContestScores = new List<PostoContestScore>();
+
+            if (HasContestParticipant(state, cityId))
+                return;
+
+            state.ContestScores.Add(new PostoContestScore(NormalizeCityId(cityId)));
+        }
+
+        private static void ClearContest(PostoState state)
+        {
+            if (state == null)
+                return;
+
+            state.ContestEndsUtc = DateTime.MinValue;
+            if (state.ContestScores == null)
+                state.ContestScores = new List<PostoContestScore>();
+            else
+                state.ContestScores.Clear();
+        }
+
+        private static string GetContestRemainingLabel(PostoState state)
+        {
+            if (!IsContestActive(state))
+                return String.Empty;
+
+            TimeSpan remaining = state.ContestEndsUtc - DateTime.UtcNow;
+            if (remaining < TimeSpan.Zero)
+                remaining = TimeSpan.Zero;
+
+            if (remaining.TotalDays >= 1.0)
+                return String.Format("{0}d {1}h", Math.Max(0, remaining.Days), Math.Max(0, remaining.Hours));
+
+            if (remaining.TotalHours >= 1.0)
+                return String.Format("{0}h {1}m", Math.Max(0, (int)remaining.TotalHours), Math.Max(0, remaining.Minutes));
+
+            return String.Format("{0}m", Math.Max(0, (int)Math.Ceiling(remaining.TotalMinutes)));
+        }
+
+        private static void ResolveContestIfNeeded(PostoDefinition def, PostoState state)
+        {
+            if (def == null || state == null)
+                return;
+
+            if (String.IsNullOrWhiteSpace(state.OwnerCityId))
+            {
+                ClearContest(state);
+                return;
+            }
+
+            if (state.ContestScores == null)
+                state.ContestScores = new List<PostoContestScore>();
+
+            if (state.ContestScores.Count == 0 || state.ContestEndsUtc == DateTime.MinValue)
+                return;
+
+            if (state.ContestEndsUtc > DateTime.UtcNow)
+                return;
+
+            string winnerCity = NormalizeCityId(state.OwnerCityId);
+            int bestScore = Int32.MinValue;
+            bool tie = false;
+
+            for (int i = 0; i < state.ContestScores.Count; i++)
+            {
+                PostoContestScore score = state.ContestScores[i];
+                if (score == null || String.IsNullOrWhiteSpace(score.CityId))
+                    continue;
+
+                if (score.Score > bestScore)
+                {
+                    bestScore = score.Score;
+                    winnerCity = NormalizeCityId(score.CityId);
+                    tie = false;
+                }
+                else if (score.Score == bestScore)
+                {
+                    tie = true;
+                }
+            }
+
+            if (tie)
+                winnerCity = NormalizeCityId(state.OwnerCityId);
+
+            state.OwnerCityId = winnerCity;
+            state.ProgressCityId = String.Empty;
+            state.ProgressValue = 0;
+            state.ProtectedUntilUtc = DateTime.UtcNow + def.ProtectionDelay;
+            state.LastProductionUtc = DateTime.UtcNow;
+            ClearContest(state);
+            RefreshPostoChests(def.Id);
         }
 
         public static string GetLockedHtmlForViewer(PlayerMobile viewer, PostoDefinition def, PostoState state)
         {
+            if (def == null || state == null)
+                return String.Empty;
+
+            if (IsContestActive(state))
+                return String.Empty;
+
             string viewerCity = GetCitizenCity(viewer);
 
             if (String.IsNullOrWhiteSpace(viewerCity) && viewer != null)
                 viewerCity = GetAmbassadorCity(viewer);
 
-            if (!String.IsNullOrWhiteSpace(state.OwnerCityId) &&
-                !SameCity(viewerCity, state.OwnerCityId) &&
-                DateTime.UtcNow < state.ProtectedUntilUtc)
+            if (!String.IsNullOrWhiteSpace(state.OwnerCityId)
+                && !SameCity(viewerCity, state.OwnerCityId)
+                && DateTime.UtcNow < state.ProtectedUntilUtc)
             {
                 return String.Format(
                     "Nós acabamos de fazer um acordo com o reino {0} para nos ajudar. Vamos ver se eles conseguem cumprir suas promessas de nos proteger primeiro.",
                     NormalizeCityId(state.OwnerCityId));
-            }
-
-            if (!String.IsNullOrWhiteSpace(state.ProgressCityId) &&
-                !SameCity(viewerCity, state.ProgressCityId))
-            {
-                return String.Format(
-                    "Já firmamos um acordo provisório com o reino {0}. Só vamos ouvir outra proposta depois que esse trato terminar ou falhar.",
-                    NormalizeCityId(state.ProgressCityId));
             }
 
             return String.Empty;
@@ -311,15 +486,17 @@ namespace Server.Custom.Systems.Postos
             if (def == null || state == null)
                 return "<BASEFONT COLOR=#000000>Posto inválido.";
 
+            ResolveContestIfNeeded(def, state);
             TouchProduction(def.Id);
 
-            string lockedHtml = GetLockedHtmlForViewer(viewer, def, state);
+            if (IsContestActive(state))
+                return BuildContestHtml(def, state);
 
+            string lockedHtml = GetLockedHtmlForViewer(viewer, def, state);
             if (!String.IsNullOrWhiteSpace(lockedHtml))
                 return lockedHtml;
 
             StringBuilder sb = new StringBuilder();
-
             sb.Append(def.StoryHtml);
             sb.Append("<br><br>");
             sb.Append("<BASEFONT COLOR=#000000><b>Objetivo:</b></BASEFONT> ");
@@ -333,8 +510,7 @@ namespace Server.Custom.Systems.Postos
             sb.Append(def.DailyYield);
             sb.Append(" ");
             sb.Append(GetResourceDisplayName(def.ResourceType));
-            sb.Append(" por dia");
-            sb.Append("<br>");
+            sb.Append(" por dia<br>");
 
             if (!String.IsNullOrWhiteSpace(state.OwnerCityId))
             {
@@ -345,7 +521,7 @@ namespace Server.Custom.Systems.Postos
 
             if (!String.IsNullOrWhiteSpace(state.ProgressCityId))
             {
-                sb.Append("<BASEFONT COLOR=#000000><b>Posto contestado por:</b></BASEFONT> ");
+                sb.Append("<BASEFONT COLOR=#000000><b>Acordo atual:</b></BASEFONT> ");
                 sb.Append(NormalizeCityId(state.ProgressCityId));
                 sb.Append("<br>");
             }
@@ -362,6 +538,58 @@ namespace Server.Custom.Systems.Postos
             return sb.ToString();
         }
 
+        private static string BuildContestHtml(PostoDefinition def, PostoState state)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(GetContestStoryHtml(def));
+            sb.Append("<br><br>");
+            sb.Append("<BASEFONT COLOR=#000000><b>Prazo da disputa:</b></BASEFONT> ");
+            sb.Append(GetContestRemainingLabel(state));
+            sb.Append(" restantes.<br>");
+            sb.Append("<BASEFONT COLOR=#000000><b>Alvo:</b></BASEFONT> ");
+            sb.Append(GetObjectiveVerb(def.ObjectiveType));
+            sb.Append(" ");
+            sb.Append(def.ObjectiveDisplayName);
+            sb.Append("<br>");
+            sb.Append("<BASEFONT COLOR=#000000><b>Placar atual:</b></BASEFONT><br>");
+
+            List<PostoContestScore> ordered = new List<PostoContestScore>(state.ContestScores ?? new List<PostoContestScore>());
+            ordered.Sort(delegate (PostoContestScore a, PostoContestScore b)
+            {
+                int scoreCompare = b.Score.CompareTo(a.Score);
+                if (scoreCompare != 0)
+                    return scoreCompare;
+
+                if (SameCity(a.CityId, state.OwnerCityId))
+                    return -1;
+
+                if (SameCity(b.CityId, state.OwnerCityId))
+                    return 1;
+
+                return String.Compare(NormalizeCityId(a.CityId), NormalizeCityId(b.CityId), StringComparison.OrdinalIgnoreCase);
+            });
+
+            for (int i = 0; i < ordered.Count; i++)
+            {
+                PostoContestScore score = ordered[i];
+                if (score == null)
+                    continue;
+
+                sb.Append("- ");
+                sb.Append(NormalizeCityId(score.CityId));
+                if (SameCity(score.CityId, state.OwnerCityId))
+                    sb.Append(" (defensor)");
+                sb.Append(": ");
+                sb.Append(score.Score);
+                sb.Append(" abatido(s)<br>");
+            }
+
+            sb.Append("<BASEFONT COLOR=#000000><b>Produção atual:</b></BASEFONT> ");
+            sb.Append(NormalizeCityId(state.OwnerCityId));
+            sb.Append(" continua recebendo os recursos até o fim da disputa.");
+            return sb.ToString();
+        }
+
         public static PostoActionType GetAvailableAction(PlayerMobile viewer, PostoDefinition def, PostoState state, out string buttonLabel, out string reason)
         {
             buttonLabel = String.Empty;
@@ -373,57 +601,86 @@ namespace Server.Custom.Systems.Postos
                 return PostoActionType.None;
             }
 
+            ResolveContestIfNeeded(def, state);
             string ambassadorCity = GetAmbassadorCity(viewer);
+            string citizenCity = GetCitizenCity(viewer);
+
+            if (IsContestActive(state))
+            {
+                if (String.IsNullOrWhiteSpace(ambassadorCity))
+                {
+                    if (HasContestParticipant(state, citizenCity))
+                        reason = "Seu reino já está na disputa. Agora os cidadãos devem garantir a melhor proteção.";
+                    else
+                        reason = "Somente um embaixador pode colocar um novo reino nesta disputa.";
+
+                    return PostoActionType.None;
+                }
+
+                if (HasContestParticipant(state, ambassadorCity))
+                {
+                    reason = SameCity(ambassadorCity, state.OwnerCityId)
+                        ? "Seu reino já defende este posto na disputa atual."
+                        : "Seu reino já entrou na disputa deste posto.";
+                    return PostoActionType.None;
+                }
+
+                buttonLabel = "Entrar na disputa";
+                return PostoActionType.AcceptAgreement;
+            }
 
             if (String.IsNullOrWhiteSpace(ambassadorCity))
             {
-                string citizenCity = GetCitizenCity(viewer);
-
                 if (!String.IsNullOrWhiteSpace(state.ProgressCityId) && SameCity(citizenCity, state.ProgressCityId))
                     reason = "Seu reino já aceitou o acordo. Agora os cidadãos precisam cumprir o objetivo.";
-
                 else
                     reason = "Somente um embaixador pode firmar ou concluir acordos de posto.";
 
                 return PostoActionType.None;
             }
 
-            if (!String.IsNullOrWhiteSpace(state.OwnerCityId) &&
-                SameCity(ambassadorCity, state.OwnerCityId) &&
-                String.IsNullOrWhiteSpace(state.ProgressCityId))
+            if (!String.IsNullOrWhiteSpace(state.OwnerCityId)
+                && SameCity(ambassadorCity, state.OwnerCityId)
+                && String.IsNullOrWhiteSpace(state.ProgressCityId))
             {
                 reason = "Este posto já pertence ao seu reino.";
                 return PostoActionType.None;
             }
 
-            if (!String.IsNullOrWhiteSpace(state.OwnerCityId) &&
-                !SameCity(ambassadorCity, state.OwnerCityId) &&
-                DateTime.UtcNow < state.ProtectedUntilUtc)
+            if (!String.IsNullOrWhiteSpace(state.OwnerCityId)
+                && !SameCity(ambassadorCity, state.OwnerCityId)
+                && DateTime.UtcNow < state.ProtectedUntilUtc)
             {
                 reason = "Este posto ainda está protegido pelo acordo recém-firmado.";
                 return PostoActionType.None;
             }
 
-            if (String.IsNullOrWhiteSpace(state.ProgressCityId))
+            if (String.IsNullOrWhiteSpace(state.OwnerCityId))
             {
-                buttonLabel = "Aceitar acordo";
-                return PostoActionType.AcceptAgreement;
-            }
+                if (String.IsNullOrWhiteSpace(state.ProgressCityId))
+                {
+                    buttonLabel = "Aceitar acordo";
+                    return PostoActionType.AcceptAgreement;
+                }
 
-            if (!SameCity(state.ProgressCityId, ambassadorCity))
-            {
-                reason = "Outro reino já está negociando este posto.";
+                if (!SameCity(state.ProgressCityId, ambassadorCity))
+                {
+                    reason = "Outro reino já está negociando este posto.";
+                    return PostoActionType.None;
+                }
+
+                if (state.ProgressValue >= def.ObjectiveAmount)
+                {
+                    buttonLabel = "Conquistar Posto";
+                    return PostoActionType.Conquer;
+                }
+
+                reason = "O acordo já foi aceito pelo seu reino. Falta cumprir o objetivo.";
                 return PostoActionType.None;
             }
 
-            if (state.ProgressValue >= def.ObjectiveAmount)
-            {
-                buttonLabel = "Conquistar Posto";
-                return PostoActionType.Conquer;
-            }
-
-            reason = "O acordo já foi aceito pelo seu reino. Falta cumprir o objetivo.";
-            return PostoActionType.None;
+            buttonLabel = "Iniciar disputa";
+            return PostoActionType.AcceptAgreement;
         }
 
         public static bool TryAcceptAgreement(PlayerMobile from, string postoId, out string message)
@@ -445,6 +702,7 @@ namespace Server.Custom.Systems.Postos
                 return false;
             }
 
+            ResolveContestIfNeeded(def, state);
             string ambassadorCity = GetAmbassadorCity(from);
 
             if (String.IsNullOrWhiteSpace(ambassadorCity))
@@ -453,43 +711,63 @@ namespace Server.Custom.Systems.Postos
                 return false;
             }
 
-            if (!String.IsNullOrWhiteSpace(state.OwnerCityId) &&
-                SameCity(ambassadorCity, state.OwnerCityId) &&
-                String.IsNullOrWhiteSpace(state.ProgressCityId))
+            if (String.IsNullOrWhiteSpace(state.OwnerCityId))
             {
-                message = "Este posto já pertence ao seu reino.";
+                if (!String.IsNullOrWhiteSpace(state.ProgressCityId))
+                {
+                    if (SameCity(state.ProgressCityId, ambassadorCity))
+                    {
+                        message = "Seu reino já aceitou o acordo deste posto.";
+                        return false;
+                    }
+
+                    message = "Outro reino já está tentando conquistar este posto.";
+                    return false;
+                }
+
+                state.ProgressCityId = ambassadorCity;
+                state.ProgressValue = 0;
+                message = "Acordo aceito. Agora os cidadãos de " + ambassadorCity + " já podem cumprir a missão do posto.";
+                RefreshPostoChests(postoId);
+                return true;
+            }
+
+            if (SameCity(ambassadorCity, state.OwnerCityId))
+            {
+                message = "O reino dono já participa automaticamente de qualquer disputa deste posto.";
                 return false;
             }
 
-            if (!String.IsNullOrWhiteSpace(state.OwnerCityId) &&
-                !SameCity(ambassadorCity, state.OwnerCityId) &&
-                DateTime.UtcNow < state.ProtectedUntilUtc)
+            if (DateTime.UtcNow < state.ProtectedUntilUtc && !IsContestActive(state))
             {
                 message = "Este posto ainda está sob o prazo mínimo de proteção.";
                 return false;
             }
 
-            if (!String.IsNullOrWhiteSpace(state.ProgressCityId))
+            if (!IsContestActive(state))
             {
-                if (SameCity(state.ProgressCityId, ambassadorCity))
-                {
-                    message = "Seu reino já aceitou o acordo deste posto.";
-                    return false;
-                }
+                state.ProgressCityId = String.Empty;
+                state.ProgressValue = 0;
+                state.ContestEndsUtc = DateTime.UtcNow + ContestDuration;
+                ClearContest(state);
+                state.ContestEndsUtc = DateTime.UtcNow + ContestDuration;
+                AddContestParticipant(state, state.OwnerCityId);
+                AddContestParticipant(state, ambassadorCity);
+                QueueLeaderAlert(state.OwnerCityId, postoId, ambassadorCity);
+                message = "A disputa pelo posto " + def.Name + " começou. Pelos próximos 3 dias, vence o reino que mais contiver a ameaça local.";
+                RefreshPostoChests(postoId);
+                return true;
+            }
 
-                message = "Outro reino já está tentando conquistar este posto.";
+            if (HasContestParticipant(state, ambassadorCity))
+            {
+                message = "Seu reino já está participando da disputa deste posto.";
                 return false;
             }
 
-            state.ProgressCityId = ambassadorCity;
-            state.ProgressValue = 0;
-
-            if (String.IsNullOrWhiteSpace(state.OwnerCityId))
-                message = "Acordo aceito. Agora os cidadãos de " + ambassadorCity + " já podem cumprir a missão do posto.";
-            else
-                message = "Posto em disputa. Enquanto isso, ele continua produzindo para " + NormalizeCityId(state.OwnerCityId) + ".";
-
-            RefreshPostoChests(postoId);
+            AddContestParticipant(state, ambassadorCity);
+            QueueLeaderAlert(state.OwnerCityId, postoId, ambassadorCity);
+            message = "O reino de " + ambassadorCity + " entrou na disputa pelo posto " + def.Name + ".";
             return true;
         }
 
@@ -512,11 +790,20 @@ namespace Server.Custom.Systems.Postos
                 return false;
             }
 
+            ResolveContestIfNeeded(def, state);
             string ambassadorCity = GetAmbassadorCity(from);
 
             if (String.IsNullOrWhiteSpace(ambassadorCity))
             {
                 message = "Somente um embaixador pode concluir a conquista.";
+                return false;
+            }
+
+            if (!String.IsNullOrWhiteSpace(state.OwnerCityId))
+            {
+                message = IsContestActive(state)
+                    ? "Este posto está em disputa aberta. O vencedor será definido ao final do prazo."
+                    : "Postos já conquistados só podem mudar de mãos através de disputa.";
                 return false;
             }
 
@@ -536,11 +823,8 @@ namespace Server.Custom.Systems.Postos
             state.ProgressCityId = String.Empty;
             state.ProgressValue = 0;
             state.ProtectedUntilUtc = DateTime.UtcNow + def.ProtectionDelay;
-
-            if (state.LastProductionUtc == DateTime.MinValue)
-                state.LastProductionUtc = DateTime.UtcNow;
-            else
-                state.LastProductionUtc = DateTime.UtcNow;
+            state.LastProductionUtc = DateTime.UtcNow;
+            ClearContest(state);
 
             message = "O posto " + def.Name + " agora pertence a " + ambassadorCity + ".";
             RefreshPostoChests(postoId);
@@ -566,6 +850,8 @@ namespace Server.Custom.Systems.Postos
                 message = "Posto inválido.";
                 return false;
             }
+
+            ResolveContestIfNeeded(def, state);
 
             if (String.IsNullOrWhiteSpace(state.OwnerCityId))
             {
@@ -607,8 +893,8 @@ namespace Server.Custom.Systems.Postos
                 amount,
                 GetResourceDisplayName(def.ResourceType),
                 NormalizeCityId(state.OwnerCityId));
-                RefreshPostoChests(postoId);
 
+            RefreshPostoChests(postoId);
             return true;
         }
 
@@ -620,12 +906,10 @@ namespace Server.Custom.Systems.Postos
                     return;
 
                 PlayerMobile killer = ResolvePlayer(e.Killer);
-
                 if (killer == null || killer.Deleted)
                     return;
 
                 string citizenCity = GetCitizenCity(killer);
-
                 if (String.IsNullOrWhiteSpace(citizenCity))
                     return;
 
@@ -634,9 +918,34 @@ namespace Server.Custom.Systems.Postos
                 foreach (PostoDefinition def in PostoRegistry.All)
                 {
                     PostoState state = GetState(def.Id);
-
                     if (state == null)
                         continue;
+
+                    ResolveContestIfNeeded(def, state);
+
+                    if (def.ObjectiveType != PostoObjectiveType.KillMob)
+                        continue;
+
+                    if (!MatchesAnyTypeName(killedTypeName, def.ObjectiveTypeNames))
+                        continue;
+
+                    if (IsContestActive(state))
+                    {
+                        if (!HasContestParticipant(state, citizenCity))
+                            continue;
+
+                        for (int i = 0; i < state.ContestScores.Count; i++)
+                        {
+                            PostoContestScore score = state.ContestScores[i];
+                            if (score == null || !SameCity(score.CityId, citizenCity))
+                                continue;
+
+                            score.Score++;
+                            break;
+                        }
+
+                        break;
+                    }
 
                     if (String.IsNullOrWhiteSpace(state.ProgressCityId))
                         continue;
@@ -647,14 +956,7 @@ namespace Server.Custom.Systems.Postos
                     if (state.ProgressValue >= def.ObjectiveAmount)
                         continue;
 
-                    if (def.ObjectiveType != PostoObjectiveType.KillMob)
-                        continue;
-
-                    if (!MatchesAnyTypeName(killedTypeName, def.ObjectiveTypeNames))
-                        continue;
-
                     state.ProgressValue++;
-
                     if (state.ProgressValue > def.ObjectiveAmount)
                         state.ProgressValue = def.ObjectiveAmount;
 
@@ -677,7 +979,6 @@ namespace Server.Custom.Systems.Postos
             foreach (Item item in World.Items.Values)
             {
                 PostoResourceChest chest = item as PostoResourceChest;
-
                 if (chest == null || chest.Deleted)
                     continue;
 
@@ -697,10 +998,28 @@ namespace Server.Custom.Systems.Postos
             if (def == null || state == null || def.ObjectiveType != PostoObjectiveType.DestroyItem)
                 return;
 
+            ResolveContestIfNeeded(def, state);
             string citizenCity = GetCitizenCity(destroyer);
-
             if (String.IsNullOrWhiteSpace(citizenCity))
                 return;
+
+            if (IsContestActive(state))
+            {
+                if (!HasContestParticipant(state, citizenCity))
+                    return;
+
+                for (int i = 0; i < state.ContestScores.Count; i++)
+                {
+                    PostoContestScore score = state.ContestScores[i];
+                    if (score == null || !SameCity(score.CityId, citizenCity))
+                        continue;
+
+                    score.Score++;
+                    break;
+                }
+
+                return;
+            }
 
             if (!SameCity(state.ProgressCityId, citizenCity))
                 return;
@@ -712,7 +1031,6 @@ namespace Server.Custom.Systems.Postos
                 return;
 
             state.ProgressValue++;
-
             if (state.ProgressValue > def.ObjectiveAmount)
                 state.ProgressValue = def.ObjectiveAmount;
         }
@@ -725,7 +1043,6 @@ namespace Server.Custom.Systems.Postos
             for (int i = 0; i < allowedNames.Length; i++)
             {
                 string allowed = allowedNames[i];
-
                 if (String.IsNullOrWhiteSpace(allowed))
                     continue;
 
@@ -777,6 +1094,13 @@ namespace Server.Custom.Systems.Postos
             state.StoredAmount = 0;
             state.LastProductionUtc = DateTime.MinValue;
             state.ProtectedUntilUtc = DateTime.MinValue;
+            ClearContest(state);
+
+            for (int i = m_PendingLeaderAlerts.Count - 1; i >= 0; i--)
+            {
+                if (String.Equals(m_PendingLeaderAlerts[i].PostoId, postoId, StringComparison.OrdinalIgnoreCase))
+                    m_PendingLeaderAlerts.RemoveAt(i);
+            }
 
             message = "O posto " + def.Name + " foi resetado.";
             RefreshPostoChests(postoId);
@@ -807,6 +1131,117 @@ namespace Server.Custom.Systems.Postos
             return true;
         }
 
+        private static void QueueLeaderAlert(string defenderCityId, string postoId, string challengerCityId)
+        {
+            if (String.IsNullOrWhiteSpace(defenderCityId) || String.IsNullOrWhiteSpace(postoId) || String.IsNullOrWhiteSpace(challengerCityId))
+                return;
+
+            PostoLeaderAlert alert = new PostoLeaderAlert();
+            alert.PostoId = postoId;
+            alert.DefenderCityId = NormalizeCityId(defenderCityId);
+            alert.ChallengerCityId = NormalizeCityId(challengerCityId);
+            alert.CreatedUtc = DateTime.UtcNow;
+
+            PlayerMobile onlineLeader = FindOnlineLeader(alert.DefenderCityId);
+            if (onlineLeader != null)
+            {
+                SendLeaderAlertGump(onlineLeader, alert);
+                return;
+            }
+
+            m_PendingLeaderAlerts.Add(alert);
+        }
+
+        private static PlayerMobile FindOnlineLeader(string cityId)
+        {
+            int cityIndex = GetCityIndexByName(cityId);
+            if (cityIndex < 0)
+                return null;
+
+            foreach (Mobile m in World.Mobiles.Values)
+            {
+                PlayerMobile pm = m as PlayerMobile;
+                if (pm == null || pm.Deleted || pm.NetState == null)
+                    continue;
+
+                if (pm.OSUReinoLeader && pm.OSUReinoLeaderCityId == cityIndex)
+                    return pm;
+            }
+
+            return null;
+        }
+
+        private static void SendLeaderAlertGump(PlayerMobile pm, PostoLeaderAlert alert)
+        {
+            if (pm == null || pm.Deleted || alert == null)
+                return;
+
+            PostoDefinition def = GetDefinition(alert.PostoId);
+            if (def == null)
+                return;
+
+            pm.CloseGump(typeof(PostoContestAlertGump));
+            pm.SendGump(new PostoContestAlertGump(pm, def.Name, NormalizeCityId(alert.ChallengerCityId), NormalizeCityId(alert.DefenderCityId)));
+        }
+
+        private static int GetCityIndexByName(string cityId)
+        {
+            cityId = NormalizeCityId(cityId);
+            string[] cities = GetKnownCities();
+
+            for (int i = 0; i < cities.Length; i++)
+            {
+                if (SameCity(cities[i], cityId))
+                    return i;
+            }
+
+            return -1;
+        }
+
+        private static string GetCityNameByIndex(int cityId)
+        {
+            string[] cities = GetKnownCities();
+            if (cityId < 0 || cityId >= cities.Length)
+                return String.Empty;
+
+            return NormalizeCityId(cities[cityId]);
+        }
+
+        private static string GetContestStoryHtml(PostoDefinition def)
+        {
+            if (def == null)
+                return "<BASEFONT COLOR=#000000>Este posto está em disputa.";
+
+            switch ((def.Id ?? String.Empty).ToLowerInvariant())
+            {
+                case "aramute": return "<BASEFONT COLOR=#000000>Aramute já não pede favores: pede prova. Os mineiros fecharam as entradas menores e decidiram observar qual reino realmente segura os corredores. Durante a disputa, vence quem abater mais ameaças nas galerias e provar que pode manter a mina aberta.";
+                case "dorvok": return "<BASEFONT COLOR=#000000>Dorvok cansou de promessas vazias. A pedreira seguirá com o reino que mostrar, em números, que consegue limpar as escoras e manter o trabalho de pé. Três dias. Que a rocha escolha o mais firme.";
+                case "selgard": return "<BASEFONT COLOR=#000000>Os trabalhadores de Selgard não querem mais juramentos bonitos. Querem corredor seguro e turnos inteiros sem gritos. A disputa está aberta: o reino que mais contiver a ameaça local ficará com o acordo.";
+                case "karstun": return "<BASEFONT COLOR=#000000>Karstun virou palco de competição entre coroas. Os pedreiros juraram manter o trato com quem provar, golpe por golpe, que consegue proteger melhor o corte. O melhor guarda leva a pedra.";
+                case "vhalor": return "<BASEFONT COLOR=#000000>Vhalor não vai trocar de bandeira por discurso. A pedreira ficará com o reino que, nestes próximos dias, derrubar mais invasores e mantiver os níveis fundos respirando. Aqui, a vitória se mede em abatidos.";
+                case "nargesh": return "<BASEFONT COLOR=#000000>Nargesh abriu uma disputa direta entre reinos. As galerias continuarão produzindo para o atual dono por enquanto, mas o contrato final irá para quem provar mais proteção no subsolo.";
+                case "tirak": return "<BASEFONT COLOR=#000000>Em Tirak, os mineiros decidiram assistir em silêncio. Que os reinos disputem, que os imps tombem, e que o posto fique com quem mostrar mais serviço antes do prazo acabar.";
+                case "thorma": return "<BASEFONT COLOR=#000000>Thorma colocou a fornalha da decisão sobre as coroas. Os túneis quentes reconhecerão como aliado o reino que suportar melhor a pressão e abater mais ameaças até o fim da disputa.";
+                case "cunhau": return "<BASEFONT COLOR=#000000>Cunhau suspendeu promessas e abriu desafio. O bosque ficará com o reino que conseguir manter as trilhas mais limpas e os machados trabalhando pelos próximos dias. Que vença o melhor protetor da mata.";
+                case "belorim": return "<BASEFONT COLOR=#000000>Belorim declarou disputa aberta. As hárpias continuam rondando os pinheiros, e o bosque será entregue ao reino que provar, no alto e no chão, que sabe proteger melhor seus lenhadores.";
+                case "valesca": return "<BASEFONT COLOR=#000000>Valesca está em disputa. Os lenhadores prometeram seguir o reino que cortar o emaranhado de perigo e apresentar o maior número de abatidos antes do prazo final.";
+                case "norvind": return "<BASEFONT COLOR=#000000>Norvind quer resultados, não brasões. Os ettins continuam descendo do morro, e o trato ficará com o reino que mostrar força constante e a melhor defesa das carroças.";
+                case "talbrasa": return "<BASEFONT COLOR=#000000>Talbrasa transformou a crise da floresta em competição aberta. O reino que mais derrubar ameaças e segurar o pátio de secagem ficará com a madeira quando a disputa terminar.";
+                case "rivenoak": return "<BASEFONT COLOR=#000000>Rivenoak foi posto em prova. As trilhas vivas continuam estrangulando a mata, e agora cada reino terá de demonstrar, em trabalho real, quem merece conduzir o posto.";
+                case "galdrin": return "<BASEFONT COLOR=#000000>Galdrin cansou de alianças frágeis. As rotas de corte seguem sob risco, e o bosque será mantido por quem mostrar a melhor proteção armada até o último dia da disputa.";
+                case "ulmora": return "<BASEFONT COLOR=#000000>Ulmora abriu sua névoa para uma disputa entre reinos. Quem conseguir limpar mais feras e conservar as saídas da mata terá o direito de manter este acordo.";
+                case "saial": return "<BASEFONT COLOR=#000000>Saial decidiu observar os reinos de perto. Os campos continuarão colhendo sob a guarda atual, mas o contrato final ficará com quem expulsar mais ameaças dos celeiros e das cercas.";
+                case "iriande": return "<BASEFONT COLOR=#000000>Iriande está em disputa. Os trabalhadores manterão os fardos indo para quem já segura o posto por enquanto, porém o melhor defensor dos campos levará o trato no fim do prazo.";
+                case "belsara": return "<BASEFONT COLOR=#000000>Belsara chamou todos os reinos à prova. Não basta oferecer escolta: é preciso mostrar quem realmente limpa os caminhos e mantém as plantações respirando.";
+                case "rosamar": return "<BASEFONT COLOR=#000000>Rosamar decidiu que só a prática resolve. O reino que mais contiver a ameaça local durante a janela de disputa provará que merece a confiança destes agricultores.";
+                case "lumera": return "<BASEFONT COLOR=#000000>Lumera abriu uma disputa de proteção. As margens e canais serão observados dia e noite, e o posto ficará com o reino que apresentar o maior esforço real contra a ameaça.";
+                case "dalvila": return "<BASEFONT COLOR=#000000>Dalvila quer paz para a colheita, e paz agora vale placar. O reino que abater mais inimigos até o fim da disputa será reconhecido como o mais capaz de guardar estes campos.";
+                case "ventalva": return "<BASEFONT COLOR=#000000>Ventalva transformou o desassossego da região em prova formal. Durante três dias, os reinos disputarão este posto abatendo as ameaças locais. O melhor desempenho fala mais alto.";
+                case "orquessa": return "<BASEFONT COLOR=#000000>Orquessa abriu disputa sem rodeios. Os agricultores querem ver qual reino realmente protege as passagens, os poços e os fardos. O melhor vença — e fique com o posto.";
+                default: return "<BASEFONT COLOR=#000000>Este posto está em disputa. Os trabalhadores manterão o trato com quem mostrar a melhor proteção local. O melhor vença.";
+            }
+        }
+
         public static void Save()
         {
             try
@@ -820,7 +1255,7 @@ namespace Server.Custom.Systems.Postos
                 using (FileStream fs = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.None))
                 using (BinaryWriter bw = new BinaryWriter(fs))
                 {
-                    bw.Write(2); // version
+                    bw.Write(3); // version
 
                     bw.Write(m_States.Count);
                     foreach (KeyValuePair<string, PostoState> kv in m_States)
@@ -834,19 +1269,37 @@ namespace Server.Custom.Systems.Postos
                         bw.Write(st.StoredAmount);
                         bw.Write(st.LastProductionUtc.ToBinary());
                         bw.Write(st.ProtectedUntilUtc.ToBinary());
+                        bw.Write(st.ContestEndsUtc.ToBinary());
+
+                        int contestCount = st.ContestScores != null ? st.ContestScores.Count : 0;
+                        bw.Write(contestCount);
+                        for (int i = 0; i < contestCount; i++)
+                        {
+                            PostoContestScore score = st.ContestScores[i];
+                            bw.Write(score != null ? score.CityId ?? String.Empty : String.Empty);
+                            bw.Write(score != null ? score.Score : 0);
+                        }
                     }
 
                     bw.Write(m_Ledgers.Count);
                     foreach (KeyValuePair<string, PostoKingdomResourceLedger> kv in m_Ledgers)
                     {
                         PostoKingdomResourceLedger ledger = kv.Value;
-
                         bw.Write(kv.Key ?? String.Empty);
                         bw.Write(ledger.Iron);
                         bw.Write(ledger.Wood);
                         bw.Write(ledger.Cotton);
                     }
 
+                    bw.Write(m_PendingLeaderAlerts.Count);
+                    for (int i = 0; i < m_PendingLeaderAlerts.Count; i++)
+                    {
+                        PostoLeaderAlert alert = m_PendingLeaderAlerts[i] ?? new PostoLeaderAlert();
+                        bw.Write(alert.PostoId ?? String.Empty);
+                        bw.Write(alert.DefenderCityId ?? String.Empty);
+                        bw.Write(alert.ChallengerCityId ?? String.Empty);
+                        bw.Write(alert.CreatedUtc.ToBinary());
+                    }
                 }
             }
             catch
@@ -885,6 +1338,20 @@ namespace Server.Custom.Systems.Postos
                             st.LastProductionUtc = DateTime.FromBinary(br.ReadInt64());
                             st.ProtectedUntilUtc = DateTime.FromBinary(br.ReadInt64());
 
+                            if (version >= 3)
+                            {
+                                st.ContestEndsUtc = DateTime.FromBinary(br.ReadInt64());
+                                int contestCount = br.ReadInt32();
+                                st.ContestScores = new List<PostoContestScore>();
+                                for (int c = 0; c < contestCount; c++)
+                                {
+                                    PostoContestScore score = new PostoContestScore();
+                                    score.CityId = br.ReadString();
+                                    score.Score = br.ReadInt32();
+                                    st.ContestScores.Add(score);
+                                }
+                            }
+
                             m_States[postoId] = st;
                         }
 
@@ -895,18 +1362,30 @@ namespace Server.Custom.Systems.Postos
                         {
                             string cityId = br.ReadString();
                             PostoKingdomResourceLedger ledger = new PostoKingdomResourceLedger(cityId);
-
                             ledger.Iron = br.ReadInt32();
                             ledger.Wood = br.ReadInt32();
                             ledger.Cotton = br.ReadInt32();
-
                             m_Ledgers[cityId] = ledger;
+                        }
+
+                        m_PendingLeaderAlerts.Clear();
+                        if (version >= 3)
+                        {
+                            int alertCount = br.ReadInt32();
+                            for (int i = 0; i < alertCount; i++)
+                            {
+                                PostoLeaderAlert alert = new PostoLeaderAlert();
+                                alert.PostoId = br.ReadString();
+                                alert.DefenderCityId = br.ReadString();
+                                alert.ChallengerCityId = br.ReadString();
+                                alert.CreatedUtc = DateTime.FromBinary(br.ReadInt64());
+                                m_PendingLeaderAlerts.Add(alert);
+                            }
                         }
 
                         if (version == 1)
                         {
                             int oldRoleCount = br.ReadInt32();
-
                             for (int i = 0; i < oldRoleCount; i++)
                             {
                                 br.ReadInt32();
@@ -929,6 +1408,5 @@ namespace Server.Custom.Systems.Postos
             {
             }
         }
-
     }
 }

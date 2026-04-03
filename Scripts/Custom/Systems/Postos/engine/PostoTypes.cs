@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Server.Custom.Systems.Postos
 {
@@ -30,6 +31,40 @@ namespace Server.Custom.Systems.Postos
         Conquer
     }
 
+    public class PostoContestScore
+    {
+        public string CityId;
+        public int Score;
+
+        public PostoContestScore()
+        {
+            CityId = String.Empty;
+            Score = 0;
+        }
+
+        public PostoContestScore(string cityId)
+        {
+            CityId = cityId ?? String.Empty;
+            Score = 0;
+        }
+    }
+
+    public class PostoLeaderAlert
+    {
+        public string PostoId;
+        public string DefenderCityId;
+        public string ChallengerCityId;
+        public DateTime CreatedUtc;
+
+        public PostoLeaderAlert()
+        {
+            PostoId = String.Empty;
+            DefenderCityId = String.Empty;
+            ChallengerCityId = String.Empty;
+            CreatedUtc = DateTime.UtcNow;
+        }
+    }
+
     public class PostoState
     {
         public string PostoId;
@@ -39,6 +74,8 @@ namespace Server.Custom.Systems.Postos
         public int StoredAmount;
         public DateTime LastProductionUtc;
         public DateTime ProtectedUntilUtc;
+        public DateTime ContestEndsUtc;
+        public List<PostoContestScore> ContestScores;
 
         public PostoState(string postoId)
         {
@@ -49,6 +86,8 @@ namespace Server.Custom.Systems.Postos
             StoredAmount = 0;
             LastProductionUtc = DateTime.MinValue;
             ProtectedUntilUtc = DateTime.MinValue;
+            ContestEndsUtc = DateTime.MinValue;
+            ContestScores = new List<PostoContestScore>();
         }
     }
 
