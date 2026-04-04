@@ -4,6 +4,7 @@ using Server.Items;
 using Server.Mobiles;
 using Server.Multis;
 using System;
+using Server.Custom.Systems.Reinos;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -543,7 +544,7 @@ namespace Server.Custom.Systems.Rent
 			if (PropertyType == OSUPropertyType.Tomb)
 				return Flip ? 0x1166 : 0x1165;
 
-			return Flip ? 0x0BD1 : 0x0BD2;
+			return Flip ? 0x18B6 : 0x18B7;
 		}
 
 		public void UpdateSignItem()
@@ -608,7 +609,7 @@ namespace Server.Custom.Systems.Rent
 				item = new Item( 0x1766 );
 				item.Name = "Area Preview";
 				item.Movable = false;
-				item.Location = new Point3D( p.X, p.Y, avgz <= m.Z ? m.Z+2 : avgz+2  );
+				item.Location = new Point3D( p.X, p.Y, avgz <= m.Z ? m.Z+2 : avgz  );
 				item.Map = Map;
 
 				c_PreviewItems.Add( item );
@@ -747,6 +748,9 @@ namespace Server.Custom.Systems.Rent
 
                 int price = c_Price + (sellitems ? c_ItemsPrice : 0);
 
+                if (IsTomb)
+                    price += m_TombExtraCost;
+
                 if (c_Free)
                     price = 0;
 
@@ -760,7 +764,7 @@ namespace Server.Custom.Systems.Rent
                 {
                     m.SendMessage( "Um total de " + price.ToString() + " moedas de outro foi retirado do seu banco." );
 					m.SendMessage("Para trancar as portas, clique em casa uma delas e defina as permissões.");
-                    OnRentPaid();
+                    OnRentPaid(price);
                 }
 
                 if (IsTomb)
@@ -1477,7 +1481,7 @@ namespace Server.Custom.Systems.Rent
 			if ( !c_Free )
 				c_House.Owner.SendMessage( "The bank has withdrawn {0} copper rent for your town house.", c_Price );
 
-			OnRentPaid();
+			OnRentPaid(c_Price);
 
 			if ( c_RentToOwn )
 			{
@@ -1515,17 +1519,10 @@ namespace Server.Custom.Systems.Rent
 		}
 
 		//GOVERNMENT
-		protected virtual void OnRentPaid()
-		{
-			//if( AssignTreasury() )
-			//{
-			//	Copper copper = new Copper();
-			//	copper.Amount = Price;
-			//	
-			//	if( Treasury is BaseContainer )
-			//		( (BaseContainer)Treasury ).DropAndStack( copper );
-			//}
-		}
+        protected virtual void OnRentPaid(int amount)
+        {
+            ReinoMaintenanceSystem.RecordRevenueFromRentalSign(this, amount);
+        }
 		
 		//public bool AssignTreasury()
 	//	{

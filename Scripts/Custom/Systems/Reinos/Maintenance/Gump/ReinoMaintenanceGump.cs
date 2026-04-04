@@ -1,0 +1,295 @@
+using System;
+using System.Collections.Generic;
+using Server.Custom.Systems.Postos;
+using Server.Gumps;
+using Server.Mobiles;
+using Server.Network;
+
+namespace Server.Custom.Systems.Reinos
+{
+    public partial class ReinoExpansionGump
+    {
+        private const int ButtonMaintenanceActiveBase = 50000;
+        private const int ButtonMaintenanceInactiveBase = 50100;
+        private const int ButtonMaintenancePostoActiveBase = 50200;
+        private const int ButtonMaintenancePostoDisputeBase = 50300;
+        private const int ButtonMaintenanceToggle = 50400;
+        private const int ButtonMaintenancePriorityDown = 50401;
+        private const int ButtonMaintenancePriorityUp = 50402;
+
+        private void BuildMaintenancePage()
+        {
+            AddPage(1);
+            AddLabel(757, 173, 0, @"Manutenção");
+            AddImageTiled(407, 271, 819, 5, 367);
+            AddImageTiled(580, 226, 6, 470, 365);
+            AddImageTiled(785, 226, 6, 470, 365);
+            AddImageTiled(1016, 226, 6, 470, 365);
+            AddImageTiled(802, 540, 201, 5, 367);
+            AddImageTiled(1038, 451, 201, 5, 367);
+            AddImageTiled(1038, 631, 201, 5, 367);
+
+            AddLabel(416, 237, 0, @"Construções Ativas");
+            AddLabel(615, 237, 0, @"Construções Inativas");
+            AddLabel(818, 237, 0, @"Postos de Materiais Ativos");
+            AddLabel(838, 516, 0, @"Postos em Disputa:");
+            AddLabel(1037, 237, 0, @"Custo de Construções Ativas");
+            AddLabel(1046, 423, 0, @"Custo para Ativar Construções");
+            AddLabel(1063, 648, 0, @"Tempo de Funcionamento:");
+
+            List<ReinoConstructionRuntimeInfo> active = ReinoMaintenanceSystem.GetActiveConstructions(m_CityId);
+            List<ReinoConstructionRuntimeInfo> inactive = ReinoMaintenanceSystem.GetInactiveConstructions(m_CityId);
+            List<PostoDefinition> activePostos = ReinoMaintenanceSystem.GetActivePostos(m_CityId);
+            List<PostoDefinition> disputePostos = ReinoMaintenanceSystem.GetDisputedPostos(m_CityId);
+
+            int[] leftY = new int[] { 290, 315, 339, 364, 389, 414 };
+            int[] midY = new int[] { 291, 316, 340, 365, 390, 415 };
+            int[] postoY = new int[] { 289, 314, 338, 363, 388 };
+            int[] disputeY = new int[] { 562, 587, 611 };
+
+            for (int i = 0; i < active.Count && i < leftY.Length; i++)
+            {
+                AddButton(413, leftY[i] + 3, 536, 435, ButtonMaintenanceActiveBase + i, GumpButtonType.Reply, 0);
+                AddLabel(437, leftY[i], 0, active[i].Name);
+            }
+
+            for (int i = 0; i < inactive.Count && i < midY.Length; i++)
+            {
+                AddButton(613, midY[i] + 3, 536, 435, ButtonMaintenanceInactiveBase + i, GumpButtonType.Reply, 0);
+                AddLabel(637, midY[i], 0, inactive[i].Name);
+            }
+
+            for (int i = 0; i < activePostos.Count && i < postoY.Length; i++)
+            {
+                AddButton(816, postoY[i] + 3, 536, 435, ButtonMaintenancePostoActiveBase + i, GumpButtonType.Reply, 0);
+                AddLabel(840, postoY[i], 0, activePostos[i].Name);
+            }
+
+            for (int i = 0; i < disputePostos.Count && i < disputeY.Length; i++)
+            {
+                AddButton(817, disputeY[i] + 3, 536, 435, ButtonMaintenancePostoDisputeBase + i, GumpButtonType.Reply, 0);
+                AddLabel(841, disputeY[i], 0, disputePostos[i].Name);
+            }
+
+            DrawCostBlock(1044, 295, ReinoMaintenanceSystem.GetTotalActiveWeeklyCost(m_CityId));
+            DrawCostBlock(1044, 469, ReinoMaintenanceSystem.GetTotalInactiveActivationCost(m_CityId));
+
+            int weeks = ReinoMaintenanceSystem.GetWeeksOfOperationRemaining(m_CityId);
+            AddLabel(1103, 673, 0, weeks == ReinoMaintenanceSystem.WeeksInfinite ? @"Permanente" : (weeks + @" semanas"));
+        }
+
+        private void DrawCostBlock(int x, int y, List<ReinoResourceCost> costs)
+        {
+            int gold = GetCostAmount(costs, ReinoResourceType.Gold);
+            int cloth = GetCostAmount(costs, ReinoResourceType.Cloth);
+            int iron = GetCostAmount(costs, ReinoResourceType.Iron);
+            int wood = GetCostAmount(costs, ReinoResourceType.Wood);
+
+            AddLabel(x, y, 0, @"Moedas: " + gold);
+            AddLabel(x, y + 25, 0, @"Tecidos: " + cloth);
+            AddLabel(x, y + 49, 0, @"Ferro: " + iron);
+            AddLabel(x, y + 74, 0, @"Madeira: " + wood);
+        }
+
+        private int GetCostAmount(List<ReinoResourceCost> costs, ReinoResourceType type)
+        {
+            int amount = 0;
+            if (costs == null)
+                return 0;
+
+            for (int i = 0; i < costs.Count; i++)
+            {
+                ReinoResourceCost cost = costs[i];
+                if (cost != null && cost.Type == type)
+                    amount += cost.Amount;
+            }
+
+            return amount;
+        }
+
+        private void BuildConstructionDetailPage()
+        {
+            AddPage(1);
+
+            ReinoConstructionRuntimeInfo info = ReinoMaintenanceSystem.GetConstruction(m_SelectedBuildingId);
+            string title = info != null ? info.Name : @"Construção";
+            AddLabel(785, 173, 0, title);
+
+            AddImageTiled(408, 259, 819, 5, 367);
+            AddImageTiled(408, 366, 819, 5, 367);
+            AddImageTiled(408, 449, 819, 5, 367);
+            AddImageTiled(408, 563, 819, 5, 367);
+            AddImageTiled(714, 273, 6, 19, 365);
+            AddImageTiled(887, 273, 6, 19, 365);
+            AddImageTiled(1054, 273, 6, 19, 365);
+            AddImageTiled(806, 587, 6, 103, 365);
+
+            if (info == null)
+            {
+                AddHtml(430, 250, 760, 390, @"<BASEFONT COLOR=#000000>Selecione uma construção na página de manutenção para ver os detalhes dela aqui.</BASEFONT>", false, false);
+                return;
+            }
+
+            List<ReinoResourceCost> weekly = ReinoMaintenanceSystem.GetWeeklyCosts(info);
+            bool active = info.Status == ReinoLotStatus.Active;
+            int toggleArt = active ? 541 : 543;
+            string toggleText = active ? @"Desativar Construção" : @"Ativar Construção";
+            DateTime openSince = ReinoMaintenanceSystem.GetLastActivatedUtc(info);
+            int priority = ReinoMaintenanceSystem.GetDisplayPriority(info);
+            int npcCount = ReinoMaintenanceSystem.GetNpcCount(info);
+            int npcSalary = info.Definition != null ? Math.Max(0, info.Definition.NpcWeeklySalaryGold) : 0;
+            int commissionCount = ReinoMaintenanceSystem.GetCommissionCount(info);
+            int commissionWeekly = ReinoMaintenanceSystem.GetCommissionWeeklySalaryGold(info);
+
+            AddLabel(410, 225, 0, @"Status:");
+            AddButton(712, 230, toggleArt, toggleArt, ButtonMaintenanceToggle, GumpButtonType.Reply, 0);
+            AddLabel(740, 228, 0, toggleText);
+            AddLabel(410, 278, 0, @"Valor de Manutenção Semanal:");
+            AddLabel(410, 303, 0, @"Valor recebido Semanal:");
+            AddLabel(410, 328, 0, @"Valor Recebido Total:");
+            AddLabel(410, 387, 0, @"Número de Npcs:");
+            AddLabel(410, 412, 0, @"Valor por Npc:");
+            AddLabel(410, 469, 0, @"Aberto Desde:");
+            AddLabel(410, 496, 0, @"Tempo de Funcionamento:");
+            AddLabel(410, 523, 0, @"Rendimento por Tempo de Funcionamento:");
+            AddLabel(410, 583, 0, @"Cargos Comissionados:");
+            AddLabel(410, 610, 0, @"Salários:");
+            AddLabel(410, 637, 0, @"Valor Total de Salários:");
+            AddLabel(410, 664, 0, @"Valor de Salários por Tempo de Funcionamento:");
+            AddLabel(728, 272, 0, @"Ferro: " + GetCostAmount(weekly, ReinoResourceType.Iron));
+            AddLabel(906, 272, 0, @"Madeira: " + GetCostAmount(weekly, ReinoResourceType.Wood));
+            AddLabel(1077, 273, 0, @"Tecido: " + GetCostAmount(weekly, ReinoResourceType.Cloth));
+            AddLabel(465, 225, 0, active ? @"Ativa" : @"Inativa");
+            AddLabel(620, 278, 0, GetCostAmount(weekly, ReinoResourceType.Gold) + @" moedas");
+            AddLabel(620, 303, 0, ReinoMaintenanceSystem.GetRevenueLast7DaysGold(info) + @" moedas");
+            AddLabel(620, 328, 0, ReinoMaintenanceSystem.GetTotalRevenueGold(info) + @" moedas");
+            AddLabel(620, 387, 0, npcCount.ToString());
+            AddLabel(620, 412, 0, npcSalary + @" moedas");
+            AddLabel(620, 469, 0, openSince == DateTime.MinValue ? @"Nunca" : openSince.ToString("dd/MM/yyyy HH:mm"));
+            AddLabel(620, 496, 0, openSince == DateTime.MinValue ? @"0 semanas" : (Math.Max(1, (int)Math.Floor((DateTime.UtcNow - openSince).TotalDays / 7.0)) + @" semanas"));
+            AddLabel(620, 523, 0, ReinoMaintenanceSystem.GetAverageRevenuePerWeekCurrentActivation(info) + @" moedas/semana");
+            AddLabel(620, 583, 0, commissionCount.ToString());
+            AddLabel(620, 610, 0, commissionWeekly + @" moedas/semana");
+            AddLabel(620, 637, 0, ReinoMaintenanceSystem.GetCommissionTotalWagesGold(info) + @" moedas");
+            AddLabel(620, 664, 0, ReinoMaintenanceSystem.GetCommissionWagesAveragePerWeekCurrentActivation(info) + @" moedas/semana");
+
+            AddLabel(950, 596, 0, @"Prioridade de Funcionamento");
+            AddButton(964, 640, 583, 248, ButtonMaintenancePriorityDown, GumpButtonType.Reply, 0);
+            AddButton(1090, 638, 582, 248, ButtonMaintenancePriorityUp, GumpButtonType.Reply, 0);
+            AddLabel(1034, 642, 0, priority.ToString());
+        }
+
+        private void BuildPostoDetailPage()
+        {
+            AddPage(1);
+
+            string postoId = m_SelectedBuildingId != null && m_SelectedBuildingId.StartsWith("P:", StringComparison.OrdinalIgnoreCase) ? m_SelectedBuildingId.Substring(2) : String.Empty;
+            PostoDefinition def = !String.IsNullOrWhiteSpace(postoId) ? PostoSystem.GetDefinition(postoId) : null;
+
+            AddLabel(772, 173, 0, def != null ? def.Name : @"Posto");
+            AddImageTiled(408, 366, 819, 5, 367);
+            AddImageTiled(408, 259, 819, 5, 367);
+            AddImageTiled(408, 533, 819, 5, 367);
+            AddLabel(410, 225, 0, @"Status:");
+            AddLabel(410, 278, 0, @"Material:");
+            AddLabel(410, 303, 0, @"Gera Diariamente:");
+            AddLabel(410, 328, 0, @"Total Gerado:");
+            AddLabel(410, 387, 0, @"Última Produção:");
+            AddLabel(410, 415, 0, @"Atualmente Armazenando:");
+            AddLabel(410, 442, 0, @"Última Retirada:");
+            AddLabel(410, 469, 0, @"Despachante Designado:");
+            AddLabel(410, 495, 0, @"Observação:");
+
+            if (def == null)
+            {
+                AddHtml(430, 250, 760, 390, @"<BASEFONT COLOR=#000000>O detalhe dos postos vai ser a próxima etapa. Os botões da página 3 já direcionam para esta página para você manter o layout pronto.</BASEFONT>", false, false);
+                return;
+            }
+
+            PostoState state = PostoSystem.GetState(def.Id);
+            AddLabel(620, 225, 0, PostoSystem.IsContestActive(state) ? @"Em disputa" : @"Ativo");
+            AddLabel(620, 278, 0, PostoSystem.GetResourceDisplayName(def.ResourceType));
+            AddLabel(620, 303, 0, def.DailyYield.ToString());
+            AddLabel(620, 328, 0, @"Página 10 será concluída no próximo passo.");
+            AddLabel(620, 387, 0, state != null && state.LastProductionUtc != DateTime.MinValue ? state.LastProductionUtc.ToString("dd/MM/yyyy HH:mm") : @"-" );
+            AddLabel(620, 415, 0, PostoSystem.GetStoredAmount(def.Id).ToString());
+            AddLabel(620, 442, 0, @"-" );
+            AddLabel(620, 469, 0, @"-" );
+            AddLabel(620, 495, 0, @"Placeholder visual pronto para a próxima etapa." );
+        }
+
+        private bool HandleMaintenanceResponse(PlayerMobile from, RelayInfo info)
+        {
+            int button = info.ButtonID;
+
+            List<ReinoConstructionRuntimeInfo> active = ReinoMaintenanceSystem.GetActiveConstructions(m_CityId);
+            List<ReinoConstructionRuntimeInfo> inactive = ReinoMaintenanceSystem.GetInactiveConstructions(m_CityId);
+            List<PostoDefinition> activePostos = ReinoMaintenanceSystem.GetActivePostos(m_CityId);
+            List<PostoDefinition> disputePostos = ReinoMaintenanceSystem.GetDisputedPostos(m_CityId);
+
+            if (button >= ButtonMaintenanceActiveBase && button < ButtonMaintenanceActiveBase + 100)
+            {
+                int index = button - ButtonMaintenanceActiveBase;
+                if (index >= 0 && index < active.Count)
+                    from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, active[index].Key, m_BuildingPage, 9));
+                return true;
+            }
+
+            if (button >= ButtonMaintenanceInactiveBase && button < ButtonMaintenanceInactiveBase + 100)
+            {
+                int index = button - ButtonMaintenanceInactiveBase;
+                if (index >= 0 && index < inactive.Count)
+                    from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, inactive[index].Key, m_BuildingPage, 9));
+                return true;
+            }
+
+            if (button >= ButtonMaintenancePostoActiveBase && button < ButtonMaintenancePostoActiveBase + 100)
+            {
+                int index = button - ButtonMaintenancePostoActiveBase;
+                if (index >= 0 && index < activePostos.Count)
+                    from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, "P:" + activePostos[index].Id, m_BuildingPage, 10));
+                return true;
+            }
+
+            if (button >= ButtonMaintenancePostoDisputeBase && button < ButtonMaintenancePostoDisputeBase + 100)
+            {
+                int index = button - ButtonMaintenancePostoDisputeBase;
+                if (index >= 0 && index < disputePostos.Count)
+                    from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, "P:" + disputePostos[index].Id, m_BuildingPage, 10));
+                return true;
+            }
+
+            if (button == ButtonMaintenanceToggle)
+            {
+                string message;
+                ReinoMaintenanceSystem.TryToggleActivation(from, m_CityId, m_SelectedBuildingId, out message);
+                if (!String.IsNullOrWhiteSpace(message))
+                    from.SendMessage(message);
+                from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 9));
+                return true;
+            }
+
+            if (button == ButtonMaintenancePriorityDown)
+            {
+                string message;
+                ReinoMaintenanceSystem.TryShiftPriority(from, m_CityId, m_SelectedBuildingId, +1, out message);
+                if (!String.IsNullOrWhiteSpace(message))
+                    from.SendMessage(message);
+                from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 9));
+                return true;
+            }
+
+            if (button == ButtonMaintenancePriorityUp)
+            {
+                string message;
+                ReinoMaintenanceSystem.TryShiftPriority(from, m_CityId, m_SelectedBuildingId, -1, out message);
+                if (!String.IsNullOrWhiteSpace(message))
+                    from.SendMessage(message);
+                from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 9));
+                return true;
+            }
+
+            return false;
+        }
+    }
+}

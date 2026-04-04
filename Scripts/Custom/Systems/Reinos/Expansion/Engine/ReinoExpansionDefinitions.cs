@@ -116,15 +116,61 @@ namespace Server.Custom.Systems.Reinos
                 return sb.ToString();
             }
 
+            ReinoLotConfigDefinition config = ReinoLotConfigRegistry.Get(lot.LotConfigId);
+
             if (lot.Objective.Type == ReinoObjectiveType.KillMob)
             {
-                sb.Append("Essa área está infestada de esqueletos. Seria impossível construir aqui dessa maneira.<BR><BR>");
-                sb.Append("<B>Objetivo:</B> eliminar as ameaças dentro do lote.<BR>");
+                sb.Append("Esse lote precisa ser limpo antes que qualquer obra comece.<BR><BR>");
+                if (config != null && !String.IsNullOrWhiteSpace(config.Name))
+                {
+                    sb.Append("<B>Cenário:</B> ");
+                    sb.Append(config.Name);
+                    sb.Append("<BR>");
+                }
+
+                sb.Append("<B>Objetivo:</B> derrotar ");
+                sb.Append(lot.Objective.RequiredAmount);
+                sb.Append(" ");
+                sb.Append(String.IsNullOrWhiteSpace(lot.Objective.DisplayName) ? "ameaças" : lot.Objective.DisplayName);
+                sb.Append(".<BR>");
                 sb.Append("<B>Progresso:</B> ");
                 sb.Append(state.ObjectiveProgress);
                 sb.Append("/");
                 sb.Append(lot.Objective.RequiredAmount);
-                sb.Append(" skeletons abatidos.");
+                sb.Append(".");
+            }
+            else if (lot.Objective.Type == ReinoObjectiveType.CollectItem)
+            {
+                sb.Append("Esse lote está tomado por entulho vivo, raízes ou focos de contaminação.<BR><BR>");
+                if (config != null && !String.IsNullOrWhiteSpace(config.Name))
+                {
+                    sb.Append("<B>Cenário:</B> ");
+                    sb.Append(config.Name);
+                    sb.Append("<BR>");
+                }
+
+                sb.Append("<B>Objetivo:</B> remover ");
+                sb.Append(lot.Objective.RequiredAmount);
+                sb.Append(" ");
+                sb.Append(String.IsNullOrWhiteSpace(lot.Objective.DisplayName) ? "ameaças" : lot.Objective.DisplayName);
+                sb.Append(".<BR>");
+
+                if (config != null && config.CollectibleEntries != null && config.CollectibleEntries.Length > 0)
+                {
+                    string tool = config.CollectibleEntries[0] != null ? config.CollectibleEntries[0].RequiredToolTypeName : String.Empty;
+                    if (!String.IsNullOrWhiteSpace(tool))
+                    {
+                        sb.Append("<B>Ferramenta:</B> ");
+                        sb.Append(tool);
+                        sb.Append(".<BR>");
+                    }
+                }
+
+                sb.Append("<B>Progresso:</B> ");
+                sb.Append(state.ObjectiveProgress);
+                sb.Append("/");
+                sb.Append(lot.Objective.RequiredAmount);
+                sb.Append(".");
             }
             else if (lot.Objective.Type == ReinoObjectiveType.DeliverVirtualResource)
             {

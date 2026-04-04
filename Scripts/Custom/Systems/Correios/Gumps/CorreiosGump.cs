@@ -10,6 +10,7 @@ using Server.Network;
 using Server.Targeting;
 using Server.Items;
 using Server.Accounting;
+using Server.Custom.Systems.Reinos;
 
 namespace Server.Custom.Correios
 {
@@ -40,6 +41,7 @@ namespace Server.Custom.Correios
         // UI selections
         public int SelectedPublicationId;
         public int SelectedSubscriptionPubId;
+        public int ContextNpcSerial;
 
         // Manage publication edits
         public int NewPrice;
@@ -146,6 +148,26 @@ namespace Server.Custom.Correios
                 Sessions[m.Serial] = s;
             }
             return s;
+        }
+
+        private Mobile GetContextNpc()
+        {
+            return _s != null && _s.ContextNpcSerial > 0 ? World.FindMobile((Serial)_s.ContextNpcSerial) : null;
+        }
+
+        private bool WithdrawWithKingdomRevenue(Mobile payer, int amount)
+        {
+            if (amount <= 0)
+                return true;
+
+            if (!Banker.Withdraw(payer, amount))
+                return false;
+
+            Mobile npc = GetContextNpc();
+            if (npc != null && !npc.Deleted)
+                ReinoMaintenanceSystem.RecordRevenueFromNpc(npc, amount);
+
+            return true;
         }
 
         public static void OpenSubscriptionNoticeIfAny(Mobile from)
@@ -1740,7 +1762,7 @@ namespace Server.Custom.Correios
             // Name change (always immediate, no suspension)
             if (changeName)
             {
-                if (!Banker.Withdraw(from, 50))
+                if (!WithdrawWithKingdomRevenue(from, 50))
                 {
                     from.SendMessage("Você precisa de 50 moedas no banco para mudar o nome.");
                     from.SendGump(new CorreiosGump(from, 8));
@@ -1778,7 +1800,7 @@ namespace Server.Custom.Correios
 
                 int totalMoney = Cost_SendLetter * subs;
 
-                if (totalMoney > 0 && !Banker.Withdraw(from, totalMoney))
+                if (totalMoney > 0 && !WithdrawWithKingdomRevenue(from, totalMoney))
                 {
                     from.SendMessage("Você não tem moedas suficientes no banco.");
                     from.SendGump(new CorreiosGump(from, 8));
@@ -2112,7 +2134,7 @@ namespace Server.Custom.Correios
             }
 
             int total = CalculateMailSendCost(attachments);
-        if (total > 0 && !Banker.Withdraw(from, total))
+        if (total > 0 && !WithdrawWithKingdomRevenue(from, total))
         {
             from.SendMessage("Você não tem dinheiro suficiente no banco.");
             from.SendGump(new CorreiosGump(from, 3));
@@ -2166,7 +2188,7 @@ namespace Server.Custom.Correios
 
             if (price > 0)
             {
-                if (!Banker.Withdraw(from, price))
+                if (!WithdrawWithKingdomRevenue(from, price))
                 {
                     // sem dinheiro: desfaz assinatura
                     CorreioStorage.Instance.Unsubscribe(from, pub.PublicationId);
@@ -2218,7 +2240,7 @@ namespace Server.Custom.Correios
         {
             int totalCreateCost = Cost_CreatePublication + _s.PubCostPerSubscriber;
 
-            if (!Banker.Withdraw(from, totalCreateCost))
+            if (!WithdrawWithKingdomRevenue(from, totalCreateCost))
             {
                 from.SendMessage("Você precisa de " + totalCreateCost + " moedas no banco para criar uma publicação.");
                 from.SendGump(new CorreiosGump(from, 7));
@@ -2282,7 +2304,7 @@ namespace Server.Custom.Correios
                 return;
             }
 
-            if (!Banker.Withdraw(from, 50))
+            if (!WithdrawWithKingdomRevenue(from, 50))
             {
                 from.SendMessage("Você precisa de 50 moedas no banco.");
                 from.SendGump(new CorreiosGump(from, 8));
@@ -2307,7 +2329,7 @@ namespace Server.Custom.Correios
 
             int subs = pub.Subscribers.Count;
            
-            if (cost > 0 && !Banker.Withdraw(from, cost))
+            if (cost > 0 && !WithdrawWithKingdomRevenue(from, cost))
             {
                 from.SendMessage("Você não tem moedas suficientes no banco.");
                 from.SendGump(new CorreiosGump(from, 8));
@@ -2348,7 +2370,7 @@ namespace Server.Custom.Correios
 
             int subs = pub.Subscribers.Count;
           
-            if (cost > 0 && !Banker.Withdraw(from, cost))
+            if (cost > 0 && !WithdrawWithKingdomRevenue(from, cost))
             {
                 from.SendMessage("Você não tem moedas suficientes no banco.");
                 from.SendGump(new CorreiosGump(from, 8));
@@ -2478,7 +2500,7 @@ namespace Server.Custom.Correios
                     continue;
 
                 // tenta cobrar do assinante
-                if (price > 0 && !Banker.Withdraw(sub, price))
+                if (price > 0 && !WithdrawWithKingdomRevenue(sub, price))
                 {
                     // não pagou = não recebe
                     sub.SendMessage("Você não tinha ouro no banco para pagar esta edição. Você não recebeu a publicação.");
@@ -2498,7 +2520,7 @@ namespace Server.Custom.Correios
 
             // agora o publicador paga só pelos que vão receber
             int totalEnvio = perSub * pagantes.Count;
-            if (!Banker.Withdraw(from, totalEnvio))
+            if (!WithdrawWithKingdomRevenue(from, totalEnvio))
             {
                 // se o publicador não consegue pagar envio, devolve o dinheiro cobrado dos assinantes
                 foreach (var sub in pagantes)
@@ -2512,7 +2534,7 @@ namespace Server.Custom.Correios
                 return;
             }
 
-            if (!Banker.Withdraw(from, total))
+            if (!WithdrawWithKingdomRevenue(from, total))
             {
                 from.SendMessage($"Você precisa de {total} moedas no banco para enviar esta edição.");
                 from.SendGump(new CorreiosGump(from, 10));

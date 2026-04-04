@@ -12,13 +12,19 @@ namespace Server.Custom.Systems.Reinos
         protected readonly int m_SelectedWallAreaId;
         protected readonly string m_SelectedBuildingId;
         protected readonly int m_BuildingPage;
+        protected readonly int m_InitialPage;
 
         public ReinoExpansionGump(PlayerMobile from, int cityId)
-            : this(from, cityId, -1, -1, String.Empty, 0)
+            : this(from, cityId, -1, -1, String.Empty, 0, 4)
         {
         }
 
         public ReinoExpansionGump(PlayerMobile from, int cityId, int selectedLotId, int selectedWallAreaId, string selectedBuildingId, int buildingPage)
+            : this(from, cityId, selectedLotId, selectedWallAreaId, selectedBuildingId, buildingPage, 4)
+        {
+        }
+
+        public ReinoExpansionGump(PlayerMobile from, int cityId, int selectedLotId, int selectedWallAreaId, string selectedBuildingId, int buildingPage, int initialPage)
             : base(0, 0)
         {
             m_From = from;
@@ -27,6 +33,7 @@ namespace Server.Custom.Systems.Reinos
             m_SelectedWallAreaId = selectedWallAreaId;
             m_SelectedBuildingId = selectedBuildingId ?? String.Empty;
             m_BuildingPage = buildingPage < 0 ? 0 : buildingPage;
+            m_InitialPage = initialPage;
 
             Closable = true;
             Disposable = true;
@@ -34,8 +41,7 @@ namespace Server.Custom.Systems.Reinos
             Resizable = false;
 
             BuildBaseGump();
-            BuildExpansionPage();
-            BuildPlaceholderPages();
+            BuildCurrentSection();
         }
 
         private void BuildBaseGump()
@@ -58,55 +64,88 @@ namespace Server.Custom.Systems.Reinos
             AddLabel(253, 170, 0, @"Governo");
 
             AddLabel(250, 231, 0, @"Visão Geral");
-            AddButton(211, 225, 439, 248, 1, GumpButtonType.Page, 1);
+            AddButton(211, 225, 439, 438, 1, GumpButtonType.Reply, 0);
 
             AddLabel(250, 270, 0, @"Tesouro");
-            AddButton(211, 264, 439, 248, 2, GumpButtonType.Page, 2);
+            AddButton(211, 264, 439, 438, 2, GumpButtonType.Reply, 0);
 
             AddLabel(250, 310, 0, @"Manutenção");
-            AddButton(211, 304, 439, 248, 3, GumpButtonType.Page, 3);
+            AddButton(211, 304, 439, 438, 3, GumpButtonType.Reply, 0);
 
             AddLabel(250, 349, 0, @"Expansão");
-            AddButton(211, 343, 439, 248, 4, GumpButtonType.Page, 4);
+            AddButton(211, 343, 439, 438, 4, GumpButtonType.Reply, 0);
 
             AddLabel(250, 390, 0, @"Empregados");
-            AddButton(211, 384, 439, 248, 5, GumpButtonType.Page, 5);
+            AddButton(211, 384, 439, 438, 5, GumpButtonType.Reply, 0);
 
             AddLabel(250, 429, 0, @"Diplomacia");
-            AddButton(211, 423, 439, 248, 6, GumpButtonType.Page, 6);
+            AddButton(211, 423, 439, 438, 6, GumpButtonType.Reply, 0);
 
             AddLabel(250, 469, 0, @"Visual");
-            AddButton(211, 463, 439, 248, 7, GumpButtonType.Page, 7);
+            AddButton(211, 463, 439, 438, 7, GumpButtonType.Reply, 0);
 
             AddLabel(250, 508, 0, @"Slot 1");
-            AddButton(211, 502, 439, 248, 8, GumpButtonType.Page, 8);
+            AddButton(211, 502, 439, 438, 8, GumpButtonType.Reply, 0);
 
-            AddLabel(250, 548, 0, @"Slot 2");
-            AddButton(211, 542, 439, 248, 9, GumpButtonType.Page, 9);
+            AddLabel(250, 548, 0, @"Detalhe");
+            AddButton(211, 542, 439, 438, 9, GumpButtonType.Reply, 0);
 
-            AddLabel(250, 587, 0, @"Slot 3");
-            AddButton(211, 581, 439, 248, 10, GumpButtonType.Page, 10);
+            AddLabel(250, 587, 0, @"Postos");
+            AddButton(211, 581, 439, 438, 10, GumpButtonType.Reply, 0);
 
             AddLabel(250, 627, 0, @"Slot 4");
-            AddButton(211, 621, 439, 248, 11, GumpButtonType.Page, 11);
+            AddButton(211, 621, 439, 438, 11, GumpButtonType.Reply, 0);
 
             AddLabel(250, 666, 0, @"Slot 5");
-            AddButton(211, 660, 439, 248, 12, GumpButtonType.Page, 12);
+            AddButton(211, 660, 439, 438, 12, GumpButtonType.Reply, 0);
         }
 
-        private void BuildPlaceholderPages()
+        private void BuildCurrentSection()
+        {
+            switch (m_InitialPage)
+            {
+                case 3:
+                    BuildMaintenancePage();
+                    break;
+                case 4:
+                    BuildExpansionPage();
+                    break;
+                case 9:
+                    BuildConstructionDetailPage();
+                    break;
+                case 10:
+                    BuildPostoDetailPage();
+                    break;
+                default:
+                    BuildPlaceholderPage(GetPlaceholderTitle(m_InitialPage));
+                    break;
+            }
+        }
+
+        private string GetPlaceholderTitle(int page)
+        {
+            switch (page)
+            {
+                case 1: return "Visão Geral";
+                case 2: return "Tesouro";
+                case 5: return "Empregados";
+                case 6: return "Diplomacia";
+                case 7: return "Visual";
+                case 8: return "Slot 1";
+                case 11: return "Slot 4";
+                case 12: return "Slot 5";
+                default: return "Página";
+            }
+        }
+
+        private void BuildPlaceholderPage(string titulo)
         {
             AddPage(1);
-            AddPage(2);
-            AddPage(3);
-            AddPage(5);
-            AddPage(6);
-            AddPage(7);
-            AddPage(8);
-            AddPage(9);
-            AddPage(10);
-            AddPage(11);
-            AddPage(12);
+
+            AddLabel(430, 185, 0, titulo);
+            AddHtml(430, 220, 720, 420,
+                "<BASEFONT COLOR=#D7C89A>Esta página ainda não foi implementada.</BASEFONT>",
+                true, true);
         }
     }
 }

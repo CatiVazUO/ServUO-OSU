@@ -1,5 +1,6 @@
 using System;
 using Server.Items;
+using Server.Custom.Systems.Reinos;
 using Server.Mobiles;
 
 namespace Server.Custom.Systems.Biblioteca.Library
@@ -25,7 +26,7 @@ namespace Server.Custom.Systems.Biblioteca.Library
         {
         }
 
-        public bool EnsureWeeklyFee(PlayerMobile pm, out string failReason)
+        public bool EnsureWeeklyFee(PlayerMobile pm, Mobile contextNpc, out string failReason)
         {
             failReason = null;
 
@@ -35,13 +36,13 @@ namespace Server.Custom.Systems.Biblioteca.Library
                 return false;
             }
 
-            // cobra 10 moedas por semana, retirando do banco
             TimeSpan elapsed = DateTime.UtcNow - _lastFeePaidUtc;
             if (elapsed.TotalDays < 7.0)
                 return true;
 
             int weeks = (int)Math.Floor(elapsed.TotalDays / 7.0);
-            if (weeks < 1) weeks = 1;
+            if (weeks < 1)
+                weeks = 1;
 
             int cost = weeks * 10;
 
@@ -51,9 +52,17 @@ namespace Server.Custom.Systems.Biblioteca.Library
                 return false;
             }
 
+            if (contextNpc != null && !contextNpc.Deleted)
+                ReinoMaintenanceSystem.RecordRevenueFromNpc(contextNpc, cost);
+
             _lastFeePaidUtc = _lastFeePaidUtc.AddDays(weeks * 7.0);
             InvalidateProperties();
             return true;
+        }
+
+        public bool EnsureWeeklyFee(PlayerMobile pm, out string failReason)
+        {
+            return EnsureWeeklyFee(pm, null, out failReason);
         }
 
         public override void AddNameProperties(ObjectPropertyList list)

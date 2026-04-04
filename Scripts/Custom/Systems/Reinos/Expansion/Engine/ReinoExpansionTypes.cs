@@ -27,7 +27,8 @@ namespace Server.Custom.Systems.Reinos
     {
         None = 0,
         KillMob,
-        DeliverVirtualResource
+        DeliverVirtualResource,
+        CollectItem
     }
 
     public enum ReinoResourceType
@@ -109,12 +110,58 @@ namespace Server.Custom.Systems.Reinos
         public int MultiSerial;
         public List<int> DoorSerials;
         public List<int> RentalSignSerials;
+        public List<int> ThreatMobSerials;
+        public List<int> ThreatItemSerials;
+        public DateTime LastActivatedUtc;
+        public int MaintenancePriority;
+
+        public int CommissionedRoleCount;
+        public int CommissionedRoleWeeklySalaryGold;
+
+        public int TotalRevenueGold;
+        public int RevenueCurrentActivationGold;
+        public int RevenueLast7DaysGold;
+        public DateTime RevenueWeekStartUtc;
+
+        public int TotalNpcWagesGold;
+        public int NpcWagesCurrentActivationGold;
+        public int NpcWagesLast7DaysGold;
+        public DateTime NpcWagesWeekStartUtc;
+
+        public int TotalCommissionWagesGold;
+        public int CommissionWagesCurrentActivationGold;
+        public int CommissionWagesLast7DaysGold;
+        public DateTime CommissionWagesWeekStartUtc;
 
         public ReinoAreaState()
         {
             ConstructionId = String.Empty;
             DoorSerials = new List<int>();
             RentalSignSerials = new List<int>();
+            ThreatMobSerials = new List<int>();
+            ThreatItemSerials = new List<int>();
+
+            LastActivatedUtc = DateTime.MinValue;
+            MaintenancePriority = 0;
+
+            CommissionedRoleCount = 0;
+            CommissionedRoleWeeklySalaryGold = 0;
+
+            TotalRevenueGold = 0;
+            RevenueCurrentActivationGold = 0;
+            RevenueLast7DaysGold = 0;
+            RevenueWeekStartUtc = DateTime.MinValue;
+
+            TotalNpcWagesGold = 0;
+            NpcWagesCurrentActivationGold = 0;
+            NpcWagesLast7DaysGold = 0;
+            NpcWagesWeekStartUtc = DateTime.MinValue;
+
+            TotalCommissionWagesGold = 0;
+            CommissionWagesCurrentActivationGold = 0;
+            CommissionWagesLast7DaysGold = 0;
+            CommissionWagesWeekStartUtc = DateTime.MinValue;
+
             Status = ReinoLotStatus.Locked;
             CurrentStageIndex = -1;
             NextStageUtc = DateTime.MinValue;
@@ -271,6 +318,9 @@ namespace Server.Custom.Systems.Reinos
         public TimeSpan ReactivateDuration;
         public bool Permanent;
         public int MaintenancePriority;
+        public bool AllowManualActivationToggle;
+        public bool AllowPriorityChange;
+        public int NpcWeeklySalaryGold;
         public ReinoRentalTemplate[] RentalTemplates;
 
         public ReinoConstructionDefinition()
@@ -297,6 +347,9 @@ namespace Server.Custom.Systems.Reinos
             ReactivateDuration = TimeSpan.FromDays(3.0);
             Permanent = false;
             MaintenancePriority = 5;
+            AllowManualActivationToggle = true;
+            AllowPriorityChange = true;
+            NpcWeeklySalaryGold = 0;
             RentalTemplates = new ReinoRentalTemplate[0];
         }
 
@@ -452,6 +505,97 @@ namespace Server.Custom.Systems.Reinos
         }
     }
 
+
+
+    public class ReinoLotMobSpawnEntry
+    {
+        public string TypeName;
+        public int Weight;
+
+        public ReinoLotMobSpawnEntry()
+        {
+            TypeName = String.Empty;
+            Weight = 1;
+        }
+
+        public ReinoLotMobSpawnEntry(string typeName, int weight)
+        {
+            TypeName = typeName ?? String.Empty;
+            Weight = weight <= 0 ? 1 : weight;
+        }
+    }
+
+    public class ReinoLotCollectibleSpawnEntry
+    {
+        public string TypeName;
+        public string DisplayName;
+        public int ItemId;
+        public int Hue;
+        public string RequiredToolTypeName;
+        public int Weight;
+
+        public ReinoLotCollectibleSpawnEntry()
+        {
+            TypeName = String.Empty;
+            DisplayName = String.Empty;
+            ItemId = 0x0D15;
+            Hue = 0;
+            RequiredToolTypeName = String.Empty;
+            Weight = 1;
+        }
+
+        public ReinoLotCollectibleSpawnEntry(string typeName, string displayName, int itemId, int hue, string requiredToolTypeName, int weight)
+        {
+            TypeName = typeName ?? String.Empty;
+            DisplayName = displayName ?? String.Empty;
+            ItemId = itemId;
+            Hue = hue;
+            RequiredToolTypeName = requiredToolTypeName ?? String.Empty;
+            Weight = weight <= 0 ? 1 : weight;
+        }
+    }
+
+    public class ReinoLotConfigDefinition
+    {
+        public int ConfigId;
+        public int Side;
+        public string Name;
+        public int EncounterMultiId;
+        public Point3D EncounterOffset;
+        public Point3D SpawnOffset;
+        public int SpawnRange;
+        public ReinoObjectiveType ObjectiveType;
+        public string ObjectiveDisplayName;
+        public string[] ObjectiveTargetTypeNames;
+        public int ObjectiveAmount;
+        public int SpawnCount;
+        public ReinoLotMobSpawnEntry[] MobEntries;
+        public ReinoLotCollectibleSpawnEntry[] CollectibleEntries;
+
+        public ReinoLotConfigDefinition()
+        {
+            ConfigId = 0;
+            Side = 0;
+            Name = String.Empty;
+            EncounterMultiId = 0;
+            EncounterOffset = Point3D.Zero;
+            SpawnOffset = Point3D.Zero;
+            SpawnRange = 3;
+            ObjectiveType = ReinoObjectiveType.None;
+            ObjectiveDisplayName = String.Empty;
+            ObjectiveTargetTypeNames = new string[0];
+            ObjectiveAmount = 0;
+            SpawnCount = 0;
+            MobEntries = new ReinoLotMobSpawnEntry[0];
+            CollectibleEntries = new ReinoLotCollectibleSpawnEntry[0];
+        }
+
+        public bool IsEmpty
+        {
+            get { return ConfigId == 0 || ObjectiveType == ReinoObjectiveType.None; }
+        }
+    }
+
     public class ReinoLotDefinition
     {
         public int LotId;
@@ -461,11 +605,25 @@ namespace Server.Custom.Systems.Reinos
         public int Side;
         public Rectangle2D Rect;
         public string Name;
+        public int LotConfigId;
+        public int EncounterOffsetX;
+        public int EncounterOffsetY;
+        public int EncounterOffsetZ;
+        public int SpawnOffsetX;
+        public int SpawnOffsetY;
+        public int SpawnOffsetZ;
         public ReinoObjectiveDefinition Objective;
 
         public ReinoLotDefinition()
         {
             Name = String.Empty;
+            LotConfigId = 0;
+            EncounterOffsetX = 0;
+            EncounterOffsetY = 0;
+            EncounterOffsetZ = 0;
+            SpawnOffsetX = 0;
+            SpawnOffsetY = 0;
+            SpawnOffsetZ = 0;
             Objective = new ReinoObjectiveDefinition();
         }
 
@@ -478,6 +636,13 @@ namespace Server.Custom.Systems.Reinos
             Side = side;
             Rect = new Rectangle2D(northWest.X, northWest.Y, side, side);
             Name = String.Format("Lote {0}: {1}x{1}", lotId, side);
+            LotConfigId = 0;
+            EncounterOffsetX = 0;
+            EncounterOffsetY = 0;
+            EncounterOffsetZ = 0;
+            SpawnOffsetX = 0;
+            SpawnOffsetY = 0;
+            SpawnOffsetZ = 0;
             Objective = new ReinoObjectiveDefinition();
         }
 
@@ -508,6 +673,29 @@ namespace Server.Custom.Systems.Reinos
         public int PostSerial;
         public List<int> DoorSerials;
         public List<int> RentalSignSerials;
+        public List<int> ThreatMobSerials;
+        public List<int> ThreatItemSerials;
+        public DateTime LastActivatedUtc;
+        public int MaintenancePriority;
+
+        public int CommissionedRoleCount;
+        public int CommissionedRoleWeeklySalaryGold;
+
+        public int TotalRevenueGold;
+        public int RevenueCurrentActivationGold;
+        public int RevenueLast7DaysGold;
+        public DateTime RevenueWeekStartUtc;
+
+        public int TotalNpcWagesGold;
+        public int NpcWagesCurrentActivationGold;
+        public int NpcWagesLast7DaysGold;
+        public DateTime NpcWagesWeekStartUtc;
+
+        public int TotalCommissionWagesGold;
+        public int CommissionWagesCurrentActivationGold;
+        public int CommissionWagesLast7DaysGold;
+        public DateTime CommissionWagesWeekStartUtc;
+
 
         public ReinoLotState()
         {
@@ -520,6 +708,28 @@ namespace Server.Custom.Systems.Reinos
             ReactivateReadyUtc = DateTime.MinValue;
             DoorSerials = new List<int>();
             RentalSignSerials = new List<int>();
+            ThreatMobSerials = new List<int>();
+            ThreatItemSerials = new List<int>();
+            LastActivatedUtc = DateTime.MinValue;
+            MaintenancePriority = 0;
+
+            CommissionedRoleCount = 0;
+            CommissionedRoleWeeklySalaryGold = 0;
+
+            TotalRevenueGold = 0;
+            RevenueCurrentActivationGold = 0;
+            RevenueLast7DaysGold = 0;
+            RevenueWeekStartUtc = DateTime.MinValue;
+
+            TotalNpcWagesGold = 0;
+            NpcWagesCurrentActivationGold = 0;
+            NpcWagesLast7DaysGold = 0;
+            NpcWagesWeekStartUtc = DateTime.MinValue;
+
+            TotalCommissionWagesGold = 0;
+            CommissionWagesCurrentActivationGold = 0;
+            CommissionWagesLast7DaysGold = 0;
+            CommissionWagesWeekStartUtc = DateTime.MinValue;
         }
 
         public ReinoLotState(int lotId) : this()

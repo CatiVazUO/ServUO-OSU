@@ -11,6 +11,7 @@ using Server.Custom.Systems.HtmlBooks.Engine;
 using Server.Custom.Systems.HtmlBooks.Gumps;
 using Server.Custom.Systems.HtmlBooks.Html.Readable;
 using Server.Custom.Systems.Biblioteca.Library;
+using Server.Custom.Systems.Reinos;
 
 namespace Server.Custom.Systems.Biblioteca.Gumps
 {
@@ -102,7 +103,7 @@ namespace Server.Custom.Systems.Biblioteca.Gumps
             if (hasCard && card != null)
             {
                 string feeFail;
-                if (!card.EnsureWeeklyFee(_pm, out feeFail))
+                if (!card.EnsureWeeklyFee(_pm, _npc, out feeFail))
                 {
                     // revoke if cannot pay
                     card.Delete();
@@ -354,6 +355,20 @@ namespace Server.Custom.Systems.Biblioteca.Gumps
             return res;
         }
 
+        private bool WithdrawWithKingdomRevenue(Mobile payer, int amount)
+        {
+            if (amount <= 0)
+                return true;
+
+            if (!Banker.Withdraw(payer, amount))
+                return false;
+
+            if (_npc != null && !_npc.Deleted)
+                ReinoMaintenanceSystem.RecordRevenueFromNpc(_npc, amount);
+
+            return true;
+        }
+
         public override void OnResponse(NetState sender, RelayInfo info)
         {
             if (_pm == null || _pm.Deleted || _npc == null || _npc.Deleted)
@@ -369,7 +384,7 @@ namespace Server.Custom.Systems.Biblioteca.Gumps
             if (hasCard && card != null)
             {
                 string feeFail;
-                if (!card.EnsureWeeklyFee(_pm, out feeFail))
+                if (!card.EnsureWeeklyFee(_pm, _npc, out feeFail))
                 {
                     card.Delete();
                     hasCard = false;
@@ -409,7 +424,7 @@ namespace Server.Custom.Systems.Biblioteca.Gumps
                     return;
                 }
 
-                if (!Banker.Withdraw(_pm, 50))
+                if (!WithdrawWithKingdomRevenue(_pm, 50))
                 {
                     _pm.SendMessage(0x22, "Você precisa de 50 moedas no banco.");
                     _pm.SendGump(new GumpLibrary(_pm, _npc, TAB_CARD, 0, 0, _searchQueryRaw));

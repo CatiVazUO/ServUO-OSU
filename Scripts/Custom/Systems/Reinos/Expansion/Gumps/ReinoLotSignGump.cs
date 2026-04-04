@@ -33,13 +33,13 @@ namespace Server.Custom.Systems.Reinos
                 return;
             }
 
-            AddLabel(470, 225, 0, lot.Name);
+            AddLabel(504, 225, 0, lot.Name);
             AddImage(352, 240, 443);
             AddHtml(371, 277, 362, 190, ReinoExpansionSystem.BuildLotSignHtml(from, lot, state), false, false);
-            AddLabel(377, 486, 0, "Reino");
-            AddLabel(472, 486, 0, ReinoElectionsSystem.GetCityName(lot.CityId));
-            AddLabel(590, 486, 0, "Status");
-            AddLabel(655, 486, 0, ReinoExpansionSystem.GetStatusLabel(state.Status));
+            AddLabel(377, 486, 0, "Reino -");
+            AddLabel(428, 486, 0, ReinoElectionsSystem.GetCityName(lot.CityId));
+            AddLabel(590, 486, 0, "Status -");
+            AddLabel(652, 486, 0, ReinoExpansionSystem.GetStatusLabel(state.Status));
         }
     }
 }

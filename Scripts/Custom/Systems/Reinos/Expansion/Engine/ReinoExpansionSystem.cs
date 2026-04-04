@@ -11,7 +11,7 @@ using Server.Custom.Systems.Rent;
 
 namespace Server.Custom.Systems.Reinos
 {
-    public static class ReinoExpansionSystem
+    public static partial class ReinoExpansionSystem
     {
         private static readonly string FilePath = Path.Combine(Core.BaseDirectory, "Data", "OSU_ReinoExpansion_v2.bin");
 
@@ -31,15 +31,20 @@ namespace Server.Custom.Systems.Reinos
             ReinoExpansionDefinitions.EnsureInitialized();
             EnsureDefaults();
             Load();
+
+            for (int cityId = 0; cityId < ReinoElectionsSystem.CityNames.Length; cityId++)
+                ReinoMaintenanceSystem.NormalizeCityPriorities(cityId);
+
             EventSink.WorldSave += delegate { Save(); };
             EventSink.CreatureDeath += OnCreatureDeath;
 
-            Timer.DelayCall(TimeSpan.FromSeconds(10.0), TimeSpan.FromSeconds(10.0), Pulse);
-            Timer.DelayCall(TimeSpan.FromMinutes(2.0), TimeSpan.FromMinutes(2.0), MaintenancePulse);
+            Timer.DelayCall(TimeSpan.FromHours(1.0), TimeSpan.FromHours(1.0), Pulse);
         }
 
         private static void EnsureDefaults()
         {
+            ReinoLotConfigRegistry.EnsureInitialized();
+
             for (int cityId = 0; cityId < 4; cityId++)
                 GetLedger(cityId);
         }
@@ -443,10 +448,9 @@ namespace Server.Custom.Systems.Reinos
                 m_NextLotId = lotId + 1;
             ReinoLotDefinition lot = new ReinoLotDefinition(lotId, cityId, map, northWest, side);
             lot.Name = String.Format("Lote {0}: {1}x{1}", lotId, side);
-            lot.Objective = BuildDefaultObjective();
             m_LotDefinitions[lotId] = lot;
             m_LotStates[lotId] = new ReinoLotState(lotId);
-            EnsureLotSign(lot, m_LotStates[lotId]);
+            ConfigureNewLot(lot, m_LotStates[lotId]);
 
             message = String.Format("Lote {0} criado para {1}.", lotId, ReinoElectionsSystem.GetCityName(cityId));
             return true;
@@ -778,6 +782,110 @@ namespace Server.Custom.Systems.Reinos
             return false;
         }
 
+        public static bool TryDeactivateLotConstruction(int cityId, int lotId, out string message)
+        {
+            message = String.Empty;
+
+            ReinoLotDefinition lot = GetLotDefinition(lotId);
+            ReinoLotState state = GetLotState(lotId);
+
+            if (lot == null || state == null || lot.CityId != cityId)
+            {
+                message = "Lote inválido para esse reino.";
+                return false;
+            }
+
+            if (state.Status != ReinoLotStatus.Active)
+            {
+                message = "Essa construção não está ativa.";
+                return false;
+            }
+
+            ReinoConstructionDefinition def = ReinoExpansionDefinitions.GetBuilding(state.ConstructionId);
+            if (def == null)
+            {
+                message = "Construção inválida.";
+                return false;
+            }
+
+            if (def.RentalTemplates != null && def.RentalTemplates.Length > 0)
+            {
+                message = "Construções com aluguel não podem ser desativadas manualmente.";
+                return false;
+            }
+
+            ConvertLotToAbandoned(lot, state, def);
+            message = "Construção desativada.";
+            return true;
+        }
+
+        public static bool TryDeactivateAreaConstruction(int cityId, int areaId, out string message)
+        {
+            message = String.Empty;
+
+            ReinoAreaDefinition area = GetAreaDefinition(areaId);
+            ReinoAreaState state = GetAreaState(areaId);
+
+            if (area == null || state == null || area.CityId != cityId)
+            {
+                message = "Área inválida para esse reino.";
+                return false;
+            }
+
+            if (state.Status != ReinoLotStatus.Active)
+            {
+                message = "Essa construção não está ativa.";
+                return false;
+            }
+
+            ReinoConstructionDefinition def = ReinoExpansionDefinitions.GetBuilding(state.ConstructionId);
+            if (def == null)
+            {
+                message = "Construção inválida.";
+                return false;
+            }
+
+            if (def.Permanent)
+            {
+                message = "Essa construção não pode ser desativada.";
+                return false;
+            }
+
+            ConvertAreaToAbandoned(area, state, def);
+            message = "Construção desativada.";
+            return true;
+        }
+
+        public static void ForceDeactivateLotForMaintenance(int lotId)
+        {
+            ReinoLotDefinition lot = GetLotDefinition(lotId);
+            ReinoLotState state = GetLotState(lotId);
+
+            if (lot == null || state == null || state.Status != ReinoLotStatus.Active)
+                return;
+
+            ReinoConstructionDefinition def = ReinoExpansionDefinitions.GetBuilding(state.ConstructionId);
+            if (def == null)
+                return;
+
+            ConvertLotToAbandoned(lot, state, def);
+        }
+
+        public static void ForceDeactivateAreaForMaintenance(int areaId)
+        {
+            ReinoAreaDefinition area = GetAreaDefinition(areaId);
+            ReinoAreaState state = GetAreaState(areaId);
+
+            if (area == null || state == null || state.Status != ReinoLotStatus.Active)
+                return;
+
+            ReinoConstructionDefinition def = ReinoExpansionDefinitions.GetBuilding(state.ConstructionId);
+            if (def == null || def.Permanent)
+                return;
+
+            ConvertAreaToAbandoned(area, state, def);
+        }
+
         private static void StartLotConstruction(ReinoLotDefinition lot, ReinoLotState state, ReinoConstructionDefinition def)
         {
             CleanupLotWorldObjects(state);
@@ -843,9 +951,12 @@ namespace Server.Custom.Systems.Reinos
 
                     if (state.Status == ReinoLotStatus.Available && state.AvailableUntilUtc != DateTime.MinValue && DateTime.UtcNow >= state.AvailableUntilUtc)
                     {
-                        ResetLotInternal(lot, state);
+                        HandleAvailableLotExpiry(lot, state);
                         continue;
                     }
+
+                    if (state.Status == ReinoLotStatus.Locked)
+                        RespawnLotEncounter(lot, state);
 
                     if (state.Status == ReinoLotStatus.UnderConstruction && state.NextStageUtc != DateTime.MinValue && DateTime.UtcNow >= state.NextStageUtc)
                         AdvanceLotConstruction(lot, state);
@@ -862,52 +973,71 @@ namespace Server.Custom.Systems.Reinos
                     if (state.Status == ReinoLotStatus.UnderConstruction && state.NextStageUtc != DateTime.MinValue && DateTime.UtcNow >= state.NextStageUtc)
                         AdvanceAreaConstruction(area, state);
                 }
+
+                ReinoMaintenanceSystem.RunWeeklyMaintenance();
             }
             catch
             {
             }
         }
 
-        private static void MaintenancePulse()
+        private static void EnsureLotVisualState(ReinoLotDefinition lot, ReinoLotState state)
         {
-            try
+            if (lot == null || state == null || String.IsNullOrWhiteSpace(state.ConstructionId))
+                return;
+
+            ReinoConstructionDefinition def = ReinoExpansionDefinitions.GetBuilding(state.ConstructionId);
+            if (def == null)
+                return;
+
+            ReinoConstructionMulti multi = state.MultiSerial > 0 ? World.FindItem((Serial)state.MultiSerial) as ReinoConstructionMulti : null;
+
+            if (state.Status == ReinoLotStatus.Active)
             {
-                foreach (KeyValuePair<int, ReinoLotDefinition> kv in m_LotDefinitions)
+                if (multi == null || multi.Deleted || multi.StageIndex != -1)
                 {
-                    ReinoLotDefinition lot = kv.Value;
-                    ReinoLotState state = GetLotState(kv.Key);
-
-                    if (lot == null || state == null || state.Status != ReinoLotStatus.Active)
-                        continue;
-
-                    ReinoConstructionDefinition def = ReinoExpansionDefinitions.GetBuilding(state.ConstructionId);
-                    if (def == null || def.Permanent)
-                        continue;
-
-                    string reason;
-                    if (!TryConsumeResources(lot.CityId, def.MaintenanceCosts, out reason))
-                        ConvertLotToAbandoned(lot, state, def);
-                }
-
-                foreach (KeyValuePair<int, ReinoAreaDefinition> kv in m_AreaDefinitions)
-                {
-                    ReinoAreaDefinition area = kv.Value;
-                    ReinoAreaState state = GetAreaState(kv.Key);
-
-                    if (area == null || state == null || state.Status != ReinoLotStatus.Active)
-                        continue;
-
-                    ReinoConstructionDefinition def = ReinoExpansionDefinitions.GetBuilding(state.ConstructionId);
-                    if (def == null || def.Permanent)
-                        continue;
-
-                    string reason;
-                    if (!TryConsumeResources(area.CityId, def.MaintenanceCosts, out reason))
-                        ConvertAreaToAbandoned(area, state, def);
+                    CleanupLotWorldObjects(state);
+                    PlaceLotFinishedMulti(lot, state, def, false);
+                    SpawnNpcIfNeeded(lot, state, def);
+                    SpawnRentalSignsIfNeeded(lot, state, def);
                 }
             }
-            catch
+            else if (state.Status == ReinoLotStatus.Abandoned)
             {
+                if (multi == null || multi.Deleted || multi.StageIndex != -2)
+                {
+                    CleanupLotWorldObjects(state);
+                    PlaceLotFinishedMulti(lot, state, def, true);
+                }
+            }
+        }
+
+        private static void EnsureAreaVisualState(ReinoAreaDefinition area, ReinoAreaState state)
+        {
+            if (area == null || state == null || String.IsNullOrWhiteSpace(state.ConstructionId))
+                return;
+
+            ReinoConstructionDefinition def = ReinoExpansionDefinitions.GetBuilding(state.ConstructionId);
+            if (def == null)
+                return;
+
+            ReinoConstructionMulti multi = state.MultiSerial > 0 ? World.FindItem((Serial)state.MultiSerial) as ReinoConstructionMulti : null;
+
+            if (state.Status == ReinoLotStatus.Active)
+            {
+                if (multi == null || multi.Deleted || multi.StageIndex != -1)
+                {
+                    CleanupAreaWorldObjects(state);
+                    PlaceAreaFinishedMulti(area, state, def, false);
+                }
+            }
+            else if (state.Status == ReinoLotStatus.Abandoned)
+            {
+                if (multi == null || multi.Deleted || multi.StageIndex != -2)
+                {
+                    CleanupAreaWorldObjects(state);
+                    PlaceAreaFinishedMulti(area, state, def, true);
+                }
             }
         }
 
@@ -1020,10 +1150,16 @@ namespace Server.Custom.Systems.Reinos
             state.NextStageUtc = DateTime.MinValue;
             state.ReactivateReadyUtc = DateTime.MinValue;
 
+            state.LastActivatedUtc = DateTime.UtcNow;
+            state.RevenueCurrentActivationGold = 0;
+            state.NpcWagesCurrentActivationGold = 0;
+            state.CommissionWagesCurrentActivationGold = 0;
+
             PlaceLotFinishedMulti(lot, state, def, false);
             SpawnNpcIfNeeded(lot, state, def);
             SpawnRentalSignsIfNeeded(lot, state, def);
             EnsureLotSign(lot, state);
+            ReinoMaintenanceSystem.NormalizeCityPriorities(lot.CityId);
         }
 
         private static void CompleteAreaConstruction(ReinoAreaDefinition area, ReinoAreaState state, ReinoConstructionDefinition def)
@@ -1033,7 +1169,13 @@ namespace Server.Custom.Systems.Reinos
             state.CurrentStageIndex = def.StageMultiIds.Length;
             state.NextStageUtc = DateTime.MinValue;
 
+            state.LastActivatedUtc = DateTime.UtcNow;
+            state.RevenueCurrentActivationGold = 0;
+            state.NpcWagesCurrentActivationGold = 0;
+            state.CommissionWagesCurrentActivationGold = 0;
+
             PlaceAreaFinishedMulti(area, state, def, false);
+            ReinoMaintenanceSystem.NormalizeCityPriorities(area.CityId);
         }
 
         private static void ConvertLotToAbandoned(ReinoLotDefinition lot, ReinoLotState state, ReinoConstructionDefinition def)
@@ -1045,6 +1187,7 @@ namespace Server.Custom.Systems.Reinos
             state.ReactivateReadyUtc = DateTime.MinValue;
             PlaceLotFinishedMulti(lot, state, def, true);
             EnsureLotSign(lot, state);
+            ReinoMaintenanceSystem.NormalizeCityPriorities(lot.CityId);
         }
 
         private static void ConvertAreaToAbandoned(ReinoAreaDefinition area, ReinoAreaState state, ReinoConstructionDefinition def)
@@ -1057,12 +1200,14 @@ namespace Server.Custom.Systems.Reinos
             state.CurrentStageIndex = -1;
             state.NextStageUtc = DateTime.MinValue;
             PlaceAreaFinishedMulti(area, state, def, true);
+            ReinoMaintenanceSystem.NormalizeCityPriorities(area.CityId);
         }
 
         private static void PlaceLotStageMulti(ReinoLotDefinition lot, ReinoLotState state, ReinoConstructionDefinition def, int stageIndex)
         {
             EjectLotMobiles(lot);
             CleanupLotWorldObjects(state);
+            CleanupDanglingLotEncounterMultis(lot);
 
             int multiId = def.StageMultiIds[stageIndex];
             Point3D anchor = GetAnchorForTopLeft(lot.NorthWest, multiId, null);
@@ -1378,12 +1523,52 @@ namespace Server.Custom.Systems.Reinos
             if (lot == null)
                 return Point3D.Zero;
 
-            return new Point3D(lot.NorthWest.X + lot.Side - 2, lot.NorthWest.Y + lot.Side, lot.NorthWest.Z);
+            return new Point3D(lot.NorthWest.X + lot.Side - 2, lot.NorthWest.Y + lot.Side, lot.NorthWest.Z + 7);
         }
 
         private static Point3D GetLotPostLocation(ReinoLotDefinition lot)
         {
-            return GetLotSignLocation(lot);
+            if (lot == null)
+                return Point3D.Zero;
+
+            return new Point3D(lot.NorthWest.X + lot.Side - 2, lot.NorthWest.Y + lot.Side, lot.NorthWest.Z);
+        }
+
+        private static void CleanupDanglingLotEncounterMultis(ReinoLotDefinition lot)
+        {
+            if (lot == null || lot.Map == null || lot.Map == Map.Internal)
+                return;
+
+            Rectangle2D search = new Rectangle2D(lot.NorthWest.X - 8, lot.NorthWest.Y - 8, lot.Side + 16, lot.Side + 16);
+            List<Item> toDelete = new List<Item>();
+
+            IPooledEnumerable eable = lot.Map.GetItemsInBounds(search);
+
+            foreach (Item item in eable)
+            {
+                ReinoConstructionMulti multi = item as ReinoConstructionMulti;
+                if (multi == null || multi.Deleted)
+                    continue;
+
+                if (multi.ReferenceId != lot.LotId)
+                    continue;
+
+                if (String.IsNullOrWhiteSpace(multi.ConstructionId))
+                    continue;
+
+                if (!multi.ConstructionId.StartsWith("LotConfig:", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                toDelete.Add(multi);
+            }
+
+            eable.Free();
+
+            for (int i = 0; i < toDelete.Count; i++)
+            {
+                if (toDelete[i] != null && !toDelete[i].Deleted)
+                    toDelete[i].Delete();
+            }
         }
 
         private static void EnsureLotSign(ReinoLotDefinition lot, ReinoLotState state)
@@ -1470,7 +1655,21 @@ namespace Server.Custom.Systems.Reinos
         private static void ResolveWorldReferences()
         {
             foreach (KeyValuePair<int, ReinoLotDefinition> kv in m_LotDefinitions)
-                EnsureLotSign(kv.Value, GetLotState(kv.Key));
+            {
+                ReinoLotDefinition lot = kv.Value;
+                ReinoLotState state = GetLotState(kv.Key);
+
+                EnsureLotSign(lot, state);
+                EnsureLotVisualState(lot, state);
+            }
+
+            foreach (KeyValuePair<int, ReinoAreaDefinition> kv in m_AreaDefinitions)
+            {
+                ReinoAreaDefinition area = kv.Value;
+                ReinoAreaState state = GetAreaState(kv.Key);
+
+                EnsureAreaVisualState(area, state);
+            }
         }
 
         private static void CleanupLotWorldObjects(ReinoLotState state)
@@ -1518,6 +1717,30 @@ namespace Server.Custom.Systems.Reinos
                 }
 
                 state.RentalSignSerials.Clear();
+            }
+
+            if (state.ThreatMobSerials != null)
+            {
+                for (int i = 0; i < state.ThreatMobSerials.Count; i++)
+                {
+                    Mobile mob = state.ThreatMobSerials[i] > 0 ? World.FindMobile((Serial)state.ThreatMobSerials[i]) : null;
+                    if (mob != null && !mob.Deleted)
+                        mob.Delete();
+                }
+
+                state.ThreatMobSerials.Clear();
+            }
+
+            if (state.ThreatItemSerials != null)
+            {
+                for (int i = 0; i < state.ThreatItemSerials.Count; i++)
+                {
+                    Item item = state.ThreatItemSerials[i] > 0 ? World.FindItem((Serial)state.ThreatItemSerials[i]) : null;
+                    if (item != null && !item.Deleted)
+                        item.Delete();
+                }
+
+                state.ThreatItemSerials.Clear();
             }
         }
 
@@ -1588,6 +1811,9 @@ namespace Server.Custom.Systems.Reinos
                 if (killer == null || killer.Deleted)
                     return;
 
+                if (TryHandleLotThreatDeath(killer, e.Creature))
+                    return;
+
                 string citizenCity = PlayerMobile.NormalizeOSUCityId(killer.OSUCitizenCityId);
                 if (String.IsNullOrWhiteSpace(citizenCity))
                     return;
@@ -1632,8 +1858,7 @@ namespace Server.Custom.Systems.Reinos
 
                     if (targetState.ObjectiveProgress >= targetLot.Objective.RequiredAmount)
                     {
-                        targetState.Status = ReinoLotStatus.Available;
-                        targetState.AvailableUntilUtc = DateTime.UtcNow + TimeSpan.FromDays(7.0);
+                        CompleteLotObjective(targetLot, targetState);
                         killer.SendMessage("O {0} foi limpo e agora está disponível para construção.", targetLot.Name);
                     }
                     else
@@ -1710,12 +1935,11 @@ namespace Server.Custom.Systems.Reinos
 
             if (state.ObjectiveProgress >= lot.Objective.RequiredAmount && state.Status == ReinoLotStatus.Locked)
             {
-                state.Status = ReinoLotStatus.Available;
-                state.AvailableUntilUtc = DateTime.UtcNow + TimeSpan.FromDays(7.0);
+                CompleteLotObjective(lot, state);
             }
             else if (state.ObjectiveProgress < lot.Objective.RequiredAmount && state.Status == ReinoLotStatus.Available && String.IsNullOrWhiteSpace(state.ConstructionId))
             {
-                state.Status = ReinoLotStatus.Locked;
+                ResetLotEncounter(lot, state, false);
             }
 
             EnsureLotSign(lot, state);
@@ -1736,8 +1960,7 @@ namespace Server.Custom.Systems.Reinos
             }
 
             state.ObjectiveProgress = lot.Objective != null ? lot.Objective.RequiredAmount : 0;
-            state.Status = ReinoLotStatus.Available;
-            state.AvailableUntilUtc = DateTime.UtcNow + TimeSpan.FromDays(7.0);
+            CompleteLotObjective(lot, state);
             EnsureLotSign(lot, state);
             message = String.Format("Lote {0} ficou limpo e disponível para construção.", lotId);
             return true;
@@ -1762,15 +1985,7 @@ namespace Server.Custom.Systems.Reinos
 
         private static void ResetLotInternal(ReinoLotDefinition lot, ReinoLotState state)
         {
-            CleanupLotWorldObjects(state);
-            state.Status = ReinoLotStatus.Locked;
-            state.ObjectiveProgress = 0;
-            state.AvailableUntilUtc = DateTime.MinValue;
-            state.ConstructionId = String.Empty;
-            state.CurrentStageIndex = -1;
-            state.NextStageUtc = DateTime.MinValue;
-            state.ReactivateReadyUtc = DateTime.MinValue;
-            EnsureLotSign(lot, state);
+            ResetLotEncounter(lot, state, false);
         }
 
         private static void SpawnRentalSignsIfNeeded(ReinoLotDefinition lot, ReinoLotState state, ReinoConstructionDefinition def)
@@ -2178,7 +2393,7 @@ namespace Server.Custom.Systems.Reinos
                 using (FileStream fs = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.None))
                 using (BinaryWriter bw = new BinaryWriter(fs))
                 {
-                    bw.Write(4);
+                    bw.Write(5);
                     bw.Write(m_NextLotId);
                     bw.Write(m_NextAreaId);
 
@@ -2271,6 +2486,8 @@ namespace Server.Custom.Systems.Reinos
                         bw.Write(rentalCount);
                         for (int i = 0; i < rentalCount; i++)
                             bw.Write(st.RentalSignSerials[i]);
+
+                        WriteExtraLotData(bw, def, st);
                     }
                 }
             }
@@ -2393,6 +2610,8 @@ namespace Server.Custom.Systems.Reinos
                             for (int r = 0; r < rentalCount; r++)
                                 st.RentalSignSerials.Add(br.ReadInt32());
                         }
+
+                        ReadExtraLotData(br, version, def, st);
 
                         m_LotDefinitions[lotId] = def;
                         m_LotStates[lotId] = st;

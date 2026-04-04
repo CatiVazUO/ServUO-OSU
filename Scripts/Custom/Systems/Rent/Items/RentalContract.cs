@@ -159,19 +159,19 @@ namespace Server.Custom.Systems.Rent
 				House.Doors.Remove( door );
 		}
 
-		protected override void OnRentPaid()
-		{
-			if ( c_RentalMaster == null || c_RentalClient == null )
-				return;
+        protected override void OnRentPaid(int amount)
+        {
+            if (c_RentalMaster == null || c_RentalClient == null)
+                return;
 
-			if ( Free )
-				return;
+            if (Free)
+                return;
 
-			c_RentalMaster.BankBox.DropItem( new Gold( Price ) );
-			c_RentalMaster.SendMessage( "O banco transferiu seu dinheiro de {0}.", c_RentalClient.Name );
-		}
+            c_RentalMaster.BankBox.DropItem(new Gold(amount));
+            c_RentalMaster.SendMessage("O banco transferiu seu dinheiro de {0}.", c_RentalClient.Name);
+        }
 
-		public override void ClearHouse()
+        public override void ClearHouse()
 		{
 			if ( !Deleted )
 				Delete();

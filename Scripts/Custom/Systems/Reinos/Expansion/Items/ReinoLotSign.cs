@@ -23,19 +23,102 @@ namespace Server.Custom.Systems.Reinos
             set { m_CityId = value; UpdateName(); }
         }
 
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int LotConfigId
+        {
+            get { return ReinoExpansionSystem.GetLotConfigId(m_LotId); }
+            set
+            {
+                string message;
+                if (!ReinoExpansionSystem.SetLotConfig(m_LotId, value, out message))
+                {
+                }
+
+                UpdateName();
+            }
+        }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int EncounterOffsetX
+        {
+            get { return ReinoExpansionSystem.GetLotEncounterOffsetX(m_LotId); }
+            set
+            {
+                string message;
+                ReinoExpansionSystem.SetLotEncounterOffset(m_LotId, value, EncounterOffsetY, EncounterOffsetZ, out message);
+            }
+        }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int EncounterOffsetY
+        {
+            get { return ReinoExpansionSystem.GetLotEncounterOffsetY(m_LotId); }
+            set
+            {
+                string message;
+                ReinoExpansionSystem.SetLotEncounterOffset(m_LotId, EncounterOffsetX, value, EncounterOffsetZ, out message);
+            }
+        }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int EncounterOffsetZ
+        {
+            get { return ReinoExpansionSystem.GetLotEncounterOffsetZ(m_LotId); }
+            set
+            {
+                string message;
+                ReinoExpansionSystem.SetLotEncounterOffset(m_LotId, EncounterOffsetX, EncounterOffsetY, value, out message);
+            }
+        }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int SpawnOffsetX
+        {
+            get { return ReinoExpansionSystem.GetLotSpawnOffsetX(m_LotId); }
+            set
+            {
+                string message;
+                ReinoExpansionSystem.SetLotSpawnOffset(m_LotId, value, SpawnOffsetY, SpawnOffsetZ, out message);
+            }
+        }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int SpawnOffsetY
+        {
+            get { return ReinoExpansionSystem.GetLotSpawnOffsetY(m_LotId); }
+            set
+            {
+                string message;
+                ReinoExpansionSystem.SetLotSpawnOffset(m_LotId, SpawnOffsetX, value, SpawnOffsetZ, out message);
+            }
+        }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int SpawnOffsetZ
+        {
+            get { return ReinoExpansionSystem.GetLotSpawnOffsetZ(m_LotId); }
+            set
+            {
+                string message;
+                ReinoExpansionSystem.SetLotSpawnOffset(m_LotId, SpawnOffsetX, SpawnOffsetY, value, out message);
+            }
+        }
+
         [Constructable]
         public ReinoLotSign() : this(0, -1)
         {
         }
 
         [Constructable]
-        public ReinoLotSign(int lotId, int cityId) : base(0x0BD1)
+        public ReinoLotSign(int lotId, int cityId) : base(0x18B6) //placa trocar
         {
             m_LotId = lotId;
             m_CityId = cityId;
             Movable = false;
             Weight = 255.0;
             Hue = 0;
+            Z = 7;
             UpdateName();
         }
 

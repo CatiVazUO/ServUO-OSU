@@ -178,7 +178,9 @@ namespace Server.Custom.Systems.Reinos
             int itemID = entry.m_ItemID & TileData.MaxItemValue;
             ItemData data = TileData.ItemTable[itemID];
 
-            if ((data.Flags & TileFlag.Door) != 0)
+            bool functionalDoors = (m_StageIndex == -1);
+
+            if (functionalDoors && (data.Flags & TileFlag.Door) != 0)
             {
                 BaseDoor door = CreateDoorFromMultiId(itemID);
                 if (door != null)

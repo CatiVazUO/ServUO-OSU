@@ -31,6 +31,7 @@ namespace Server.Custom.Systems.Reinos
             CommandSystem.Register("ReinoLotReset", AccessLevel.GameMaster, OnLotReset);
             CommandSystem.Register("ReinoLotClean", AccessLevel.GameMaster, OnLotClean);
             CommandSystem.Register("ReinoRecursosAddAll", AccessLevel.GameMaster, OnAddAllResources);
+            CommandSystem.Register("ReinoMaintenanceNow", AccessLevel.GameMaster, OnMaintenanceNow);
         }
 
         private static bool TryParseCity(string raw, out int cityId)
@@ -390,6 +391,26 @@ namespace Server.Custom.Systems.Reinos
                 e.Mobile.SendMessage(message);
         }
 
+        private static void OnMaintenanceNow(CommandEventArgs e)
+        {
+            if (e.Arguments == null || e.Arguments.Length == 0)
+            {
+                ReinoMaintenanceSystem.RunWeeklyMaintenanceNow();
+                e.Mobile.SendMessage("Cobrança semanal forçada para todos os reinos.");
+                return;
+            }
+
+            int cityId;
+            if (!TryParseCity(e.Arguments[0], out cityId))
+            {
+                e.Mobile.SendMessage("Cidade inválida. Use Aurora, Xetá, Lurone ou Willran.");
+                return;
+            }
+
+            ReinoMaintenanceSystem.RunWeeklyMaintenanceNow(cityId);
+            e.Mobile.SendMessage("Cobrança semanal forçada para {0}.", ReinoElectionsSystem.GetCityName(cityId));
+        }
+
         private class AreaRectTarget : Target
         {
             private readonly int m_CityId;
@@ -451,6 +472,7 @@ namespace Server.Custom.Systems.Reinos
                 }
             }
         }
+
 
         private class DecorativeLinkTarget : Target
         {

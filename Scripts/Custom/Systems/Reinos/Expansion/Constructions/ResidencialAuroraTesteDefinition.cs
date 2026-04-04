@@ -111,6 +111,7 @@ namespace Server.Custom.Systems.Reinos
             StringBuilder sb = new StringBuilder();
             sb.Append("<BASEFONT COLOR=#000000>");
             sb.Append("<B>Residencial Aurora</B><BR><BR>");
+            sb.Append("<B>AVISO: ESSA ÁREA NÃO PODE SER DESATIVADA NEM DESCONSTRUIDA, ELA É PERMANENTE"
             sb.Append("<B>Construção:</B> 200 madeira, 120 ferro e 80 tecido.<BR>");
             sb.Append("<B>Manutenção:</B> nesta primeira versão de teste, a área residencial está marcada como permanente para você focar no aluguel e na configuração das casas sem risco de abandono.<BR><BR>");
             sb.Append("Quando ficar pronta, esta construção cria automaticamente 2 placas residenciais de teste já com área, altura, lockdowns, secures e local da placa definidos. O governador precisa apenas liberar cada imóvel, ajustar nome, preço, frequência e povos permitidos.<BR><BR>");
@@ -142,6 +143,9 @@ namespace Server.Custom.Systems.Reinos
             def.ReactivateDuration = TimeSpan.FromMinutes(3.0);
             def.Permanent = false;
             def.MaintenancePriority = 1;
+            def.AllowManualActivationToggle = false;
+            def.AllowPriorityChange = false;
+            def.NpcWeeklySalaryGold = 0;
             def.RentalTemplates = RENTALS;
             return def;
         }

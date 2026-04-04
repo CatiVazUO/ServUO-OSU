@@ -51,7 +51,7 @@ namespace Server.Custom.Systems.Reinos
 
         private const int FINISHED_MULTI_ID = 0xA7;   
         private const int ABANDONED_MULTI_ID = 0xA8;  
-        private static readonly TimeSpan REACTIVATE_DURATION = TimeSpan.FromMinutes(3.0);
+        private static readonly TimeSpan REACTIVATE_DURATION = TimeSpan.FromMinutes(1.0);
 
         public static ReinoConstructionDefinition Create()
         {
@@ -85,7 +85,10 @@ namespace Server.Custom.Systems.Reinos
             def.UseMultiDoors = true;
             def.ReactivateDuration = REACTIVATE_DURATION;
             def.Permanent = false;
-            def.MaintenancePriority = 5;
+            def.MaintenancePriority = 2;
+            def.AllowManualActivationToggle = true;
+            def.AllowPriorityChange = true;
+            def.NpcWeeklySalaryGold = 0;
             return def;
         }
     }

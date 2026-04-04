@@ -1,4 +1,5 @@
 using Server.Custom.Correios;
+using Server.Commands;
 using Server.Custom.Mobiles;
 using Server.Gumps;
 using Server.Mobiles;
@@ -9,10 +10,20 @@ namespace Server.Custom.Correios
     [CorpseName("um carteiro")]
     public class CorreioNPC : BaseNoTradeVendor
     {
+        private int m_GovernmentCityId;
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int GovernmentCityId
+        {
+            get { return m_GovernmentCityId; }
+            set { m_GovernmentCityId = value; InvalidateProperties(); }
+        }
+
         [Constructable]
         public CorreioNPC() : base("carteiro")
         {
             CanMove = false;
+            m_GovernmentCityId = -1;
         }
 
         public override bool HandlesOnSpeech(Mobile from)
@@ -55,6 +66,10 @@ namespace Server.Custom.Correios
         {
             CorreioStorage.Ensure();
 
+            CorreioSession session = CorreiosGump.GetSession(from);
+            if (session != null)
+                session.ContextNpcSerial = this.Serial.Value;
+
             from.CloseGump(typeof(CorreiosGump));
             from.SendGump(new CorreiosGump(from));
 
@@ -66,13 +81,19 @@ namespace Server.Custom.Correios
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write(0);
+            writer.Write(1);
+            writer.Write(m_GovernmentCityId);
         }
 
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);
             int v = reader.ReadInt();
+
+            if (v >= 1)
+                m_GovernmentCityId = reader.ReadInt();
+            else
+                m_GovernmentCityId = -1;
         }
     }
 }

@@ -17,7 +17,7 @@ namespace Server.Custom.Systems.Reinos
 
         private void BuildExpansionPage()
         {
-            AddPage(4);
+            AddPage(1);
 
             List<ReinoLotDefinition> leftLots = ReinoExpansionSystem.GetVisibleLeftLotsForCity(m_CityId);
             List<ReinoLotDefinition> rightLots = ReinoExpansionSystem.GetUnavailableLotsForCity(m_CityId);
@@ -154,17 +154,26 @@ namespace Server.Custom.Systems.Reinos
 
             int button = info.ButtonID;
 
+            if (button >= 1 && button <= 12)
+            {
+                from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, button));
+                return;
+            }
+
+            if (HandleMaintenanceResponse(from, info))
+                return;
+
             if (button >= ButtonSelectLeftLotBase && button < ButtonSelectRightLotBase)
             {
                 int lotId = button - ButtonSelectLeftLotBase;
-                from.SendGump(new ReinoExpansionGump(from, m_CityId, lotId, -1, String.Empty, 0));
+                from.SendGump(new ReinoExpansionGump(from, m_CityId, lotId, -1, String.Empty, 0, 4));
                 return;
             }
 
             if (button >= ButtonSelectRightLotBase && button < ButtonSelectBuildingBase)
             {
                 int lotId = button - ButtonSelectRightLotBase;
-                from.SendGump(new ReinoExpansionGump(from, m_CityId, lotId, -1, String.Empty, 0));
+                from.SendGump(new ReinoExpansionGump(from, m_CityId, lotId, -1, String.Empty, 0, 4));
                 return;
             }
 
@@ -176,9 +185,9 @@ namespace Server.Custom.Systems.Reinos
                 int realIndex = start + slot;
 
                 if (realIndex >= 0 && realIndex < options.Count)
-                    from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, -1, options[realIndex].Id, m_BuildingPage));
+                    from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, -1, options[realIndex].Id, m_BuildingPage, 4));
                 else
-                    from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, -1, m_SelectedBuildingId, m_BuildingPage));
+                    from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, -1, m_SelectedBuildingId, m_BuildingPage, 4));
 
                 return;
             }
@@ -189,14 +198,14 @@ namespace Server.Custom.Systems.Reinos
                 if (page < 0)
                     page = 0;
 
-                from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, -1, m_SelectedBuildingId, page));
+                from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, -1, m_SelectedBuildingId, page, 4));
                 return;
             }
 
             if (button == ButtonConstructionNext)
             {
                 int page = m_BuildingPage + 1;
-                from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, -1, m_SelectedBuildingId, page));
+                from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, -1, m_SelectedBuildingId, page, 4));
                 return;
             }
 
@@ -221,7 +230,7 @@ namespace Server.Custom.Systems.Reinos
                     message = "Selecione um lote primeiro.";
 
                 from.SendMessage(message);
-                from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, -1, buildingId, m_BuildingPage));
+                from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, -1, buildingId, m_BuildingPage, 4));
             }
         }
 
