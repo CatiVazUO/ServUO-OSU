@@ -9,7 +9,7 @@ namespace Server.Gumps
     {
         public static SignInfo[] m_Types = new SignInfo[]
         {
-            new SignInfo(0xB95),
+          /*  new SignInfo(0xB95),
             new SignInfo(0xB96),
             new SignInfo(0xBA3),
             new SignInfo(0xBA4),
@@ -138,7 +138,7 @@ namespace Server.Gumps
             new SignInfo(0x9A10),
             new SignInfo(0x9A11),
             new SignInfo(0x9A12),
-            new SignInfo(0x9A13)
+            new SignInfo(0x9A13)*/
         };
 
         private readonly int m_Type;

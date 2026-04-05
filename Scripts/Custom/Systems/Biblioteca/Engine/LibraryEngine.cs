@@ -5,7 +5,7 @@ using Server.Items;
 using Server.Mobiles;
 using Server.Custom.Systems.HtmlBooks.Engine;
 
-namespace Server.Custom.Systems.Biblioteca.Engine
+namespace Server.Custom.Biblioteca.Engine
 {
     public static class LibraryEngine
     {

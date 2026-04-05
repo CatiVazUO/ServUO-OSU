@@ -1454,7 +1454,7 @@ namespace Server.Multis
             int z = base.Location.Z - oldLocation.Z;
 
             if (Sign != null && !Sign.Deleted)
-                Sign.Location = new Point3D(Sign.X + x, Sign.Y + y, Sign.Z + z);
+                Sign.Location = new Point3D(Sign.X + x, Sign.Y + y, Sign.Z + z - 5);
 
             UpdateRegion();
 

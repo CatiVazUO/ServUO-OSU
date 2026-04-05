@@ -16,6 +16,8 @@ namespace Server.Custom.Systems.Reinos
         private string m_ConstructionId;
         private int m_StageIndex;
         private List<Item> m_Components;
+        private List<int> m_ComponentSerials;
+        private bool m_ResolvingAfterLoad;
 
         [CommandProperty(AccessLevel.GameMaster)]
         public int MultiId
@@ -71,6 +73,9 @@ namespace Server.Custom.Systems.Reinos
             base.OnMapChange();
 
             if (Deleted)
+                return;
+
+            if (m_ResolvingAfterLoad)
                 return;
 
             if (m_Components == null)
@@ -140,6 +145,11 @@ namespace Server.Custom.Systems.Reinos
             if (m_Components == null)
                 m_Components = new List<Item>();
 
+            if (m_ComponentSerials == null)
+                m_ComponentSerials = new List<int>();
+            else
+                m_ComponentSerials.Clear();
+
             MultiComponentList mcl = MultiData.GetComponents(m_MultiId);
 
             if (mcl == null || mcl.List == null || mcl.List.Length == 0)
@@ -149,6 +159,7 @@ namespace Server.Custom.Systems.Reinos
             }
 
             List<BaseDoor> placedDoors = new List<BaseDoor>();
+            HashSet<string> placedDoorOffsets = new HashSet<string>();
 
             for (int i = 0; i < mcl.List.Length; ++i)
             {
@@ -157,6 +168,20 @@ namespace Server.Custom.Systems.Reinos
                 if (entry.m_ItemID <= 0)
                     continue;
 
+                int itemID = entry.m_ItemID & TileData.MaxItemValue;
+                ItemData data = TileData.ItemTable[itemID];
+                bool functionalDoors = (m_StageIndex == -1);
+
+                if (functionalDoors && (data.Flags & TileFlag.Door) != 0)
+                {
+                    string key = entry.m_OffsetX + ":" + entry.m_OffsetY + ":" + entry.m_OffsetZ;
+
+                    if (placedDoorOffsets.Contains(key))
+                        continue;
+
+                    placedDoorOffsets.Add(key);
+                }
+
                 Item item = CreateComponent(entry);
                 if (item == null)
                     continue;
@@ -164,6 +189,7 @@ namespace Server.Custom.Systems.Reinos
                 item.Movable = false;
                 item.MoveToWorld(new Point3D(X + entry.m_OffsetX, Y + entry.m_OffsetY, Z + entry.m_OffsetZ), Map);
                 m_Components.Add(item);
+                m_ComponentSerials.Add(item.Serial.Value);
 
                 BaseDoor door = item as BaseDoor;
                 if (door != null)
@@ -337,17 +363,61 @@ namespace Server.Custom.Systems.Reinos
             }
 
             m_Components.Clear();
+
+            if (m_ComponentSerials != null)
+                m_ComponentSerials.Clear();
+        }
+
+        private void ResolveComponentsAfterLoad()
+        {
+            m_ResolvingAfterLoad = false;
+
+            if (Deleted)
+                return;
+
+            if (m_Components == null)
+                m_Components = new List<Item>();
+            else
+                m_Components.Clear();
+
+            if (m_ComponentSerials == null)
+                m_ComponentSerials = new List<int>();
+
+            for (int i = 0; i < m_ComponentSerials.Count; i++)
+            {
+                Item item = World.FindItem((Serial)m_ComponentSerials[i]);
+                if (item != null && !item.Deleted)
+                    m_Components.Add(item);
+            }
+
+            if (Map == null || Map == Map.Internal)
+                return;
+
+            if (m_Components.Count == 0)
+                BuildComponents();
         }
 
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
 
-            writer.Write(0);
+            writer.Write(1);
             writer.Write(m_MultiId);
             writer.Write(m_ReferenceId);
             writer.Write(m_ConstructionId ?? String.Empty);
             writer.Write(m_StageIndex);
+
+            int count = m_Components != null ? m_Components.Count : 0;
+            writer.Write(count);
+
+            if (m_Components != null)
+            {
+                for (int i = 0; i < m_Components.Count; i++)
+                {
+                    Item item = m_Components[i];
+                    writer.Write(item != null && !item.Deleted ? item.Serial.Value : 0);
+                }
+            }
         }
 
         public override void Deserialize(GenericReader reader)
@@ -361,9 +431,20 @@ namespace Server.Custom.Systems.Reinos
             m_StageIndex = reader.ReadInt();
 
             m_Components = new List<Item>();
+            m_ComponentSerials = new List<int>();
             Visible = false;
             Movable = false;
-            Timer.DelayCall(TimeSpan.FromSeconds(1.0), new TimerCallback(RefreshComponents));
+
+            if (version >= 1)
+            {
+                int count = reader.ReadInt();
+
+                for (int i = 0; i < count; i++)
+                    m_ComponentSerials.Add(reader.ReadInt());
+            }
+
+            m_ResolvingAfterLoad = true;
+            Timer.DelayCall(TimeSpan.FromSeconds(1.0), new TimerCallback(ResolveComponentsAfterLoad));
         }
     }
 

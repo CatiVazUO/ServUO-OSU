@@ -406,7 +406,7 @@ namespace Server.Engines.NewMagincia
 		public Point3D SignLoc { get { return new Point3D(m_Location.X + 1, m_Location.Y - 2, m_Location.Z); } }
 		
 		[CommandProperty(AccessLevel.GameMaster)]
-		public Point3D MultiLocation { get { return new Point3D(m_Location.X, m_Location.Y, m_Location.Z + 2); } }
+		public Point3D MultiLocation { get { return new Point3D(m_Location.X, m_Location.Y, m_Location.Z ); } }
 		
 		public PlotDef(string id, Point3D pnt, int mapID)
 		{

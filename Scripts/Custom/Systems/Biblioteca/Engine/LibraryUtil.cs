@@ -6,7 +6,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Text;
 
-namespace Server.Custom.Systems.Biblioteca.Engine
+namespace Server.Custom.Biblioteca.Engine
 {
     public static class LibraryUtil
     {

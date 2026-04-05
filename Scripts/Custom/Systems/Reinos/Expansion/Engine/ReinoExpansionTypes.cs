@@ -294,6 +294,27 @@ namespace Server.Custom.Systems.Reinos
         }
     }
 
+    public class ReinoNpcSpawnDefinition
+    {
+        public string NpcTypeName;
+        public Point3D Offset;
+        public int ZOffset;
+
+        public ReinoNpcSpawnDefinition()
+        {
+            NpcTypeName = String.Empty;
+            Offset = Point3D.Zero;
+            ZOffset = 5;
+        }
+
+        public ReinoNpcSpawnDefinition(string npcTypeName, int x, int y, int zOffset)
+        {
+            NpcTypeName = npcTypeName ?? String.Empty;
+            Offset = new Point3D(x, y, 0);
+            ZOffset = zOffset;
+        }
+    }
+
     public class ReinoConstructionDefinition
     {
         public string Id;
@@ -313,6 +334,10 @@ namespace Server.Custom.Systems.Reinos
         public string NpcTypeName;
         public Point3D NpcOffset;
         public int NpcZOffset;
+        public ReinoNpcSpawnDefinition[] NpcSpawns;
+        public string[] AdditionalNpcTypeNames;
+        public Point3D[] AdditionalNpcOffsets;
+        public int[] AdditionalNpcZOffsets;
         public ReinoDoorDefinition[] FinishedDoors;
         public bool UseMultiDoors;
         public TimeSpan ReactivateDuration;
@@ -342,6 +367,10 @@ namespace Server.Custom.Systems.Reinos
             NpcTypeName = String.Empty;
             NpcOffset = Point3D.Zero;
             NpcZOffset = 5;
+            NpcSpawns = new ReinoNpcSpawnDefinition[0];
+            AdditionalNpcTypeNames = new string[0];
+            AdditionalNpcOffsets = new Point3D[0];
+            AdditionalNpcZOffsets = new int[0];
             FinishedDoors = new ReinoDoorDefinition[0];
             UseMultiDoors = true;
             ReactivateDuration = TimeSpan.FromDays(3.0);
@@ -510,18 +539,36 @@ namespace Server.Custom.Systems.Reinos
     public class ReinoLotMobSpawnEntry
     {
         public string TypeName;
+        public string DisplayName;
+        public int Hue;
         public int Weight;
+        public ReinoLotSpawnPointDefinition SpawnPoint;
 
         public ReinoLotMobSpawnEntry()
         {
             TypeName = String.Empty;
+            DisplayName = String.Empty;
+            Hue = 0;
             Weight = 1;
+            SpawnPoint = null;
         }
 
         public ReinoLotMobSpawnEntry(string typeName, int weight)
         {
             TypeName = typeName ?? String.Empty;
+            DisplayName = String.Empty;
+            Hue = 0;
             Weight = weight <= 0 ? 1 : weight;
+            SpawnPoint = null;
+        }
+
+        public ReinoLotMobSpawnEntry(string typeName, string displayName, int hue, int weight, ReinoLotSpawnPointDefinition spawnPoint)
+        {
+            TypeName = typeName ?? String.Empty;
+            DisplayName = displayName ?? String.Empty;
+            Hue = hue;
+            Weight = weight <= 0 ? 1 : weight;
+            SpawnPoint = spawnPoint;
         }
     }
 
@@ -533,6 +580,7 @@ namespace Server.Custom.Systems.Reinos
         public int Hue;
         public string RequiredToolTypeName;
         public int Weight;
+        public ReinoLotSpawnPointDefinition SpawnPoint;
 
         public ReinoLotCollectibleSpawnEntry()
         {
@@ -542,6 +590,7 @@ namespace Server.Custom.Systems.Reinos
             Hue = 0;
             RequiredToolTypeName = String.Empty;
             Weight = 1;
+            SpawnPoint = null;
         }
 
         public ReinoLotCollectibleSpawnEntry(string typeName, string displayName, int itemId, int hue, string requiredToolTypeName, int weight)
@@ -551,6 +600,39 @@ namespace Server.Custom.Systems.Reinos
             ItemId = itemId;
             Hue = hue;
             RequiredToolTypeName = requiredToolTypeName ?? String.Empty;
+            Weight = weight <= 0 ? 1 : weight;
+            SpawnPoint = null;
+        }
+
+        public ReinoLotCollectibleSpawnEntry(string typeName, string displayName, int itemId, int hue, string requiredToolTypeName, int weight, ReinoLotSpawnPointDefinition spawnPoint)
+        {
+            TypeName = typeName ?? String.Empty;
+            DisplayName = displayName ?? String.Empty;
+            ItemId = itemId;
+            Hue = hue;
+            RequiredToolTypeName = requiredToolTypeName ?? String.Empty;
+            Weight = weight <= 0 ? 1 : weight;
+            SpawnPoint = spawnPoint;
+        }
+    }
+
+    public class ReinoLotSpawnPointDefinition
+    {
+        public Point3D Offset;
+        public int Range;
+        public int Weight;
+
+        public ReinoLotSpawnPointDefinition()
+        {
+            Offset = Point3D.Zero;
+            Range = 3;
+            Weight = 1;
+        }
+
+        public ReinoLotSpawnPointDefinition(int x, int y, int z, int range, int weight)
+        {
+            Offset = new Point3D(x, y, z);
+            Range = range;
             Weight = weight <= 0 ? 1 : weight;
         }
     }
@@ -564,6 +646,7 @@ namespace Server.Custom.Systems.Reinos
         public Point3D EncounterOffset;
         public Point3D SpawnOffset;
         public int SpawnRange;
+        public ReinoLotSpawnPointDefinition[] SpawnPoints;
         public ReinoObjectiveType ObjectiveType;
         public string ObjectiveDisplayName;
         public string[] ObjectiveTargetTypeNames;
@@ -571,6 +654,7 @@ namespace Server.Custom.Systems.Reinos
         public int SpawnCount;
         public ReinoLotMobSpawnEntry[] MobEntries;
         public ReinoLotCollectibleSpawnEntry[] CollectibleEntries;
+        public TimeSpan RespawnDelay;
 
         public ReinoLotConfigDefinition()
         {
@@ -581,6 +665,7 @@ namespace Server.Custom.Systems.Reinos
             EncounterOffset = Point3D.Zero;
             SpawnOffset = Point3D.Zero;
             SpawnRange = 3;
+            SpawnPoints = new ReinoLotSpawnPointDefinition[0];
             ObjectiveType = ReinoObjectiveType.None;
             ObjectiveDisplayName = String.Empty;
             ObjectiveTargetTypeNames = new string[0];
@@ -588,6 +673,7 @@ namespace Server.Custom.Systems.Reinos
             SpawnCount = 0;
             MobEntries = new ReinoLotMobSpawnEntry[0];
             CollectibleEntries = new ReinoLotCollectibleSpawnEntry[0];
+            RespawnDelay = TimeSpan.FromSeconds(12.0);
         }
 
         public bool IsEmpty
@@ -663,6 +749,7 @@ namespace Server.Custom.Systems.Reinos
         public ReinoLotStatus Status;
         public int ObjectiveProgress;
         public DateTime AvailableUntilUtc;
+        public DateTime NextThreatRespawnUtc;
         public string ConstructionId;
         public int CurrentStageIndex;
         public DateTime NextStageUtc;
@@ -670,6 +757,8 @@ namespace Server.Custom.Systems.Reinos
         public int SignSerial;
         public int MultiSerial;
         public int NpcSerial;
+        public List<int> NpcSerials;
+        public List<int> ExtraNpcSerials;
         public int PostSerial;
         public List<int> DoorSerials;
         public List<int> RentalSignSerials;
@@ -695,6 +784,7 @@ namespace Server.Custom.Systems.Reinos
         public int CommissionWagesCurrentActivationGold;
         public int CommissionWagesLast7DaysGold;
         public DateTime CommissionWagesWeekStartUtc;
+        public bool RearmThreatOnAvailableExpiry;
 
 
         public ReinoLotState()
@@ -702,14 +792,17 @@ namespace Server.Custom.Systems.Reinos
             Status = ReinoLotStatus.Locked;
             ObjectiveProgress = 0;
             AvailableUntilUtc = DateTime.MinValue;
+            NextThreatRespawnUtc = DateTime.MinValue;
             ConstructionId = String.Empty;
             CurrentStageIndex = -1;
             NextStageUtc = DateTime.MinValue;
             ReactivateReadyUtc = DateTime.MinValue;
+            NpcSerials = new List<int>();
             DoorSerials = new List<int>();
             RentalSignSerials = new List<int>();
             ThreatMobSerials = new List<int>();
             ThreatItemSerials = new List<int>();
+            ExtraNpcSerials = new List<int>();
             LastActivatedUtc = DateTime.MinValue;
             MaintenancePriority = 0;
 
@@ -730,6 +823,7 @@ namespace Server.Custom.Systems.Reinos
             CommissionWagesCurrentActivationGold = 0;
             CommissionWagesLast7DaysGold = 0;
             CommissionWagesWeekStartUtc = DateTime.MinValue;
+            RearmThreatOnAvailableExpiry = false;
         }
 
         public ReinoLotState(int lotId) : this()

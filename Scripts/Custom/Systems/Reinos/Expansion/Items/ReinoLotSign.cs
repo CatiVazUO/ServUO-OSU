@@ -111,7 +111,7 @@ namespace Server.Custom.Systems.Reinos
         }
 
         [Constructable]
-        public ReinoLotSign(int lotId, int cityId) : base(0x18B6) //placa trocar
+        public ReinoLotSign(int lotId, int cityId) : base(0x18B9) //placa trocar
         {
             m_LotId = lotId;
             m_CityId = cityId;

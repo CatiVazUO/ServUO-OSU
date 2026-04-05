@@ -83,8 +83,17 @@ namespace Server.Custom.Systems.Reinos.Expansion.Engine
                 return;
             }
 
+            if (pm.Mounted)
+            {
+                pm.SendMessage("Você não pode coletar isso enquanto estiver montado.");
+                return;
+            }
+
             if (ReinoExpansionSystem.NotifyLotCollectibleUsed(pm, m_LotId, m_CollectibleTypeName))
+            {
+                pm.Animate(14, 5, 1, true, false, 0);
                 Delete();
+            }
         }
 
         public ReinoLotCollectible(Serial serial) : base(serial)

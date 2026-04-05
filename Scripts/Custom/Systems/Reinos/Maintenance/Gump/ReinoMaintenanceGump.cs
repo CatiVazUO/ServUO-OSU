@@ -16,6 +16,7 @@ namespace Server.Custom.Systems.Reinos
         private const int ButtonMaintenanceToggle = 50400;
         private const int ButtonMaintenancePriorityDown = 50401;
         private const int ButtonMaintenancePriorityUp = 50402;
+        private const int ButtonMaintenanceDemolish = 50403;
 
         private void BuildMaintenancePage()
         {
@@ -49,8 +50,14 @@ namespace Server.Custom.Systems.Reinos
 
             for (int i = 0; i < active.Count && i < leftY.Length; i++)
             {
+                string label = active[i].Name;
+
+                if (active[i].Status == ReinoLotStatus.UnderConstruction)
+                    label += "";
+
                 AddButton(413, leftY[i] + 3, 536, 435, ButtonMaintenanceActiveBase + i, GumpButtonType.Reply, 0);
-                AddLabel(437, leftY[i], 0, active[i].Name);
+                AddLabel(437, leftY[i], 0, label);
+                AddLabel(557, leftY[i], 0, ReinoMaintenanceSystem.GetDisplayPriority(active[i]).ToString());
             }
 
             for (int i = 0; i < inactive.Count && i < midY.Length; i++)
@@ -130,7 +137,17 @@ namespace Server.Custom.Systems.Reinos
                 return;
             }
 
-            List<ReinoResourceCost> weekly = ReinoMaintenanceSystem.GetWeeklyCosts(info);
+            List<ReinoResourceCost> maintenance = new List<ReinoResourceCost>();
+            if (info.Definition != null && info.Definition.MaintenanceCosts != null)
+            {
+                for (int i = 0; i < info.Definition.MaintenanceCosts.Length; i++)
+                {
+                    ReinoResourceCost cost = info.Definition.MaintenanceCosts[i];
+                    if (cost != null)
+                        maintenance.Add(new ReinoResourceCost(cost.Type, cost.Amount));
+                }
+            }
+
             bool active = info.Status == ReinoLotStatus.Active;
             int toggleArt = active ? 541 : 543;
             string toggleText = active ? @"Desativar Construção" : @"Ativar Construção";
@@ -138,40 +155,62 @@ namespace Server.Custom.Systems.Reinos
             int priority = ReinoMaintenanceSystem.GetDisplayPriority(info);
             int npcCount = ReinoMaintenanceSystem.GetNpcCount(info);
             int npcSalary = info.Definition != null ? Math.Max(0, info.Definition.NpcWeeklySalaryGold) : 0;
+            int npcWeeklyTotal = ReinoMaintenanceSystem.GetNpcWeeklyTotalGold(info);
             int commissionCount = ReinoMaintenanceSystem.GetCommissionCount(info);
             int commissionWeekly = ReinoMaintenanceSystem.GetCommissionWeeklySalaryGold(info);
+            int commissionWeeklyTotal = ReinoMaintenanceSystem.GetCommissionWeeklyTotalGold(info);
+            int recurringWeekly = ReinoMaintenanceSystem.GetCurrentRecurringRevenueGold(info);
+            int revenueThisWeek = ReinoMaintenanceSystem.GetRevenueLast7DaysGold(info);
+            int totalRevenue = ReinoMaintenanceSystem.GetTotalRevenueGold(info);
+            int operatingWeeks = ReinoMaintenanceSystem.GetOperatingWeeks(info);
+            int netWeekly = ReinoMaintenanceSystem.GetNetWeeklyGold(info);
+
+            bool canToggle = info.Definition != null && info.Definition.AllowManualActivationToggle;
+            bool canDemolish = !info.IsArea && info.Definition != null && (info.Definition.RentalTemplates == null || info.Definition.RentalTemplates.Length == 0);
 
             AddLabel(410, 225, 0, @"Status:");
-            AddButton(712, 230, toggleArt, toggleArt, ButtonMaintenanceToggle, GumpButtonType.Reply, 0);
-            AddLabel(740, 228, 0, toggleText);
-            AddLabel(410, 278, 0, @"Valor de Manutenção Semanal:");
-            AddLabel(410, 303, 0, @"Valor recebido Semanal:");
-            AddLabel(410, 328, 0, @"Valor Recebido Total:");
+            if (canToggle)
+            {
+                AddButton(712, 230, toggleArt, toggleArt, ButtonMaintenanceToggle, GumpButtonType.Reply, 0);
+                AddLabel(740, 228, 0, toggleText);
+            }
+
+            AddLabel(410, 272, 0, @"Valor de Manutenção Semanal:");
+            AddLabel(410, 297, 0, @"Rende Semanalmente:");
+            AddLabel(410, 322, 0, @"Rendeu Nesta Semana:");
             AddLabel(410, 387, 0, @"Número de Npcs:");
             AddLabel(410, 412, 0, @"Valor por Npc:");
-            AddLabel(410, 469, 0, @"Aberto Desde:");
+            AddLabel(410, 469, 0, @"Funcionando Desde:");
             AddLabel(410, 496, 0, @"Tempo de Funcionamento:");
-            AddLabel(410, 523, 0, @"Rendimento por Tempo de Funcionamento:");
+            AddLabel(410, 523, 0, @"Rendimento Total:");
             AddLabel(410, 583, 0, @"Cargos Comissionados:");
             AddLabel(410, 610, 0, @"Salários:");
             AddLabel(410, 637, 0, @"Valor Total de Salários:");
-            AddLabel(410, 664, 0, @"Valor de Salários por Tempo de Funcionamento:");
-            AddLabel(728, 272, 0, @"Ferro: " + GetCostAmount(weekly, ReinoResourceType.Iron));
-            AddLabel(906, 272, 0, @"Madeira: " + GetCostAmount(weekly, ReinoResourceType.Wood));
-            AddLabel(1077, 273, 0, @"Tecido: " + GetCostAmount(weekly, ReinoResourceType.Cloth));
+            AddLabel(410, 664, 0, @"Rendimento Líquido:");
+
+            AddLabel(728, 272, 0, @"Ferro: " + GetCostAmount(maintenance, ReinoResourceType.Iron));
+            AddLabel(906, 272, 0, @"Madeira: " + GetCostAmount(maintenance, ReinoResourceType.Wood));
+            AddLabel(1077, 273, 0, @"Tecido: " + GetCostAmount(maintenance, ReinoResourceType.Cloth));
+
             AddLabel(465, 225, 0, active ? @"Ativa" : @"Inativa");
-            AddLabel(620, 278, 0, GetCostAmount(weekly, ReinoResourceType.Gold) + @" moedas");
-            AddLabel(620, 303, 0, ReinoMaintenanceSystem.GetRevenueLast7DaysGold(info) + @" moedas");
-            AddLabel(620, 328, 0, ReinoMaintenanceSystem.GetTotalRevenueGold(info) + @" moedas");
+            AddLabel(620, 272, 0, ReinoMaintenanceSystem.GetBaseMaintenanceGoldOnly(info) + @" moedas");
+            AddLabel(620, 297, 0, recurringWeekly + @" moedas");
+            AddLabel(620, 322, 0, revenueThisWeek + @" moedas");
             AddLabel(620, 387, 0, npcCount.ToString());
             AddLabel(620, 412, 0, npcSalary + @" moedas");
             AddLabel(620, 469, 0, openSince == DateTime.MinValue ? @"Nunca" : openSince.ToString("dd/MM/yyyy HH:mm"));
-            AddLabel(620, 496, 0, openSince == DateTime.MinValue ? @"0 semanas" : (Math.Max(1, (int)Math.Floor((DateTime.UtcNow - openSince).TotalDays / 7.0)) + @" semanas"));
-            AddLabel(620, 523, 0, ReinoMaintenanceSystem.GetAverageRevenuePerWeekCurrentActivation(info) + @" moedas/semana");
+            AddLabel(620, 496, 0, operatingWeeks + @" semanas");
+            AddLabel(620, 523, 0, totalRevenue + @" moedas");
             AddLabel(620, 583, 0, commissionCount.ToString());
-            AddLabel(620, 610, 0, commissionWeekly + @" moedas/semana");
-            AddLabel(620, 637, 0, ReinoMaintenanceSystem.GetCommissionTotalWagesGold(info) + @" moedas");
-            AddLabel(620, 664, 0, ReinoMaintenanceSystem.GetCommissionWagesAveragePerWeekCurrentActivation(info) + @" moedas/semana");
+            AddLabel(620, 610, 0, commissionWeekly + @" moedas");
+            AddLabel(620, 637, 0, commissionWeeklyTotal + @" moedas");
+            AddLabel(620, 664, 0, netWeekly + @" moedas");
+
+            if (canDemolish)
+            {
+                AddButton(1037, 230, 533, 533, ButtonMaintenanceDemolish, GumpButtonType.Reply, 0);
+                AddLabel(1065, 228, 0, m_DemolishConfirm ? @"Confirmar Demolição" : @"Demolir Construção");
+            }
 
             AddLabel(950, 596, 0, @"Prioridade de Funcionamento");
             AddButton(964, 640, 583, 248, ButtonMaintenancePriorityDown, GumpButtonType.Reply, 0);
@@ -286,6 +325,23 @@ namespace Server.Custom.Systems.Reinos
                 if (!String.IsNullOrWhiteSpace(message))
                     from.SendMessage(message);
                 from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 9));
+                return true;
+            }
+
+            if (button == ButtonMaintenanceDemolish)
+            {
+                if (!m_DemolishConfirm)
+                {
+                    from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 9, true));
+                    return true;
+                }
+
+                string message;
+                ReinoMaintenanceSystem.TryDemolishConstruction(from, m_CityId, m_SelectedBuildingId, out message);
+                if (!String.IsNullOrWhiteSpace(message))
+                    from.SendMessage(message);
+
+                from.SendGump(new ReinoExpansionGump(from, m_CityId, -1, m_SelectedWallAreaId, String.Empty, 0, 3));
                 return true;
             }
 

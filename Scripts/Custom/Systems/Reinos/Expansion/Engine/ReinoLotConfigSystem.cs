@@ -151,6 +151,7 @@ namespace Server.Custom.Systems.Reinos
             }
 
             lot.LotConfigId = configId;
+            state.RearmThreatOnAvailableExpiry = false;
             ApplyLotConfigToDefinition(lot, configId);
             ResetLotEncounter(lot, state, true);
 
@@ -165,6 +166,7 @@ namespace Server.Custom.Systems.Reinos
 
             int configId = ReinoLotConfigRegistry.GetRandomConfigIdForSide(lot.Side);
             lot.LotConfigId = configId;
+            state.RearmThreatOnAvailableExpiry = false;
             ApplyLotConfigToDefinition(lot, configId);
 
             if (configId == 0)
@@ -220,6 +222,7 @@ namespace Server.Custom.Systems.Reinos
                 state.CurrentStageIndex = -1;
                 state.NextStageUtc = DateTime.MinValue;
                 state.ReactivateReadyUtc = DateTime.MinValue;
+
                 EnsureLotSign(lot, state);
                 return;
             }
@@ -235,6 +238,7 @@ namespace Server.Custom.Systems.Reinos
             state.CurrentStageIndex = -1;
             state.NextStageUtc = DateTime.MinValue;
             state.ReactivateReadyUtc = DateTime.MinValue;
+            state.NextThreatRespawnUtc = DateTime.MinValue;
 
             RespawnLotEncounter(lot, state);
             EnsureLotSign(lot, state);
@@ -258,6 +262,26 @@ namespace Server.Custom.Systems.Reinos
         {
             if (lot == null || state == null)
                 return;
+
+            if (state.RearmThreatOnAvailableExpiry)
+            {
+                state.RearmThreatOnAvailableExpiry = false;
+                int randomId = ReinoLotConfigRegistry.GetRandomConfigIdForSide(lot.Side);
+                if (randomId <= 0)
+                {
+                    lot.LotConfigId = 0;
+                    ApplyLotConfigToDefinition(lot, 0);
+                    state.AvailableUntilUtc = DateTime.MinValue;
+                    state.Status = ReinoLotStatus.Available;
+                    EnsureLotSign(lot, state);
+                    return;
+                }
+
+                lot.LotConfigId = randomId;
+                ApplyLotConfigToDefinition(lot, randomId);
+                ResetLotEncounter(lot, state, false);
+                return;
+            }
 
             if (lot.LotConfigId == 0)
             {
@@ -314,6 +338,9 @@ namespace Server.Custom.Systems.Reinos
             if (lot == null || state == null || config == null || config.IsEmpty)
                 return;
 
+            if (state.NextThreatRespawnUtc != DateTime.MinValue && DateTime.UtcNow < state.NextThreatRespawnUtc)
+                return;
+
             if (state.ThreatMobSerials == null)
                 state.ThreatMobSerials = new List<int>();
             if (state.ThreatItemSerials == null)
@@ -334,12 +361,14 @@ namespace Server.Custom.Systems.Reinos
                 int missing = desiredCount - state.ThreatMobSerials.Count;
                 for (int i = 0; i < missing; i++)
                     SpawnLotThreatMob(lot, state, config);
+                state.NextThreatRespawnUtc = DateTime.UtcNow + config.RespawnDelay;
             }
             else if (config.ObjectiveType == ReinoObjectiveType.CollectItem)
             {
                 int missing = desiredCount - state.ThreatItemSerials.Count;
                 for (int i = 0; i < missing; i++)
                     SpawnLotCollectible(lot, state, config);
+                state.NextThreatRespawnUtc = DateTime.UtcNow + config.RespawnDelay;
             }
         }
 
@@ -397,17 +426,70 @@ namespace Server.Custom.Systems.Reinos
             }
 
             Point3D center = GetLotSpawnCenter(lot, config);
-            Point3D loc = GetRandomPointInLot(lot, center, config.SpawnRange, lot.NorthWest.Z);
+            int range = config.SpawnRange;
+
+            ReinoLotSpawnPointDefinition spawnPoint = entry.SpawnPoint ?? GetRandomSpawnPoint(config);
+            if (spawnPoint != null)
+            {
+                center = new Point3D(
+                    lot.GetCenter(lot.NorthWest.Z).X + lot.SpawnOffsetX + spawnPoint.Offset.X,
+                    lot.GetCenter(lot.NorthWest.Z).Y + lot.SpawnOffsetY + spawnPoint.Offset.Y,
+                    lot.GetCenter(lot.NorthWest.Z).Z + lot.SpawnOffsetZ + spawnPoint.Offset.Z);
+
+                range = spawnPoint.Range;
+            }
+
+            Point3D loc = GetRandomPointInLot(lot, center, range, lot.NorthWest.Z);
 
             mob.LotId = lot.LotId;
             mob.ConfigId = config.ConfigId;
+
+            if (!String.IsNullOrWhiteSpace(entry.DisplayName))
+                mob.Name = entry.DisplayName;
+
+            if (entry.Hue != 0)
+                mob.Hue = entry.Hue;
+
             mob.Home = center;
-            mob.RangeHome = Math.Max(2, config.SpawnRange);
+            mob.RangeHome = Math.Max(2, range);
             mob.MoveToWorld(loc, lot.Map);
 
             state.ThreatMobSerials.Add(mob.Serial.Value);
         }
 
+        private static ReinoLotSpawnPointDefinition GetRandomSpawnPoint(ReinoLotConfigDefinition config)
+        {
+            if (config == null || config.SpawnPoints == null || config.SpawnPoints.Length == 0)
+                return null;
+
+            int total = 0;
+
+            for (int i = 0; i < config.SpawnPoints.Length; i++)
+            {
+                ReinoLotSpawnPointDefinition p = config.SpawnPoints[i];
+                if (p != null && p.Weight > 0)
+                    total += p.Weight;
+            }
+
+            if (total <= 0)
+                return config.SpawnPoints[0];
+
+            int roll = Utility.Random(total);
+
+            for (int i = 0; i < config.SpawnPoints.Length; i++)
+            {
+                ReinoLotSpawnPointDefinition p = config.SpawnPoints[i];
+                if (p == null || p.Weight <= 0)
+                    continue;
+
+                if (roll < p.Weight)
+                    return p;
+
+                roll -= p.Weight;
+            }
+
+            return config.SpawnPoints[0];
+        }
         private static void SpawnLotCollectible(ReinoLotDefinition lot, ReinoLotState state, ReinoLotConfigDefinition config)
         {
             if (lot == null || state == null || config == null || config.CollectibleEntries == null || config.CollectibleEntries.Length == 0)
@@ -418,7 +500,20 @@ namespace Server.Custom.Systems.Reinos
                 return;
 
             Point3D center = GetLotSpawnCenter(lot, config);
-            Point3D loc = GetRandomPointInLot(lot, center, config.SpawnRange, lot.NorthWest.Z);
+            int range = config.SpawnRange;
+
+            ReinoLotSpawnPointDefinition spawnPoint = entry.SpawnPoint ?? GetRandomSpawnPoint(config);
+            if (spawnPoint != null)
+            {
+                center = new Point3D(
+                    lot.GetCenter(lot.NorthWest.Z).X + lot.SpawnOffsetX + spawnPoint.Offset.X,
+                    lot.GetCenter(lot.NorthWest.Z).Y + lot.SpawnOffsetY + spawnPoint.Offset.Y,
+                    lot.GetCenter(lot.NorthWest.Z).Z + lot.SpawnOffsetZ + spawnPoint.Offset.Z);
+
+                range = spawnPoint.Range;
+            }
+
+            Point3D loc = GetRandomPointInLot(lot, center, range, lot.NorthWest.Z);
 
             ReinoLotCollectible item = new ReinoLotCollectible(entry.ItemId, entry.Hue, entry.DisplayName, lot.LotId, config.ConfigId, entry.TypeName, entry.RequiredToolTypeName);
             item.MoveToWorld(loc, lot.Map);

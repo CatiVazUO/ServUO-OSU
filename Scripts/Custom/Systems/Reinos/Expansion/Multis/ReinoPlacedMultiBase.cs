@@ -26,7 +26,7 @@ namespace Server.Custom.Systems.Reinos
             m_StageIndex = stageIndex;
         }
 
-        protected ReinoPlacedMultiBase(Serial serial) : base(serial)
+        public ReinoPlacedMultiBase(Serial serial) : base(serial)
         {
         }
 

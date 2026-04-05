@@ -4,7 +4,7 @@ using Server;
 using Server.Custom.Systems.Postos;
 using Server.Custom.Systems.Rent;
 using Server.Custom.Correios;
-using Server.Custom.Systems.Biblioteca.Mobiles;
+using Server.Custom.Biblioteca;
 using Server.Items;
 using Server.Mobiles;
 
@@ -50,6 +50,12 @@ namespace Server.Custom.Systems.Reinos
         public const int WeeksInfinite = Int32.MaxValue;
 
         private static DateTime m_LastWeeklyMaintenanceUtc = DateTime.MinValue;
+
+        public static DateTime LastWeeklyMaintenanceUtc
+        {
+            get { return m_LastWeeklyMaintenanceUtc; }
+            set { m_LastWeeklyMaintenanceUtc = value; }
+        }
 
         public static string BuildLotKey(int lotId) { return "L:" + lotId; }
         public static string BuildAreaKey(int areaId) { return "A:" + areaId; }
@@ -116,11 +122,11 @@ namespace Server.Custom.Systems.Reinos
         {
             List<ReinoConstructionRuntimeInfo> list = new List<ReinoConstructionRuntimeInfo>();
             HashSet<int> seenLots = new HashSet<int>();
-            List<ReinoLotDefinition> visibleLots = ReinoExpansionSystem.GetVisibleLeftLotsForCity(cityId);
+            List<ReinoLotDefinition> cityLots = ReinoExpansionSystem.GetAllLotsForCity(cityId);
 
-            for (int i = 0; i < visibleLots.Count; i++)
+            for (int i = 0; i < cityLots.Count; i++)
             {
-                ReinoLotDefinition lot = visibleLots[i];
+                ReinoLotDefinition lot = cityLots[i];
                 if (lot == null || seenLots.Contains(lot.LotId))
                     continue;
 
@@ -190,7 +196,7 @@ namespace Server.Custom.Systems.Reinos
 
             for (int i = 0; i < all.Count; i++)
             {
-                if (all[i].Status == ReinoLotStatus.Active)
+                if (all[i].Status == ReinoLotStatus.Active || all[i].Status == ReinoLotStatus.UnderConstruction)
                     list.Add(all[i]);
             }
 
@@ -523,11 +529,58 @@ namespace Server.Custom.Systems.Reinos
                 return false;
             }
 
+            List<ReinoResourceCost> weeklyCosts = GetWeeklyCosts(info);
+            string fail;
+
+            if (!TryConsumeCosts(cityId, weeklyCosts, out fail))
+            {
+                message = fail;
+                return false;
+            }
+
             return info.IsArea
                 ? ReinoExpansionSystem.TryConfirmAreaConstruction(from, cityId, info.ReferenceId, info.Definition.Id, out message)
                 : ReinoExpansionSystem.TryConfirmLotConstruction(from, cityId, info.ReferenceId, info.Definition.Id, out message);
         }
 
+
+        public static bool TryDemolishConstruction(PlayerMobile from, int cityId, string key, out string message)
+        {
+            message = String.Empty;
+
+            if (from == null || from.Deleted)
+            {
+                message = "Jogador inválido.";
+                return false;
+            }
+
+            if (!ReinoAccessHelper.HasGovernmentAccess(from, cityId))
+            {
+                message = "Somente o governador pode demolir construções.";
+                return false;
+            }
+
+            ReinoConstructionRuntimeInfo info = GetConstruction(key);
+            if (info == null || info.CityId != cityId)
+            {
+                message = "Construção inválida.";
+                return false;
+            }
+
+            if (info.IsArea)
+            {
+                message = "Esse botão só demole construções de lote.";
+                return false;
+            }
+
+            if (info.Definition != null && info.Definition.RentalTemplates != null && info.Definition.RentalTemplates.Length > 0)
+            {
+                message = "Essa construção não pode ser demolida.";
+                return false;
+            }
+
+            return ReinoExpansionSystem.TryDemolishLotConstruction(cityId, info.ReferenceId, out message);
+        }
         public static List<ReinoResourceCost> GetWeeklyCosts(ReinoConstructionRuntimeInfo info)
         {
             List<ReinoResourceCost> list = new List<ReinoResourceCost>();
@@ -541,7 +594,7 @@ namespace Server.Custom.Systems.Reinos
             if (npcCost > 0)
                 list.Add(new ReinoResourceCost(ReinoResourceType.Gold, npcCost));
 
-            int commission = GetCommissionWeeklySalaryGold(info);
+            int commission = GetCommissionCount(info) * Math.Max(0, GetCommissionWeeklySalaryGold(info));
             if (commission > 0)
                 list.Add(new ReinoResourceCost(ReinoResourceType.Gold, commission));
 
@@ -634,11 +687,28 @@ namespace Server.Custom.Systems.Reinos
 
         public static int GetNpcCount(ReinoConstructionRuntimeInfo info)
         {
-            if (info == null || info.IsArea || info.LotState == null || info.LotState.NpcSerial <= 0)
+            if (info == null || info.IsArea || info.LotState == null)
                 return 0;
 
-            Mobile mobile = World.FindMobile((Serial)info.LotState.NpcSerial);
-            return mobile != null && !mobile.Deleted ? 1 : 0;
+            int count = 0;
+
+            if (info.LotState.NpcSerials != null && info.LotState.NpcSerials.Count > 0)
+            {
+                for (int i = 0; i < info.LotState.NpcSerials.Count; i++)
+                {
+                    Mobile mob = World.FindMobile((Serial)info.LotState.NpcSerials[i]);
+                    if (mob != null && !mob.Deleted)
+                        count++;
+                }
+
+                return count;
+            }
+
+            if (info.LotState.NpcSerial <= 0)
+                return 0;
+
+            Mobile single = World.FindMobile((Serial)info.LotState.NpcSerial);
+            return single != null && !single.Deleted ? 1 : 0;
         }
 
         public static int GetCommissionCount(ReinoConstructionRuntimeInfo info)
@@ -655,6 +725,100 @@ namespace Server.Custom.Systems.Reinos
                 return 0;
 
             return info.IsArea ? info.AreaState.CommissionedRoleWeeklySalaryGold : info.LotState.CommissionedRoleWeeklySalaryGold;
+        }
+
+        private static List<TownHouseSign> GetRuntimeRentalSigns(ReinoConstructionRuntimeInfo info)
+        {
+            List<TownHouseSign> list = new List<TownHouseSign>();
+
+            if (info == null)
+                return list;
+
+            List<int> serials = info.IsArea ? info.AreaState.RentalSignSerials : info.LotState.RentalSignSerials;
+            if (serials == null)
+                return list;
+
+            for (int i = 0; i < serials.Count; i++)
+            {
+                TownHouseSign sign = World.FindItem((Serial)serials[i]) as TownHouseSign;
+                if (sign != null && !sign.Deleted)
+                    list.Add(sign);
+            }
+
+            return list;
+        }
+
+        private static int ConvertToWeeklyGold(TownHouseSign sign)
+        {
+            if (sign == null || sign.Deleted || !sign.Owned || sign.Free || sign.Price <= 0)
+                return 0;
+
+            if (sign.RentByTime <= TimeSpan.Zero)
+                return 0;
+
+            double days = Math.Max(1.0, sign.RentByTime.TotalDays);
+            return Math.Max(0, (int)Math.Round(sign.Price * (7.0 / days)));
+        }
+
+        public static int GetCurrentRecurringRevenueGold(ReinoConstructionRuntimeInfo info)
+        {
+            int total = 0;
+            List<TownHouseSign> signs = GetRuntimeRentalSigns(info);
+
+            for (int i = 0; i < signs.Count; i++)
+                total += ConvertToWeeklyGold(signs[i]);
+
+            return total;
+        }
+
+        public static int GetBaseMaintenanceGoldOnly(ReinoConstructionRuntimeInfo info)
+        {
+            if (info == null || info.Definition == null || info.Definition.MaintenanceCosts == null)
+                return 0;
+
+            int total = 0;
+
+            for (int i = 0; i < info.Definition.MaintenanceCosts.Length; i++)
+            {
+                ReinoResourceCost cost = info.Definition.MaintenanceCosts[i];
+                if (cost != null && cost.Type == ReinoResourceType.Gold)
+                    total += Math.Max(0, cost.Amount);
+            }
+
+            return total;
+        }
+
+        public static int GetNpcWeeklyTotalGold(ReinoConstructionRuntimeInfo info)
+        {
+            if (info == null || info.Definition == null)
+                return 0;
+
+            return GetNpcCount(info) * Math.Max(0, info.Definition.NpcWeeklySalaryGold);
+        }
+
+        public static int GetCommissionWeeklyTotalGold(ReinoConstructionRuntimeInfo info)
+        {
+            return GetCommissionCount(info) * Math.Max(0, GetCommissionWeeklySalaryGold(info));
+        }
+
+        public static int GetOperatingWeeks(ReinoConstructionRuntimeInfo info)
+        {
+            DateTime since = GetLastActivatedUtc(info);
+
+            if (since == DateTime.MinValue)
+                return 0;
+
+            return Math.Max(1, (int)Math.Floor((DateTime.UtcNow - since).TotalDays / 7.0));
+        }
+
+        public static int GetNetWeeklyGold(ReinoConstructionRuntimeInfo info)
+        {
+            int recurring = GetCurrentRecurringRevenueGold(info);
+            int maintenance = GetBaseMaintenanceGoldOnly(info);
+            int npc = GetNpcWeeklyTotalGold(info);
+            int commission = GetCommissionWeeklyTotalGold(info);
+
+            return recurring - maintenance - npc - commission;
         }
 
         public static int GetTotalRevenueGold(ReinoConstructionRuntimeInfo info)
@@ -819,27 +983,98 @@ namespace Server.Custom.Systems.Reinos
             return String.Format("Moedas: {0}  Tecidos: {1}  Ferro: {2}  Madeira: {3}", gold, cloth, iron, wood);
         }
 
-        private static DateTime m_LastWeeklyMaintenanceSlotUtc = DateTime.MinValue;
-
-        private static DateTime GetCurrentWeeklyMaintenanceSlotUtc()
+        public static void RunWeeklyMaintenance()
         {
-            DateTime now = DateTime.UtcNow;
+            if (!ShouldRunWeeklyMaintenanceNow())
+                return;
 
-            int daysSinceMonday = ((int)now.DayOfWeek + 6) % 7;
-            DateTime monday = now.Date.AddDays(-daysSinceMonday);
+            for (int cityId = 0; cityId < ReinoElectionsSystem.CityNames.Length; cityId++)
+            {
+                NormalizeCityPriorities(cityId);
+                List<ReinoConstructionRuntimeInfo> active = GetActiveConstructions(cityId);
 
-            DateTime slot = monday.AddHours(20); // 20:00 UTC = 17:00 Recife
+                active.Sort(delegate (ReinoConstructionRuntimeInfo a, ReinoConstructionRuntimeInfo b)
+                {
+                    int cmp = GetDisplayPriority(a).CompareTo(GetDisplayPriority(b));
+                    if (cmp != 0)
+                        return cmp;
 
-            if (now < slot)
-                slot = slot.AddDays(-7);
+                    cmp = GetWeeklyCostWeight(a).CompareTo(GetWeeklyCostWeight(b));
+                    if (cmp != 0)
+                        return cmp;
 
-            return slot;
+                    return String.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase);
+                });
+
+                for (int i = 0; i < active.Count; i++)
+                {
+                    ReinoConstructionRuntimeInfo info = active[i];
+                    List<ReinoResourceCost> weekly = GetWeeklyCosts(info);
+                    string fail;
+
+                    if (TryConsumeCosts(cityId, weekly, out fail))
+                    {
+                        RecordWeeklyWages(info);
+                        continue;
+                    }
+
+                    if (info.Definition != null && info.Definition.RentalTemplates != null && info.Definition.RentalTemplates.Length > 0)
+                        continue;
+
+                    if (info.IsArea)
+                        ReinoExpansionSystem.ForceDeactivateAreaForMaintenance(info.ReferenceId);
+                    else
+                        ReinoExpansionSystem.ForceDeactivateLotForMaintenance(info.ReferenceId);
+                }
+            }
         }
 
-        private static void RunWeeklyMaintenanceForCity(int cityId)
+        public static void RunWeeklyMaintenanceNow()
+        {
+            for (int cityId = 0; cityId < ReinoElectionsSystem.CityNames.Length; cityId++)
+            {
+                NormalizeCityPriorities(cityId);
+                List<ReinoConstructionRuntimeInfo> active = GetActiveConstructions(cityId);
+
+                active.Sort(delegate (ReinoConstructionRuntimeInfo a, ReinoConstructionRuntimeInfo b)
+                {
+                    int cmp = GetDisplayPriority(a).CompareTo(GetDisplayPriority(b));
+                    if (cmp != 0)
+                        return cmp;
+
+                    cmp = GetWeeklyCostWeight(a).CompareTo(GetWeeklyCostWeight(b));
+                    if (cmp != 0)
+                        return cmp;
+
+                    return String.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase);
+                });
+
+                for (int i = 0; i < active.Count; i++)
+                {
+                    ReinoConstructionRuntimeInfo info = active[i];
+                    List<ReinoResourceCost> weekly = GetWeeklyCosts(info);
+                    string fail;
+
+                    if (TryConsumeCosts(cityId, weekly, out fail))
+                    {
+                        RecordWeeklyWages(info);
+                        continue;
+                    }
+
+                    if (info.Definition != null && info.Definition.RentalTemplates != null && info.Definition.RentalTemplates.Length > 0)
+                        continue;
+
+                    if (info.IsArea)
+                        ReinoExpansionSystem.ForceDeactivateAreaForMaintenance(info.ReferenceId);
+                    else
+                        ReinoExpansionSystem.ForceDeactivateLotForMaintenance(info.ReferenceId);
+                }
+            }
+        }
+
+        public static void RunWeeklyMaintenanceNow(int cityId)
         {
             NormalizeCityPriorities(cityId);
-
             List<ReinoConstructionRuntimeInfo> active = GetActiveConstructions(cityId);
 
             active.Sort(delegate (ReinoConstructionRuntimeInfo a, ReinoConstructionRuntimeInfo b)
@@ -877,26 +1112,6 @@ namespace Server.Custom.Systems.Reinos
             }
         }
 
-        public static void RunWeeklyMaintenance()
-        {
-            if (!ShouldRunWeeklyMaintenanceNow())
-                return;
-
-            for (int cityId = 0; cityId < ReinoElectionsSystem.CityNames.Length; cityId++)
-                RunWeeklyMaintenanceForCity(cityId);
-        }
-
-        public static void RunWeeklyMaintenanceNow()
-        {
-            for (int cityId = 0; cityId < ReinoElectionsSystem.CityNames.Length; cityId++)
-                RunWeeklyMaintenanceForCity(cityId);
-        }
-
-        public static void RunWeeklyMaintenanceNow(int cityId)
-        {
-            RunWeeklyMaintenanceForCity(cityId);
-        }
-
         private static int GetWeeklyCostWeight(ReinoConstructionRuntimeInfo info)
         {
             List<ReinoResourceCost> costs = GetWeeklyCosts(info);
@@ -915,7 +1130,7 @@ namespace Server.Custom.Systems.Reinos
                 return;
 
             int npcGold = GetNpcCount(info) * Math.Max(0, info.Definition.NpcWeeklySalaryGold);
-            int commissionGold = GetCommissionWeeklySalaryGold(info);
+            int commissionGold = GetCommissionCount(info) * Math.Max(0, GetCommissionWeeklySalaryGold(info));
 
             if (info.IsArea)
             {

@@ -13,18 +13,24 @@ namespace Server.Custom.Systems.Reinos
         protected readonly string m_SelectedBuildingId;
         protected readonly int m_BuildingPage;
         protected readonly int m_InitialPage;
+        protected readonly bool m_DemolishConfirm;
 
         public ReinoExpansionGump(PlayerMobile from, int cityId)
-            : this(from, cityId, -1, -1, String.Empty, 0, 4)
+            : this(from, cityId, -1, -1, String.Empty, 0, 4, false)
         {
         }
 
         public ReinoExpansionGump(PlayerMobile from, int cityId, int selectedLotId, int selectedWallAreaId, string selectedBuildingId, int buildingPage)
-            : this(from, cityId, selectedLotId, selectedWallAreaId, selectedBuildingId, buildingPage, 4)
+            : this(from, cityId, selectedLotId, selectedWallAreaId, selectedBuildingId, buildingPage, 4, false)
         {
         }
 
         public ReinoExpansionGump(PlayerMobile from, int cityId, int selectedLotId, int selectedWallAreaId, string selectedBuildingId, int buildingPage, int initialPage)
+            : this(from, cityId, selectedLotId, selectedWallAreaId, selectedBuildingId, buildingPage, initialPage, false)
+        {
+        }
+
+        public ReinoExpansionGump(PlayerMobile from, int cityId, int selectedLotId, int selectedWallAreaId, string selectedBuildingId, int buildingPage, int initialPage, bool demolishConfirm)
             : base(0, 0)
         {
             m_From = from;
@@ -34,6 +40,7 @@ namespace Server.Custom.Systems.Reinos
             m_SelectedBuildingId = selectedBuildingId ?? String.Empty;
             m_BuildingPage = buildingPage < 0 ? 0 : buildingPage;
             m_InitialPage = initialPage;
+            m_DemolishConfirm = demolishConfirm;
 
             Closable = true;
             Disposable = true;

@@ -42,7 +42,7 @@ namespace Server.Custom.Systems.Reinos.Expansion.Engine
             Karma = 0;
         }
 
-        protected BaseReinoLotThreat(Serial serial) : base(serial)
+        public BaseReinoLotThreat(Serial serial) : base(serial)
         {
         }
 

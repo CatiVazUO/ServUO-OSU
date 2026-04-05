@@ -44,8 +44,8 @@ namespace Server.Custom.Systems.Reinos
         };
 
 
-        private const int FINISHED_MULTI_ID = 0xA3;
-        private const int ABANDONED_MULTI_ID = 0x98;  // small tower
+        private const int FINISHED_MULTI_ID = 0xA9;
+        private const int ABANDONED_MULTI_ID = 0xA9;  // small tower
 
         private static readonly ReinoRentalTemplate[] RENTALS = new ReinoRentalTemplate[]
         {
@@ -111,11 +111,15 @@ namespace Server.Custom.Systems.Reinos
             StringBuilder sb = new StringBuilder();
             sb.Append("<BASEFONT COLOR=#000000>");
             sb.Append("<B>Residencial Aurora</B><BR><BR>");
-            sb.Append("<B>AVISO: ESSA ÁREA NÃO PODE SER DESATIVADA NEM DESCONSTRUIDA, ELA É PERMANENTE"
+            sb.Append("<B>AVISO: ESSA ÁREA NÃO PODE SER DESATIVADA NEM DESCONSTRUIDA, ELA É PERMANENTE</B><BR>");
             sb.Append("<B>Construção:</B> 200 madeira, 120 ferro e 80 tecido.<BR>");
-            sb.Append("<B>Manutenção:</B> nesta primeira versão de teste, a área residencial está marcada como permanente para você focar no aluguel e na configuração das casas sem risco de abandono.<BR><BR>");
-            sb.Append("Quando ficar pronta, esta construção cria automaticamente 2 placas residenciais de teste já com área, altura, lockdowns, secures e local da placa definidos. O governador precisa apenas liberar cada imóvel, ajustar nome, preço, frequência e povos permitidos.<BR><BR>");
-            sb.Append("Os offsets desta versão são placeholders. Quando você tiver o multi residencial definitivo, use o comando de exportação para medir as placas reais e substituir esses números com precisão.");
+            sb.Append("<B>Manutenção:</B> nesta primeira versão de teste, a área residencial está " +
+                "marcada como permanente para você focar no aluguel e na configuração das casas sem risco de abandono.<BR><BR>");
+            sb.Append("Quando ficar pronta, esta construção cria automaticamente 2 placas residenciais " +
+                "de teste já com área, altura, lockdowns, secures e local da placa definidos. O governador " +
+                "precisa apenas liberar cada imóvel, ajustar nome, preço, frequência e povos permitidos.<BR><BR>");
+            sb.Append("Os offsets desta versão são placeholders. Quando você tiver o multi residencial definitivo, " +
+                "use o comando de exportação para medir as placas reais e substituir esses números com precisão.");
             sb.Append("</BASEFONT>");
 
             ReinoConstructionDefinition def = new ReinoConstructionDefinition();

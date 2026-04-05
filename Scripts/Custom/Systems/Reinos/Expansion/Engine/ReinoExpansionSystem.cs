@@ -38,7 +38,7 @@ namespace Server.Custom.Systems.Reinos
             EventSink.WorldSave += delegate { Save(); };
             EventSink.CreatureDeath += OnCreatureDeath;
 
-            Timer.DelayCall(TimeSpan.FromHours(1.0), TimeSpan.FromHours(1.0), Pulse);
+            Timer.DelayCall(TimeSpan.FromMinutes(0.20), TimeSpan.FromMinutes(0.20), Pulse);
         }
 
         private static void EnsureDefaults()
@@ -101,6 +101,31 @@ namespace Server.Custom.Systems.Reinos
             }
         }
 
+        public static List<ReinoLotDefinition> GetAllLotsForCity(int cityId)
+        {
+            List<ReinoLotDefinition> list = new List<ReinoLotDefinition>();
+
+            foreach (KeyValuePair<int, ReinoLotDefinition> kv in m_LotDefinitions)
+            {
+                ReinoLotDefinition lot = kv.Value;
+                ReinoLotState st = GetLotState(kv.Key);
+
+                if (lot == null || st == null || lot.CityId != cityId)
+                    continue;
+
+                list.Add(lot);
+            }
+
+            list.Sort(delegate (ReinoLotDefinition a, ReinoLotDefinition b)
+            {
+                if (a == null && b == null) return 0;
+                if (a == null) return 1;
+                if (b == null) return -1;
+                return a.LotId.CompareTo(b.LotId);
+            });
+
+            return list;
+        }
         public static bool TryParseCityId(string raw, out int cityId)
         {
             cityId = -1;
@@ -456,17 +481,6 @@ namespace Server.Custom.Systems.Reinos
             return true;
         }
 
-        private static ReinoObjectiveDefinition BuildDefaultObjective()
-        {
-            ReinoObjectiveDefinition def = new ReinoObjectiveDefinition();
-            def.Type = ReinoObjectiveType.KillMob;
-            def.DisplayName = "skeletons";
-            def.TargetTypeNames = new string[] { "Skeleton" };
-            def.RequiredAmount = 3;
-            def.ResourceType = ReinoResourceType.None;
-            return def;
-        }
-
         public static List<ReinoLotDefinition> GetUnavailableLotsForCity(int cityId)
         {
             List<ReinoLotDefinition> list = new List<ReinoLotDefinition>();
@@ -506,7 +520,7 @@ namespace Server.Custom.Systems.Reinos
                 if (lot == null || st == null || lot.CityId != cityId)
                     continue;
 
-                if (st.Status == ReinoLotStatus.Available || st.Status == ReinoLotStatus.UnderConstruction || st.Status == ReinoLotStatus.Active || st.Status == ReinoLotStatus.Abandoned)
+                if (st.Status == ReinoLotStatus.Available)
                     list.Add(lot);
             }
 
@@ -990,11 +1004,14 @@ namespace Server.Custom.Systems.Reinos
             if (def == null)
                 return;
 
-            ReinoConstructionMulti multi = state.MultiSerial > 0 ? World.FindItem((Serial)state.MultiSerial) as ReinoConstructionMulti : null;
+            Item multiItem = state.MultiSerial > 0 ? World.FindItem((Serial)state.MultiSerial) : null;
+            bool hasValidMulti = (multiItem != null && !multiItem.Deleted);
+
+            ReinoConstructionMulti rcMulti = multiItem as ReinoConstructionMulti;
 
             if (state.Status == ReinoLotStatus.Active)
             {
-                if (multi == null || multi.Deleted || multi.StageIndex != -1)
+                if (!hasValidMulti || (rcMulti != null && rcMulti.StageIndex != -1))
                 {
                     CleanupLotWorldObjects(state);
                     PlaceLotFinishedMulti(lot, state, def, false);
@@ -1004,7 +1021,7 @@ namespace Server.Custom.Systems.Reinos
             }
             else if (state.Status == ReinoLotStatus.Abandoned)
             {
-                if (multi == null || multi.Deleted || multi.StageIndex != -2)
+                if (!hasValidMulti || (rcMulti != null && rcMulti.StageIndex != -2))
                 {
                     CleanupLotWorldObjects(state);
                     PlaceLotFinishedMulti(lot, state, def, true);
@@ -1021,22 +1038,27 @@ namespace Server.Custom.Systems.Reinos
             if (def == null)
                 return;
 
-            ReinoConstructionMulti multi = state.MultiSerial > 0 ? World.FindItem((Serial)state.MultiSerial) as ReinoConstructionMulti : null;
+            Item multiItem = state.MultiSerial > 0 ? World.FindItem((Serial)state.MultiSerial) : null;
+            bool hasValidMulti = (multiItem != null && !multiItem.Deleted);
+
+            ReinoConstructionMulti rcMulti = multiItem as ReinoConstructionMulti;
 
             if (state.Status == ReinoLotStatus.Active)
             {
-                if (multi == null || multi.Deleted || multi.StageIndex != -1)
+                if (!hasValidMulti || (rcMulti != null && rcMulti.StageIndex != -1))
                 {
                     CleanupAreaWorldObjects(state);
                     PlaceAreaFinishedMulti(area, state, def, false);
+                    ReinoMaintenanceSystem.NormalizeCityPriorities(area.CityId);
                 }
             }
             else if (state.Status == ReinoLotStatus.Abandoned)
             {
-                if (multi == null || multi.Deleted || multi.StageIndex != -2)
+                if (!hasValidMulti || (rcMulti != null && rcMulti.StageIndex != -2))
                 {
                     CleanupAreaWorldObjects(state);
                     PlaceAreaFinishedMulti(area, state, def, true);
+                    ReinoMaintenanceSystem.NormalizeCityPriorities(area.CityId);
                 }
             }
         }
@@ -1175,7 +1197,6 @@ namespace Server.Custom.Systems.Reinos
             state.CommissionWagesCurrentActivationGold = 0;
 
             PlaceAreaFinishedMulti(area, state, def, false);
-            ReinoMaintenanceSystem.NormalizeCityPriorities(area.CityId);
         }
 
         private static void ConvertLotToAbandoned(ReinoLotDefinition lot, ReinoLotState state, ReinoConstructionDefinition def)
@@ -1200,7 +1221,6 @@ namespace Server.Custom.Systems.Reinos
             state.CurrentStageIndex = -1;
             state.NextStageUtc = DateTime.MinValue;
             PlaceAreaFinishedMulti(area, state, def, true);
-            ReinoMaintenanceSystem.NormalizeCityPriorities(area.CityId);
         }
 
         private static void PlaceLotStageMulti(ReinoLotDefinition lot, ReinoLotState state, ReinoConstructionDefinition def, int stageIndex)
@@ -1457,26 +1477,109 @@ namespace Server.Custom.Systems.Reinos
             return Point3D.Zero;
         }
 
-        private static void SpawnNpcIfNeeded(ReinoLotDefinition lot, ReinoLotState state, ReinoConstructionDefinition def)
+        private static Mobile SpawnConstructionNpc(Type npcType, Point3D worldPoint, Map map, int cityId)
         {
-            if (def == null || String.IsNullOrWhiteSpace(def.NpcTypeName))
-                return;
-
-            Type npcType = ScriptCompiler.FindTypeByFullName(def.NpcTypeName);
-            if (npcType == null)
-                npcType = ScriptCompiler.FindTypeByName(def.NpcTypeName);
-
-            if (npcType == null || !typeof(Mobile).IsAssignableFrom(npcType))
-                return;
+            if (npcType == null || map == null)
+                return null;
 
             object obj = Activator.CreateInstance(npcType);
             Mobile mob = obj as Mobile;
             if (mob == null)
+                return null;
+
+            var govProp = npcType.GetProperty("GovernmentCityId");
+            if (govProp != null && govProp.CanWrite && govProp.PropertyType == typeof(int))
+                govProp.SetValue(mob, cityId, null);
+
+            mob.MoveToWorld(worldPoint, map);
+            return mob;
+        }
+
+        private static Type ResolveNpcType(string typeName)
+        {
+            if (String.IsNullOrWhiteSpace(typeName))
+                return null;
+
+            Type npcType = ScriptCompiler.FindTypeByFullName(typeName);
+            if (npcType == null)
+                npcType = ScriptCompiler.FindTypeByName(typeName);
+
+            if (npcType == null || !typeof(Mobile).IsAssignableFrom(npcType))
+                return null;
+
+            return npcType;
+        }
+
+        private static void SpawnNpcIfNeeded(ReinoLotDefinition lot, ReinoLotState state, ReinoConstructionDefinition def)
+        {
+            if (lot == null || state == null || def == null)
                 return;
 
-            Point3D p = new Point3D(lot.NorthWest.X + def.NpcOffset.X, lot.NorthWest.Y + def.NpcOffset.Y, lot.NorthWest.Z + def.NpcZOffset);
-            mob.MoveToWorld(p, lot.Map);
-            state.NpcSerial = mob.Serial.Value;
+            if (state.NpcSerials == null)
+                state.NpcSerials = new List<int>();
+            else
+                state.NpcSerials.Clear();
+
+            if (def.NpcSpawns != null && def.NpcSpawns.Length > 0)
+            {
+                for (int i = 0; i < def.NpcSpawns.Length; i++)
+                {
+                    ReinoNpcSpawnDefinition spawn = def.NpcSpawns[i];
+                    if (spawn == null || String.IsNullOrWhiteSpace(spawn.NpcTypeName))
+                        continue;
+
+                    Type npcType = ScriptCompiler.FindTypeByFullName(spawn.NpcTypeName);
+                    if (npcType == null)
+                        npcType = ScriptCompiler.FindTypeByName(spawn.NpcTypeName);
+
+                    if (npcType == null || !typeof(Mobile).IsAssignableFrom(npcType))
+                        continue;
+
+                    object obj = Activator.CreateInstance(npcType);
+                    Mobile mob = obj as Mobile;
+                    if (mob == null)
+                        continue;
+
+                    Point3D p = new Point3D(
+                        lot.NorthWest.X + spawn.Offset.X,
+                        lot.NorthWest.Y + spawn.Offset.Y,
+                        lot.NorthWest.Z + spawn.ZOffset);
+
+                    mob.MoveToWorld(p, lot.Map);
+
+                    state.NpcSerials.Add(mob.Serial.Value);
+
+                    if (state.NpcSerial == 0)
+                        state.NpcSerial = mob.Serial.Value;
+                }
+
+                return;
+            }
+
+            if (String.IsNullOrWhiteSpace(def.NpcTypeName))
+                return;
+
+            Type fallbackNpcType = ScriptCompiler.FindTypeByFullName(def.NpcTypeName);
+            if (fallbackNpcType == null)
+                fallbackNpcType = ScriptCompiler.FindTypeByName(def.NpcTypeName);
+
+            if (fallbackNpcType == null || !typeof(Mobile).IsAssignableFrom(fallbackNpcType))
+                return;
+
+            object fallbackObj = Activator.CreateInstance(fallbackNpcType);
+            Mobile fallbackMob = fallbackObj as Mobile;
+            if (fallbackMob == null)
+                return;
+
+            Point3D fallbackPoint = new Point3D(
+                lot.NorthWest.X + def.NpcOffset.X,
+                lot.NorthWest.Y + def.NpcOffset.Y,
+                lot.NorthWest.Z + def.NpcZOffset);
+
+            fallbackMob.MoveToWorld(fallbackPoint, lot.Map);
+
+            state.NpcSerial = fallbackMob.Serial.Value;
+            state.NpcSerials.Add(fallbackMob.Serial.Value);
         }
 
         private static void SpawnDoors(Point3D anchor, List<int> store, ReinoDoorDefinition[] defs, Map map)
@@ -1523,7 +1626,7 @@ namespace Server.Custom.Systems.Reinos
             if (lot == null)
                 return Point3D.Zero;
 
-            return new Point3D(lot.NorthWest.X + lot.Side - 2, lot.NorthWest.Y + lot.Side, lot.NorthWest.Z + 7);
+            return new Point3D(lot.NorthWest.X + lot.Side - 2, lot.NorthWest.Y + lot.Side, lot.NorthWest.Z + 8);
         }
 
         private static Point3D GetLotPostLocation(ReinoLotDefinition lot)
@@ -1682,10 +1785,35 @@ namespace Server.Custom.Systems.Reinos
                 multi.Delete();
             state.MultiSerial = 0;
 
+            if (state.NpcSerials != null && state.NpcSerials.Count > 0)
+            {
+                for (int i = 0; i < state.NpcSerials.Count; i++)
+                {
+                    Mobile listNpc = World.FindMobile((Serial)state.NpcSerials[i]);
+                    if (listNpc != null && !listNpc.Deleted)
+                        listNpc.Delete();
+                }
+
+                state.NpcSerials.Clear();
+            }
+
             Mobile npc = state.NpcSerial > 0 ? World.FindMobile((Serial)state.NpcSerial) : null;
             if (npc != null && !npc.Deleted)
                 npc.Delete();
+
             state.NpcSerial = 0;
+
+            if (state.ExtraNpcSerials != null)
+            {
+                for (int i = 0; i < state.ExtraNpcSerials.Count; i++)
+                {
+                    Mobile extra = state.ExtraNpcSerials[i] > 0 ? World.FindMobile((Serial)state.ExtraNpcSerials[i]) : null;
+                    if (extra != null && !extra.Deleted)
+                        extra.Delete();
+                }
+
+                state.ExtraNpcSerials.Clear();
+            }
 
             if (state.PostSerial > 0)
             {
@@ -1983,6 +2111,49 @@ namespace Server.Custom.Systems.Reinos
             return true;
         }
 
+        public static bool TryDemolishLotConstruction(int cityId, int lotId, out string message)
+        {
+            message = String.Empty;
+            ReinoLotDefinition lot = GetLotDefinition(lotId);
+            ReinoLotState state = GetLotState(lotId);
+
+            if (lot == null || state == null || lot.CityId != cityId)
+            {
+                message = "Lote inválido para esse reino.";
+                return false;
+            }
+
+            if (!state.HasConstructionProgress || String.IsNullOrWhiteSpace(state.ConstructionId))
+            {
+                message = "Esse lote não possui uma construção para demolir.";
+                return false;
+            }
+
+            CleanupLotWorldObjects(state);
+            CleanupDanglingLotEncounterMultis(lot);
+
+            lot.LotConfigId = 0;
+            ApplyLotConfigToDefinition(lot, 0);
+
+            state.Status = ReinoLotStatus.Available;
+            state.ObjectiveProgress = 0;
+            state.AvailableUntilUtc = DateTime.UtcNow + TimeSpan.FromDays(7.0);
+            state.RearmThreatOnAvailableExpiry = true;
+            state.ConstructionId = String.Empty;
+            state.CurrentStageIndex = -1;
+            state.NextStageUtc = DateTime.MinValue;
+            state.ReactivateReadyUtc = DateTime.MinValue;
+            state.LastActivatedUtc = DateTime.MinValue;
+            state.RevenueCurrentActivationGold = 0;
+            state.NpcWagesCurrentActivationGold = 0;
+            state.CommissionWagesCurrentActivationGold = 0;
+
+            EnsureLotSign(lot, state);
+            ReinoMaintenanceSystem.NormalizeCityPriorities(cityId);
+            message = String.Format("A construção do lote {0} foi demolida. O terreno ficará vazio por 7 dias e depois receberá uma nova ameaça aleatória.", lotId);
+            return true;
+        }
+
         private static void ResetLotInternal(ReinoLotDefinition lot, ReinoLotState state)
         {
             ResetLotEncounter(lot, state, false);
@@ -2023,7 +2194,7 @@ namespace Server.Custom.Systems.Reinos
                 sign.Secures = tpl.PropertyType == Server.Custom.Systems.Rent.OSUPropertyType.House ? tpl.Secures : 0;
                 sign.MinZ = anchor.Z + tpl.MinZOffset;
                 sign.MaxZ = anchor.Z + tpl.MaxZOffset;
-                sign.SignLoc = new Point3D(anchor.X + tpl.SignOffset.X, anchor.Y + tpl.SignOffset.Y, anchor.Z + tpl.SignOffset.Z);
+                sign.SignLoc = new Point3D(anchor.X + tpl.SignOffset.X, anchor.Y + tpl.SignOffset.Y, anchor.Z + tpl.SignOffset.Z +13);
                 sign.BanLoc = new Point3D(anchor.X + tpl.BanLocOffset.X, anchor.Y + tpl.BanLocOffset.Y, anchor.Z + tpl.BanLocOffset.Z);
                 sign.Blocks = tpl.BuildAbsoluteBlocks(anchor);
                 sign.MoveToWorld(sign.SignLoc, lot.Map);
@@ -2053,7 +2224,7 @@ namespace Server.Custom.Systems.Reinos
                 door.Locked = false;
                 door.KeyValue = 0;
                 door.MoveToWorld(new Point3D(anchor.X + d.X, anchor.Y + d.Y, anchor.Z + d.Z), map);
-                door.Open = true;
+                door.Open = false;
 
                 foreach (Item item in door.GetItemsInRange(1))
                 {
@@ -2393,9 +2564,10 @@ namespace Server.Custom.Systems.Reinos
                 using (FileStream fs = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.None))
                 using (BinaryWriter bw = new BinaryWriter(fs))
                 {
-                    bw.Write(5);
+                    bw.Write(8);
                     bw.Write(m_NextLotId);
                     bw.Write(m_NextAreaId);
+                    bw.Write(ReinoMaintenanceSystem.LastWeeklyMaintenanceUtc.ToBinary());
 
                     bw.Write(m_Ledgers.Count);
                     foreach (KeyValuePair<int, ReinoResourceLedger> kv in m_Ledgers)
@@ -2478,10 +2650,28 @@ namespace Server.Custom.Systems.Reinos
                         bw.Write(st.PostSerial);
                         bw.Write(st.MultiSerial);
                         bw.Write(st.NpcSerial);
+
+                        int npcCount = st.NpcSerials != null ? st.NpcSerials.Count : 0;
+                        bw.Write(npcCount);
+                        for (int i = 0; i < npcCount; i++)
+                            bw.Write(st.NpcSerials[i]);
+
+                        int extraNpcCount = st.ExtraNpcSerials != null ? st.ExtraNpcSerials.Count : 0;
+
+                        bw.Write(extraNpcCount);
+
+                        for (int n = 0; n < extraNpcCount; n++)
+                            bw.Write(st.ExtraNpcSerials[n]);
+
+                        bw.Write(st.RearmThreatOnAvailableExpiry);
+
                         int doorCount = st.DoorSerials != null ? st.DoorSerials.Count : 0;
+
                         bw.Write(doorCount);
+
                         for (int i = 0; i < doorCount; i++)
                             bw.Write(st.DoorSerials[i]);
+
                         int rentalCount = st.RentalSignSerials != null ? st.RentalSignSerials.Count : 0;
                         bw.Write(rentalCount);
                         for (int i = 0; i < rentalCount; i++)
@@ -2491,8 +2681,10 @@ namespace Server.Custom.Systems.Reinos
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine("ERRO AO SALVAR REINO EXPANSION:");
+                Console.WriteLine(ex);
             }
         }
 
@@ -2513,6 +2705,10 @@ namespace Server.Custom.Systems.Reinos
                 using (BinaryReader br = new BinaryReader(fs))
                 {
                     int version = br.ReadInt32();
+                    if (version >= 8)
+                        ReinoMaintenanceSystem.LastWeeklyMaintenanceUtc = DateTime.FromBinary(br.ReadInt64());
+                    else
+                        ReinoMaintenanceSystem.LastWeeklyMaintenanceUtc = DateTime.MinValue;
                     m_NextLotId = br.ReadInt32();
                     m_NextAreaId = version >= 2 ? br.ReadInt32() : 1;
 
@@ -2598,9 +2794,35 @@ namespace Server.Custom.Systems.Reinos
                         st.NextStageUtc = DateTime.FromBinary(br.ReadInt64());
                         st.ReactivateReadyUtc = DateTime.FromBinary(br.ReadInt64());
                         st.SignSerial = br.ReadInt32();
+
                         st.PostSerial = version >= 4 ? br.ReadInt32() : 0;
                         st.MultiSerial = br.ReadInt32();
                         st.NpcSerial = br.ReadInt32();
+
+                        if (version >= 6)
+                        {
+                            int npcCount = br.ReadInt32();
+                            st.NpcSerials = new List<int>();
+
+                            for (int n = 0; n < npcCount; n++)
+                                st.NpcSerials.Add(br.ReadInt32());
+                        }
+                        else
+                        {
+                            st.NpcSerials = new List<int>();
+
+                            if (st.NpcSerial > 0)
+                                st.NpcSerials.Add(st.NpcSerial);
+                        }
+
+                        if (version >= 6)
+                        {
+                            int extraNpcCount = br.ReadInt32();
+                            for (int n = 0; n < extraNpcCount; n++)
+                                st.ExtraNpcSerials.Add(br.ReadInt32());
+                            st.RearmThreatOnAvailableExpiry = br.ReadBoolean();
+                        }
+             
                         int doorCount = br.ReadInt32();
                         for (int d = 0; d < doorCount; d++)
                             st.DoorSerials.Add(br.ReadInt32());
@@ -2620,8 +2842,10 @@ namespace Server.Custom.Systems.Reinos
 
                 EnsureDefaults();
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine("ERRO AO CARREGAR REINO EXPANSION:");
+                Console.WriteLine(ex);
             }
         }
 

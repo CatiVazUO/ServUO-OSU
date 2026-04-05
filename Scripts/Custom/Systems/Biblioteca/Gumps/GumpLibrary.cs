@@ -5,15 +5,15 @@ using Server.Gumps;
 using Server.Mobiles;
 using Server.Network;
 using Server.Targeting;
-using Server.Custom.Systems.Biblioteca.Engine;
-using Server.Custom.Systems.Biblioteca.Targets;
+using Server.Custom.Biblioteca.Engine;
+using Server.Custom.Biblioteca.Targets;
 using Server.Custom.Systems.HtmlBooks.Engine;
 using Server.Custom.Systems.HtmlBooks.Gumps;
 using Server.Custom.Systems.HtmlBooks.Html.Readable;
-using Server.Custom.Systems.Biblioteca.Library;
+using Server.Custom.Biblioteca.Library;
 using Server.Custom.Systems.Reinos;
 
-namespace Server.Custom.Systems.Biblioteca.Gumps
+namespace Server.Custom.Biblioteca.Gumps
 {
     public class GumpLibrary : Gump
     {

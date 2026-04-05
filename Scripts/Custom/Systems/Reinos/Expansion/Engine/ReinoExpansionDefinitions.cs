@@ -19,6 +19,7 @@ namespace Server.Custom.Systems.Reinos
             m_Initialized = true;
             m_Buildings.Clear();
             Register(CorreiosAuroraDefinition.Create());
+            Register(BibliotecaAuroraTesteDefinition.Create());
             Register(ResidencialAuroraTesteDefinition.Create());
             // Adicione novas construções aqui conforme for criando novos arquivos.
         }

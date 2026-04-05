@@ -156,7 +156,7 @@ namespace Server.Custom.Systems.Rent
             TownHouseSign sign = new TownHouseSign();
             sign.PropertyType = c_ListPage == ListPage.Commercial ? OSUPropertyType.Commercial : (c_ListPage == ListPage.Tombs ? OSUPropertyType.Tomb : OSUPropertyType.House);
             sign.Flip = false; // leste = 0x0BD2
-            sign.ItemID = 0x0BD2;
+            sign.ItemID = 0x18B7;
             Owner.AddToBackpack(sign);
             Owner.SendMessage("Uma nova placa foi colocada na sua mochila. Durante o setup ela se move sozinha.");
             new TownHouseSetupGump(Owner, sign);

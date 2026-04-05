@@ -3,7 +3,7 @@ using Server.Items;
 using Server.Custom.Systems.Reinos;
 using Server.Mobiles;
 
-namespace Server.Custom.Systems.Biblioteca.Library
+namespace Server.Custom.Biblioteca.Library
 {
     public class LibraryCard : Item
     {

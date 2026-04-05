@@ -1,8 +1,10 @@
-using System;
 using Server;
 using Server.Commands;
+using Server.Items;
 using Server.Mobiles;
 using Server.Targeting;
+using System;
+using System.Collections.Generic;
 
 namespace Server.Custom.Systems.Reinos
 {
@@ -32,6 +34,8 @@ namespace Server.Custom.Systems.Reinos
             CommandSystem.Register("ReinoLotClean", AccessLevel.GameMaster, OnLotClean);
             CommandSystem.Register("ReinoRecursosAddAll", AccessLevel.GameMaster, OnAddAllResources);
             CommandSystem.Register("ReinoMaintenanceNow", AccessLevel.GameMaster, OnMaintenanceNow);
+            CommandSystem.Register("ReinoDeleteNearbyMulti", AccessLevel.GameMaster, OnDeleteNearbyMulti);
+            CommandSystem.Register("ReinoListNearbyMulti", AccessLevel.GameMaster, OnListNearbyMulti);
         }
 
         private static bool TryParseCity(string raw, out int cityId)
@@ -39,7 +43,109 @@ namespace Server.Custom.Systems.Reinos
             return ReinoExpansionSystem.TryParseCityId(raw, out cityId);
         }
 
+        private static void OnListNearbyMulti(CommandEventArgs e)
+        {
+            Mobile from = e.Mobile;
 
+            if (from == null || from.Map == null || from.Map == Map.Internal)
+                return;
+
+            int range = 12;
+
+            if (e.Arguments.Length > 0)
+            {
+                int parsed;
+                if (Int32.TryParse(e.Arguments[0], out parsed) && parsed > 0)
+                    range = parsed;
+            }
+
+            IPooledEnumerable eable = from.Map.GetItemsInRange(from.Location, range);
+            int count = 0;
+
+            foreach (Item item in eable)
+            {
+                if (item == null || item.Deleted)
+                    continue;
+
+                if (item is ReinoConstructionMulti || item is BaseMulti || item is ReinoPlacedMultiBase)
+                {
+                    count++;
+                    from.SendMessage("#{0}: {1} serial={2} loc={3}", count, item.GetType().Name, item.Serial, item.Location);
+                }
+            }
+
+            eable.Free();
+
+            if (count == 0)
+                from.SendMessage("Nenhum multi encontrado no alcance.");
+        }
+
+
+        private static void OnDeleteNearbyMulti(CommandEventArgs e)
+        {
+            Mobile from = e.Mobile;
+
+            if (from == null || from.Map == null || from.Map == Map.Internal)
+                return;
+
+            int range = 12;
+
+            if (e.Arguments.Length > 0)
+            {
+                int parsed;
+                if (Int32.TryParse(e.Arguments[0], out parsed) && parsed > 0)
+                    range = parsed;
+            }
+
+            IPooledEnumerable eable = from.Map.GetItemsInRange(from.Location, range);
+            List<Item> found = new List<Item>();
+
+            foreach (Item item in eable)
+            {
+                if (item == null || item.Deleted)
+                    continue;
+
+                if (item is ReinoConstructionMulti || item is BaseMulti || item is ReinoPlacedMultiBase)
+                    found.Add(item);
+            }
+
+            eable.Free();
+
+            if (found.Count == 0)
+            {
+                from.SendMessage("Nenhum multi encontrado no alcance.");
+                return;
+            }
+
+            for (int i = 0; i < found.Count; i++)
+            {
+                Item item = found[i];
+                from.SendMessage("Deletando multi: {0} serial={1}", item.GetType().Name, item.Serial);
+                item.Delete();
+            }
+
+            from.SendMessage("{0} multi(s) deletado(s).", found.Count);
+        }
+
+        private static void OnMaintenanceNow(CommandEventArgs e)
+        {
+            if (e.Arguments == null || e.Arguments.Length == 0)
+            {
+                ReinoMaintenanceSystem.RunWeeklyMaintenanceNow();
+                e.Mobile.SendMessage("Cobrança semanal forçada para todos os reinos.");
+                return;
+            }
+
+            int cityId;
+            if (!TryParseCity(e.Arguments[0], out cityId))
+            {
+                e.Mobile.SendMessage("Cidade inválida. Use Aurora, Xetá, Lurone ou Willran.");
+                return;
+            }
+
+            ReinoMaintenanceSystem.RunWeeklyMaintenanceNow(cityId);
+            e.Mobile.SendMessage("Cobrança semanal forçada para {0}.", ReinoElectionsSystem.GetCityName(cityId));
+        }
         private static void OnAddAllResources(CommandEventArgs e)
         {
             if (e.Arguments == null || e.Arguments.Length < 2)
@@ -391,26 +497,6 @@ namespace Server.Custom.Systems.Reinos
                 e.Mobile.SendMessage(message);
         }
 
-        private static void OnMaintenanceNow(CommandEventArgs e)
-        {
-            if (e.Arguments == null || e.Arguments.Length == 0)
-            {
-                ReinoMaintenanceSystem.RunWeeklyMaintenanceNow();
-                e.Mobile.SendMessage("Cobrança semanal forçada para todos os reinos.");
-                return;
-            }
-
-            int cityId;
-            if (!TryParseCity(e.Arguments[0], out cityId))
-            {
-                e.Mobile.SendMessage("Cidade inválida. Use Aurora, Xetá, Lurone ou Willran.");
-                return;
-            }
-
-            ReinoMaintenanceSystem.RunWeeklyMaintenanceNow(cityId);
-            e.Mobile.SendMessage("Cobrança semanal forçada para {0}.", ReinoElectionsSystem.GetCityName(cityId));
-        }
-
         private class AreaRectTarget : Target
         {
             private readonly int m_CityId;
@@ -472,7 +558,6 @@ namespace Server.Custom.Systems.Reinos
                 }
             }
         }
-
 
         private class DecorativeLinkTarget : Target
         {

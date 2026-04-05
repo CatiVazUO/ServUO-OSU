@@ -67,8 +67,8 @@ namespace Server.Custom.Systems.Rent
 
             if (c_Sign != null && c_Sign.Map != null && c_Sign.Map != Map.Internal && c_Sign.RootParent == null)
             {
-                m.Hidden = true;
-                m.MoveToWorld(new Point3D(c_Sign.Location.X, c_Sign.Location.Y, c_Sign.Location.Z + 5), c_Sign.Map);
+                m.Hidden = false;
+             //   m.MoveToWorld(new Point3D(c_Sign.Location.X, c_Sign.Location.Y, c_Sign.Location.Z), c_Sign.Map);
             }
         }
 
@@ -405,7 +405,7 @@ namespace Server.Custom.Systems.Rent
                 switch (c_Type)
                 {
                     case TargetType.SignLoc:
-                        c_Sign.SignLoc = new Point3D(point.X, point.Y, point.Z);
+                        c_Sign.SignLoc = new Point3D(point.X, point.Y, point.Z +20 ); 
                         c_Sign.MoveToWorld(c_Sign.SignLoc, c_Sign.Map);
                         c_Sign.UpdateSignItem();
                         c_Sign.ShowSignPreview();

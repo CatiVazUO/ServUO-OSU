@@ -508,7 +508,7 @@ namespace Server.Custom.Systems.Rent
 		}
 
 		[Constructable]
-		public TownHouseSign() : base( 0x0BD2 )
+		public TownHouseSign() : base( 0x18B7 )
 		{
 			Name = "This building is for rent!";
 			Movable = false;
@@ -565,20 +565,19 @@ namespace Server.Custom.Systems.Rent
 					c_House = house;
 		}
 
-		public void UpdateBlocks()
-		{
-			if ( !Owned )
-				return;
+        public void UpdateBlocks()
+        {
+            if (!Owned)
+                return;
 
-            if (c_Blocks.Count == 0)
-				UnconvertDoors();
+            UnconvertDoors();
 
             RUOVersion.UpdateRegion(this);
             ConvertItems(false);
-			c_House.InitSectorDefinition();
-		}
+            c_House.InitSectorDefinition();
+        }
 
-		public void ShowAreaPreview( Mobile m )
+        public void ShowAreaPreview( Mobile m )
 		{
 			ClearPreview();
 
@@ -754,23 +753,24 @@ namespace Server.Custom.Systems.Rent
                 if (c_Free)
                     price = 0;
 
-                if (m.AccessLevel == AccessLevel.Player && !Banker.Withdraw(m, price))
+                if (price > 0 && !Banker.Withdraw(m, price))
                 {
                     m.SendMessage("You cannot afford this house.");
                     return;
                 }
 
-                if (m.AccessLevel == AccessLevel.Player)
+                if (price > 0)
                 {
-                    m.SendMessage( "Um total de " + price.ToString() + " moedas de outro foi retirado do seu banco." );
-					m.SendMessage("Para trancar as portas, clique em casa uma delas e defina as permissões.");
+                    m.SendMessage("Um total de " + price.ToString() + " moedas de ouro foi retirado do seu banco.");
+                    m.SendMessage("Para trancar as portas, clique em casa uma delas e defina as permissões.");
                     OnRentPaid(price);
                 }
-
-                if (IsTomb)
-                    Visible = true;
                 else
-                    Visible = false;
+                {
+                    m.SendMessage("Para trancar as portas, clique em casa uma delas e defina as permissões.");
+                }
+
+                    Visible = true;
 
                 int minX = ((Rectangle2D)c_Blocks[0]).Start.X;
                 int minY = ((Rectangle2D)c_Blocks[0]).Start.Y;
@@ -797,9 +797,13 @@ namespace Server.Custom.Systems.Rent
                 c_House.Location = new Point3D(minX, minY, Map.GetAverageZ(minX, minY));
                 c_House.Map = Map;
                 c_House.Region.GoLocation = c_BanLoc;
-                c_House.Sign.Location = c_SignLoc;
-              //  c_House.Sign.OriginalName = m.Name;
-              //  c_House.Sign.TownHouseSign = this;
+                if (c_House.Sign != null && !c_House.Sign.Deleted)
+                {
+                    c_House.Sign.Location = new Point3D(c_SignLoc.X , c_SignLoc.Y, c_SignLoc.Z - 5);
+                    c_House.Sign.Visible = false;
+                }
+                //  c_House.Sign.OriginalName = m.Name;
+                //  c_House.Sign.TownHouseSign = this;
                 //c_House.Hanger = new Item(0xB98);
                 //c_House.Hanger.Location = c_SignLoc;
                 //c_House.Hanger.Map = Map;
@@ -838,7 +842,12 @@ namespace Server.Custom.Systems.Rent
                 }
                 else
                 {
-                    c_House.Sign.ItemID = GetSignItemID();
+                    Location = c_SignLoc;
+                    Map = c_House.Map;
+                    Visible = true;
+
+                    if (c_House.Sign != null && !c_House.Sign.Deleted)
+                        c_House.Sign.Visible = false;
                 }
             }
             catch(Exception e)
@@ -1002,14 +1011,17 @@ namespace Server.Custom.Systems.Rent
 			if ( !Owned )
 				return;
 
-			if ( door is ISecurable )
-			{
-				door.Locked = false;
-				c_House.Doors.Add( door );
-                return;
-			}
+            if (door is ISecurable)
+            {
+                door.Locked = false;
 
-			door.Open = false;
+                if (!c_House.Doors.Contains(door))
+                    c_House.Doors.Add(door);
+
+                return;
+            }
+
+            door.Open = false;
 
 			GenericHouseDoor newdoor = new GenericHouseDoor( 0, door.ClosedID, door.OpenedSound, door.ClosedSound );
 			newdoor.Offset = door.Offset;
@@ -1027,7 +1039,8 @@ namespace Server.Custom.Systems.Rent
 					newdoor.Link = (BaseDoor)inneritem;
 				}
 
-            c_House.Doors.Add(newdoor);
+            if (!c_House.Doors.Contains(newdoor))
+                c_House.Doors.Add(newdoor);
         }
         public virtual void UnconvertDoors()
 		{
@@ -1471,19 +1484,20 @@ namespace Server.Custom.Systems.Rent
 				return;
 			}
 
-			if ( !c_Free && c_House.Owner.AccessLevel == AccessLevel.Player && !Banker.Withdraw( c_House.Owner, c_Price ) )
-			{
-				c_House.Owner.SendMessage( "Since you can not afford the rent, the bank has reclaimed your town house." );
-				PackUpHouse();
-				return;
-			}
+            if (!c_Free && c_Price > 0 && !Banker.Withdraw(c_House.Owner, c_Price))
+            {
+                c_House.Owner.SendMessage("Since you can not afford the rent, the bank has reclaimed your town house.");
+                PackUpHouse();
+                return;
+            }
 
-			if ( !c_Free )
-				c_House.Owner.SendMessage( "The bank has withdrawn {0} copper rent for your town house.", c_Price );
+            if (!c_Free && c_Price > 0)
+                c_House.Owner.SendMessage("The bank has withdrawn {0} copper rent for your town house.", c_Price);
 
-			OnRentPaid(c_Price);
+            if (!c_Free && c_Price > 0)
+                OnRentPaid(c_Price);
 
-			if ( c_RentToOwn )
+            if ( c_RentToOwn )
 			{
 				c_RTOPayments++;
 
@@ -2170,7 +2184,7 @@ namespace Server.Custom.Systems.Rent
                 m_TombSelectedItemID = reader.ReadInt();
                 m_TombSelectedGumpID = reader.ReadInt();
                 m_TombExtraCost = reader.ReadInt();
-                m_TombDeadName = reader.ReadString();
+                m_TombDeadName = reader.ReadString();object
                 m_TombBirthYear = reader.ReadString();
                 m_TombDeathYear = reader.ReadString();
                 m_TombMessage = reader.ReadString();
