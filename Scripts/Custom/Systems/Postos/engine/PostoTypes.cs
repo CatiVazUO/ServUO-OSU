@@ -76,6 +76,15 @@ namespace Server.Custom.Systems.Postos
         public DateTime ProtectedUntilUtc;
         public DateTime ContestEndsUtc;
         public List<PostoContestScore> ContestScores;
+        public DateTime LastConqueredUtc;
+        public int TotalGeneratedCurrentOwner;
+        public int LastDispatchAmount;
+        public DateTime LastDispatchUtc;
+        public string PreviousOwnerCityId;
+        public string DonatedByCityId;
+        public long PreviousOwnerHeldTicks;
+        public long TotalOwnershipTicks;
+        public int CompletedOwnershipCount;
 
         public PostoState(string postoId)
         {
@@ -88,6 +97,15 @@ namespace Server.Custom.Systems.Postos
             ProtectedUntilUtc = DateTime.MinValue;
             ContestEndsUtc = DateTime.MinValue;
             ContestScores = new List<PostoContestScore>();
+            LastConqueredUtc = DateTime.MinValue;
+            TotalGeneratedCurrentOwner = 0;
+            LastDispatchAmount = 0;
+            LastDispatchUtc = DateTime.MinValue;
+            PreviousOwnerCityId = String.Empty;
+            DonatedByCityId = String.Empty;
+            PreviousOwnerHeldTicks = 0;
+            TotalOwnershipTicks = 0;
+            CompletedOwnershipCount = 0;
         }
     }
 

@@ -271,6 +271,154 @@ namespace Server.Custom.Systems.Postos
             return state.StoredAmount;
         }
 
+        public static int GetTotalGeneratedCurrentOwner(string postoId)
+        {
+            PostoState state = GetState(postoId);
+            return state != null ? Math.Max(0, state.TotalGeneratedCurrentOwner) : 0;
+        }
+
+        public static int GetLastDispatchAmount(string postoId)
+        {
+            PostoState state = GetState(postoId);
+            return state != null ? Math.Max(0, state.LastDispatchAmount) : 0;
+        }
+
+        public static DateTime GetLastDispatchUtc(string postoId)
+        {
+            PostoState state = GetState(postoId);
+            return state != null ? state.LastDispatchUtc : DateTime.MinValue;
+        }
+
+        public static DateTime GetLastConqueredUtc(string postoId)
+        {
+            PostoState state = GetState(postoId);
+            return state != null ? state.LastConqueredUtc : DateTime.MinValue;
+        }
+
+        public static string GetPreviousOwnerLabel(string postoId)
+        {
+            PostoState state = GetState(postoId);
+            if (state == null || String.IsNullOrWhiteSpace(state.PreviousOwnerCityId))
+                return "-";
+
+            return NormalizeCityId(state.PreviousOwnerCityId);
+        }
+
+        public static string GetDonatedByLabel(string postoId)
+        {
+            PostoState state = GetState(postoId);
+            if (state == null || String.IsNullOrWhiteSpace(state.DonatedByCityId))
+                return "-";
+
+            return NormalizeCityId(state.DonatedByCityId);
+        }
+
+        private static PostoResourceChest FindChest(string postoId)
+        {
+            foreach (Item item in World.Items.Values)
+            {
+                PostoResourceChest chest = item as PostoResourceChest;
+                if (chest == null || chest.Deleted)
+                    continue;
+
+                if (String.Equals(chest.PostoId, postoId, StringComparison.OrdinalIgnoreCase))
+                    return chest;
+            }
+
+            return null;
+        }
+
+        public static string GetChestLocationLabel(string postoId)
+        {
+            PostoResourceChest chest = FindChest(postoId);
+            if (chest == null || chest.Map == null || chest.Map == Map.Internal)
+                return "-";
+
+            return String.Format("{0}, {1}, {2}", chest.X, chest.Y, chest.Z);
+        }
+
+        private static string FormatDuration(TimeSpan span)
+        {
+            if (span < TimeSpan.Zero)
+                span = TimeSpan.Zero;
+
+            int days = (int)Math.Floor(span.TotalDays);
+            int hours = span.Hours;
+
+            if (days <= 0 && hours <= 0)
+                return "0h";
+
+            if (days > 0)
+                return String.Format("{0}d {1}h", days, Math.Max(0, hours));
+
+            return String.Format("{0}h", Math.Max(0, hours));
+        }
+
+        public static string GetPreviousOwnerHeldLabel(string postoId)
+        {
+            PostoState state = GetState(postoId);
+            if (state == null || state.PreviousOwnerHeldTicks <= 0)
+                return "-";
+
+            return FormatDuration(TimeSpan.FromTicks(state.PreviousOwnerHeldTicks));
+        }
+
+        public static string GetAverageOwnershipLabel(string postoId)
+        {
+            PostoState state = GetState(postoId);
+            if (state == null || state.CompletedOwnershipCount <= 0 || state.TotalOwnershipTicks <= 0)
+                return "-";
+
+            return FormatDuration(TimeSpan.FromTicks(state.TotalOwnershipTicks / state.CompletedOwnershipCount));
+        }
+
+        public static string GetCurrentDispatcherNames(string postoId)
+        {
+            PostoState state = GetState(postoId);
+            if (state == null || String.IsNullOrWhiteSpace(state.OwnerCityId))
+                return "-";
+
+            string city = NormalizeCityId(state.OwnerCityId);
+            List<string> names = new List<string>();
+
+            foreach (Mobile mob in World.Mobiles.Values)
+            {
+                PlayerMobile pm = mob as PlayerMobile;
+                if (pm == null || pm.Deleted)
+                    continue;
+
+                if (!pm.IsOSUDispatcherFor(city))
+                    continue;
+
+                string name = pm.Name;
+                if (String.IsNullOrWhiteSpace(name))
+                    name = "Sem nome";
+
+                if (!names.Contains(name))
+                    names.Add(name);
+
+                if (names.Count >= 3)
+                    break;
+            }
+
+            if (names.Count == 0)
+                return "-";
+
+            return String.Join(", ", names.ToArray());
+        }
+
+        private static void FinalizeOwnershipWindow(PostoState state, DateTime now)
+        {
+            if (state == null || String.IsNullOrWhiteSpace(state.OwnerCityId) || state.LastConqueredUtc == DateTime.MinValue)
+                return;
+
+            long ticks = Math.Max(0, (now - state.LastConqueredUtc).Ticks);
+            state.PreviousOwnerCityId = NormalizeCityId(state.OwnerCityId);
+            state.PreviousOwnerHeldTicks = ticks;
+            state.TotalOwnershipTicks += ticks;
+            state.CompletedOwnershipCount++;
+        }
+
         public static void TouchProduction(string postoId)
         {
             PostoDefinition def = GetDefinition(postoId);
@@ -312,6 +460,10 @@ namespace Server.Custom.Systems.Postos
             state.StoredAmount += add;
             if (state.StoredAmount > 800)
                 state.StoredAmount = 800;
+
+            int actuallyAdded = state.StoredAmount - oldAmount;
+            if (actuallyAdded > 0)
+                state.TotalGeneratedCurrentOwner += actuallyAdded;
 
             state.LastProductionUtc = state.LastProductionUtc.AddTicks(productionInterval.Ticks * cycles);
 
@@ -447,11 +599,27 @@ namespace Server.Custom.Systems.Postos
             if (tie)
                 winnerCity = NormalizeCityId(state.OwnerCityId);
 
+            string oldOwner = NormalizeCityId(state.OwnerCityId);
+            bool changedOwner = !SameCity(oldOwner, winnerCity);
+
+            if (changedOwner)
+                FinalizeOwnershipWindow(state, DateTime.UtcNow);
+
             state.OwnerCityId = winnerCity;
             state.ProgressCityId = String.Empty;
             state.ProgressValue = 0;
             state.ProtectedUntilUtc = DateTime.UtcNow + def.ProtectionDelay;
             state.LastProductionUtc = DateTime.UtcNow;
+
+            if (changedOwner)
+            {
+                state.LastConqueredUtc = DateTime.UtcNow;
+                state.TotalGeneratedCurrentOwner = 0;
+                state.LastDispatchAmount = 0;
+                state.LastDispatchUtc = DateTime.MinValue;
+                state.DonatedByCityId = String.Empty;
+            }
+
             ClearContest(state);
             RefreshPostoChests(def.Id);
         }
@@ -824,6 +992,11 @@ namespace Server.Custom.Systems.Postos
             state.ProgressValue = 0;
             state.ProtectedUntilUtc = DateTime.UtcNow + def.ProtectionDelay;
             state.LastProductionUtc = DateTime.UtcNow;
+            state.LastConqueredUtc = DateTime.UtcNow;
+            state.TotalGeneratedCurrentOwner = 0;
+            state.LastDispatchAmount = 0;
+            state.LastDispatchUtc = DateTime.MinValue;
+            state.DonatedByCityId = String.Empty;
             ClearContest(state);
 
             message = "O posto " + def.Name + " agora pertence a " + ambassadorCity + ".";
@@ -886,6 +1059,9 @@ namespace Server.Custom.Systems.Postos
 
             PostoKingdomResourceLedger ledger = EnsureLedger(state.OwnerCityId);
             ledger.Add(def.ResourceType, amount);
+
+            state.LastDispatchAmount = amount;
+            state.LastDispatchUtc = DateTime.UtcNow;
 
             amountDispatched = amount;
             message = String.Format(
@@ -1088,12 +1264,19 @@ namespace Server.Custom.Systems.Postos
                 return false;
             }
 
+            FinalizeOwnershipWindow(state, DateTime.UtcNow);
+
             state.OwnerCityId = String.Empty;
             state.ProgressCityId = String.Empty;
             state.ProgressValue = 0;
             state.StoredAmount = 0;
             state.LastProductionUtc = DateTime.MinValue;
             state.ProtectedUntilUtc = DateTime.MinValue;
+            state.LastConqueredUtc = DateTime.MinValue;
+            state.TotalGeneratedCurrentOwner = 0;
+            state.LastDispatchAmount = 0;
+            state.LastDispatchUtc = DateTime.MinValue;
+            state.DonatedByCityId = String.Empty;
             ClearContest(state);
 
             for (int i = m_PendingLeaderAlerts.Count - 1; i >= 0; i--)
@@ -1255,7 +1438,7 @@ namespace Server.Custom.Systems.Postos
                 using (FileStream fs = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.None))
                 using (BinaryWriter bw = new BinaryWriter(fs))
                 {
-                    bw.Write(3); // version
+                    bw.Write(4); // version
 
                     bw.Write(m_States.Count);
                     foreach (KeyValuePair<string, PostoState> kv in m_States)
@@ -1279,6 +1462,16 @@ namespace Server.Custom.Systems.Postos
                             bw.Write(score != null ? score.CityId ?? String.Empty : String.Empty);
                             bw.Write(score != null ? score.Score : 0);
                         }
+
+                        bw.Write(st.LastConqueredUtc.ToBinary());
+                        bw.Write(st.TotalGeneratedCurrentOwner);
+                        bw.Write(st.LastDispatchAmount);
+                        bw.Write(st.LastDispatchUtc.ToBinary());
+                        bw.Write(st.PreviousOwnerCityId ?? String.Empty);
+                        bw.Write(st.DonatedByCityId ?? String.Empty);
+                        bw.Write(st.PreviousOwnerHeldTicks);
+                        bw.Write(st.TotalOwnershipTicks);
+                        bw.Write(st.CompletedOwnershipCount);
                     }
 
                     bw.Write(m_Ledgers.Count);
@@ -1350,6 +1543,19 @@ namespace Server.Custom.Systems.Postos
                                     score.Score = br.ReadInt32();
                                     st.ContestScores.Add(score);
                                 }
+                            }
+
+                            if (version >= 4)
+                            {
+                                st.LastConqueredUtc = DateTime.FromBinary(br.ReadInt64());
+                                st.TotalGeneratedCurrentOwner = br.ReadInt32();
+                                st.LastDispatchAmount = br.ReadInt32();
+                                st.LastDispatchUtc = DateTime.FromBinary(br.ReadInt64());
+                                st.PreviousOwnerCityId = br.ReadString();
+                                st.DonatedByCityId = br.ReadString();
+                                st.PreviousOwnerHeldTicks = br.ReadInt64();
+                                st.TotalOwnershipTicks = br.ReadInt64();
+                                st.CompletedOwnershipCount = br.ReadInt32();
                             }
 
                             m_States[postoId] = st;

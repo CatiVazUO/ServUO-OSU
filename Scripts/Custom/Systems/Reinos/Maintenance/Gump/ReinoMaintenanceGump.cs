@@ -17,6 +17,7 @@ namespace Server.Custom.Systems.Reinos
         private const int ButtonMaintenancePriorityDown = 50401;
         private const int ButtonMaintenancePriorityUp = 50402;
         private const int ButtonMaintenanceDemolish = 50403;
+        private const int ButtonMaintenanceResetPosto = 50404;
 
         private void BuildMaintenancePage()
         {
@@ -224,37 +225,65 @@ namespace Server.Custom.Systems.Reinos
 
             string postoId = m_SelectedBuildingId != null && m_SelectedBuildingId.StartsWith("P:", StringComparison.OrdinalIgnoreCase) ? m_SelectedBuildingId.Substring(2) : String.Empty;
             PostoDefinition def = !String.IsNullOrWhiteSpace(postoId) ? PostoSystem.GetDefinition(postoId) : null;
+            PostoState state = def != null ? PostoSystem.GetState(def.Id) : null;
 
             AddLabel(772, 173, 0, def != null ? def.Name : @"Posto");
             AddImageTiled(408, 366, 819, 5, 367);
             AddImageTiled(408, 259, 819, 5, 367);
             AddImageTiled(408, 533, 819, 5, 367);
-            AddLabel(410, 225, 0, @"Status:");
-            AddLabel(410, 278, 0, @"Material:");
-            AddLabel(410, 303, 0, @"Gera Diariamente:");
-            AddLabel(410, 328, 0, @"Total Gerado:");
-            AddLabel(410, 387, 0, @"Última Produção:");
-            AddLabel(410, 415, 0, @"Atualmente Armazenando:");
-            AddLabel(410, 442, 0, @"Última Retirada:");
-            AddLabel(410, 469, 0, @"Despachante Designado:");
-            AddLabel(410, 495, 0, @"Observação:");
 
-            if (def == null)
+            if (def == null || state == null)
             {
-                AddHtml(430, 250, 760, 390, @"<BASEFONT COLOR=#000000>O detalhe dos postos vai ser a próxima etapa. Os botões da página 3 já direcionam para esta página para você manter o layout pronto.</BASEFONT>", false, false);
+                AddHtml(430, 250, 760, 390, @"<BASEFONT COLOR=#000000>Selecione um posto na página de manutenção para ver os detalhes dele aqui.</BASEFONT>", false, false);
                 return;
             }
 
-            PostoState state = PostoSystem.GetState(def.Id);
-            AddLabel(620, 225, 0, PostoSystem.IsContestActive(state) ? @"Em disputa" : @"Ativo");
+            bool inContest = PostoSystem.IsContestActive(state);
+            string status = inContest ? @"Em disputa" : @"Ativo";
+            DateTime conqueredSince = PostoSystem.GetLastConqueredUtc(def.Id);
+            DateTime lastDispatchUtc = PostoSystem.GetLastDispatchUtc(def.Id);
+            int totalGenerated = PostoSystem.GetTotalGeneratedCurrentOwner(def.Id);
+            int stored = PostoSystem.GetStoredAmount(def.Id);
+            int lastDispatch = PostoSystem.GetLastDispatchAmount(def.Id);
+            string dispatchers = PostoSystem.GetCurrentDispatcherNames(def.Id);
+            string previousOwner = PostoSystem.GetPreviousOwnerLabel(def.Id);
+            string donatedBy = PostoSystem.GetDonatedByLabel(def.Id);
+            string chestLoc = PostoSystem.GetChestLocationLabel(def.Id);
+            string previousHeld = PostoSystem.GetPreviousOwnerHeldLabel(def.Id);
+            string averageHeld = PostoSystem.GetAverageOwnershipLabel(def.Id);
+
+            AddLabel(410, 225, 0, @"Status:");
+            AddButton(1037, 230, 533, 533, ButtonMaintenanceResetPosto, GumpButtonType.Reply, 0);
+            AddLabel(1065, 228, 0, @"Desapropriar Posto");
+
+            AddLabel(410, 278, 0, @"Material:");
+            AddLabel(410, 303, 0, @"Gera Diariamente:");
+            AddLabel(410, 328, 0, @"Total Gerado:");
+            AddLabel(410, 387, 0, @"Conquistado Desde:");
+            AddLabel(410, 412, 0, @"Atualmente Armazenando:");
+            AddLabel(410, 437, 0, @"Última Retirada:");
+            AddLabel(410, 462, 0, @"Despachante:");
+            AddLabel(410, 487, 0, @"Data da Última Retirada:");
+            AddLabel(410, 552, 0, @"Conquistado De:");
+            AddLabel(410, 577, 0, @"Doado Por:");
+            AddLabel(410, 602, 0, @"Localização do Posto:");
+            AddLabel(410, 627, 0, @"Tempo Anterior de Posse:");
+            AddLabel(410, 652, 0, @"Tempo Médio de Posse:");
+
+            AddLabel(620, 225, 0, status);
             AddLabel(620, 278, 0, PostoSystem.GetResourceDisplayName(def.ResourceType));
-            AddLabel(620, 303, 0, def.DailyYield.ToString());
-            AddLabel(620, 328, 0, @"Página 10 será concluída no próximo passo.");
-            AddLabel(620, 387, 0, state != null && state.LastProductionUtc != DateTime.MinValue ? state.LastProductionUtc.ToString("dd/MM/yyyy HH:mm") : @"-" );
-            AddLabel(620, 415, 0, PostoSystem.GetStoredAmount(def.Id).ToString());
-            AddLabel(620, 442, 0, @"-" );
-            AddLabel(620, 469, 0, @"-" );
-            AddLabel(620, 495, 0, @"Placeholder visual pronto para a próxima etapa." );
+            AddLabel(620, 303, 0, def.DailyYield + @" por dia");
+            AddLabel(620, 328, 0, totalGenerated + @" unidades");
+            AddLabel(620, 387, 0, conqueredSince == DateTime.MinValue ? @"-" : conqueredSince.ToString("dd/MM/yyyy HH:mm"));
+            AddLabel(620, 412, 0, stored.ToString());
+            AddLabel(620, 437, 0, lastDispatch + @" unidades");
+            AddHtml(620, 460, 560, 38, @"<BASEFONT COLOR=#000000>" + dispatchers + @"</BASEFONT>", false, false);
+            AddLabel(620, 487, 0, lastDispatchUtc == DateTime.MinValue ? @"-" : lastDispatchUtc.ToString("dd/MM/yyyy HH:mm"));
+            AddLabel(620, 552, 0, previousOwner);
+            AddLabel(620, 577, 0, donatedBy);
+            AddLabel(620, 602, 0, chestLoc);
+            AddLabel(620, 627, 0, previousHeld);
+            AddLabel(620, 652, 0, averageHeld);
         }
 
         private bool HandleMaintenanceResponse(PlayerMobile from, RelayInfo info)
@@ -340,6 +369,27 @@ namespace Server.Custom.Systems.Reinos
                 ReinoMaintenanceSystem.TryDemolishConstruction(from, m_CityId, m_SelectedBuildingId, out message);
                 if (!String.IsNullOrWhiteSpace(message))
                     from.SendMessage(message);
+
+                from.SendGump(new ReinoExpansionGump(from, m_CityId, -1, m_SelectedWallAreaId, String.Empty, 0, 3));
+                return true;
+            }
+
+            if (button == ButtonMaintenanceResetPosto)
+            {
+                string postoId = m_SelectedBuildingId != null && m_SelectedBuildingId.StartsWith("P:", StringComparison.OrdinalIgnoreCase) ? m_SelectedBuildingId.Substring(2) : String.Empty;
+
+                if (!String.IsNullOrWhiteSpace(postoId))
+                {
+                    if (!ReinoAccessHelper.HasGovernmentAccess(from, m_CityId))
+                        from.SendMessage("Somente o governador pode desapropriar postos.");
+                    else
+                    {
+                        string message;
+                        PostoSystem.ResetPosto(postoId, out message);
+                        if (!String.IsNullOrWhiteSpace(message))
+                            from.SendMessage(message);
+                    }
+                }
 
                 from.SendGump(new ReinoExpansionGump(from, m_CityId, -1, m_SelectedWallAreaId, String.Empty, 0, 3));
                 return true;
