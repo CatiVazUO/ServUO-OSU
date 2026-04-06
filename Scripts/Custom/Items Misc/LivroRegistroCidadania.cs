@@ -5,7 +5,7 @@ using Server.Mobiles;
 using System;
 using System.Collections;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public class LivroRegistroCidadania : Item
     {

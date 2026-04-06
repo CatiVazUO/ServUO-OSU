@@ -4,7 +4,7 @@ using System.Text;
 using Server;
 using Server.Items;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public static class ReinoExpansionDefinitions
     {

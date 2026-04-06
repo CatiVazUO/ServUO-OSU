@@ -4,7 +4,7 @@ using Server.Items;
 using Server.Mobiles;
 using Server.Multis;
 using System;
-using Server.Custom.Systems.Reinos;
+using Server.Custom.Reinos;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -937,7 +937,7 @@ namespace Server.Custom.Systems.Rent
             if (!m_GovernmentManaged)
                 return false;
 
-            return Server.Custom.Systems.Reinos.ReinoAccessHelper.HasGovernmentAccess((PlayerMobile)m, m_GovernmentCityId);
+            return ReinoEmploymentSystem.CanManageRentalSign((PlayerMobile)m, this);
         }
 
         public bool IsCultureAllowed(Mobile m)

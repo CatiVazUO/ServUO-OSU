@@ -125,7 +125,7 @@ namespace Server.Custom.Systems.Creation.Cultures
     Economia especializada em conhecimento mágico e aprendizado... muitos jovens de outros povos vão estudar com eles...<BR><BR>
     <B>Cidade Capital:</B> Aurora<BR>
     <B>Economia:</B> Capitalista, centrado na Educação<BR>
-    <B>Regido por:</B> Ministérios (voto obrigatório)
+    <B>Regido por:</B> Governo por Ministérios (voto obrigatório)
     </BASEFONT>";
 
         public override string ProverbiosHtml =>

@@ -6,7 +6,7 @@ using Server.Items;
 using Server.Mobiles;
 using Server.Network;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public class OSUUrnaGump : Gump
     {

@@ -1,7 +1,7 @@
 using System;
 using Server.Commands;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public class ReinoLotConfigCommands
     {

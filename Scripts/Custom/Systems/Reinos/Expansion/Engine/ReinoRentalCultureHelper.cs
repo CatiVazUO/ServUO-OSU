@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Server.Custom.Systems.Culture;
 using Server.Mobiles;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public static class ReinoRentalCultureHelper
     {

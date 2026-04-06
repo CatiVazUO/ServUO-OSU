@@ -11,7 +11,7 @@ namespace Server.Custom.Systems.Needs
     {
         // ===== CONFIGURÁVEL =====
         // Tick do sistema (1 minuto para cair "suave")
-        public static TimeSpan TickInterval = TimeSpan.FromMinutes(1.0);
+        public static TimeSpan TickInterval = TimeSpan.FromMinutes(5.0);
 
         // Queda por minuto:
         // - sede: 1 por minuto

@@ -2,7 +2,7 @@ using System;
 using Server;
 using Server.Network;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public class ReinoPreviewMarker : Item
     {

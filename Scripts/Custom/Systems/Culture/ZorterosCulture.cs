@@ -127,7 +127,7 @@ namespace Server.Custom.Systems.Creation.Cultures
     A política da cidade dos Zorteros era baseada na valorização da sabedoria e da experiência de vida...<BR><BR>
     <B>Cidade Capital:</B> Willran<BR>
     <B>Economia:</B> Capitalista, centrada no comércio<BR>
-    <B>Governado por:</B> Conselho de anciões
+    <B>Governado por:</B> Conselho Pleno
     </BASEFONT>";
 
         public override string ProverbiosHtml =>

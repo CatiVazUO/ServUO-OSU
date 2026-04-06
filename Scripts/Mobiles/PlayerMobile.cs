@@ -179,13 +179,6 @@ namespace Server.Mobiles
 
         #region OSU Getters and Setters
 
-        // Reinos
-        [CommandProperty(AccessLevel.GameMaster)]
-        public bool OSUAmbassador { get; set; }
-
-        [CommandProperty(AccessLevel.GameMaster)]
-        public bool OSUDispatcher { get; set; }
-
         // Statue
         public bool StatueCanBeLiveModel { get { return true; } }
         public int StatueMaterialAmount { get { return 10; } }
@@ -224,14 +217,6 @@ namespace Server.Mobiles
                 };
             }
         }
-
-
-        // Elections 
-        [CommandProperty(AccessLevel.GameMaster)]
-        public bool OSUReinoLeader { get; set; }
-
-        [CommandProperty(AccessLevel.GameMaster)]
-        public int OSUReinoLeaderCityId { get; set; } = -1;
 
         // ===== OSU Needs (Fome/Sede) =====
         [CommandProperty(AccessLevel.GameMaster)]
@@ -7588,24 +7573,11 @@ namespace Server.Mobiles
             switch (version)
             {
                 #region OSU Deserialize
-                case 53:
-                    {
-                        OSUAmbassador = reader.ReadBool();
-                        OSUDispatcher = reader.ReadBool();
-                        goto case 52;
-                    }
-                case 52:
+                case 51:
                     {
                         OSUStrCapMax = reader.ReadInt();
                         OSUDexCapMax = reader.ReadInt();
                         OSUIntCapMax = reader.ReadInt();
-                        goto case 51;
-                    }
-                case 51:
-                    {
-                        // Elections
-                        OSUReinoLeader = reader.ReadBool();
-                        OSUReinoLeaderCityId = reader.ReadInt();
                         goto case 50;
                     }
                 case 50:
@@ -8250,22 +8222,14 @@ namespace Server.Mobiles
 
             base.Serialize(writer);
 
-            writer.Write(53); // version
+            writer.Write(51); // version
 
             #region OSU Serialize
-            // Reinos
-            // Elections
-            writer.Write(OSUAmbassador);
-            writer.Write(OSUDispatcher);
 
             // DefQuals
             writer.Write(OSUStrCapMax);
             writer.Write(OSUDexCapMax);
             writer.Write(OSUIntCapMax);
-
-            // Elections
-            writer.Write(OSUReinoLeader);
-            writer.Write(OSUReinoLeaderCityId);
 
             //Fome Sede
             writer.Write(OSUNeedsIntPenalty);

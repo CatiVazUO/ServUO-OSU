@@ -2,7 +2,7 @@ using Server;
 using Server.Multis;
 using Server.Items;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public abstract class ReinoPlacedMultiBase : BaseMulti
     {

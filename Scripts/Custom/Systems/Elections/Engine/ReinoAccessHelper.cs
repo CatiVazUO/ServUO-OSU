@@ -1,11 +1,11 @@
 using Server;
-using Server.Custom.Systems.Reinos;
+using Server.Custom.Reinos;
 using Server.Items;
 using Server.Mobiles;
 using System;
 using System.Collections.Generic;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public static class ReinoAccessHelper
     {
@@ -14,16 +14,43 @@ namespace Server.Custom.Systems.Reinos
             if (pm == null || pm.Deleted)
                 return false;
 
-            if (!Server.Custom.Systems.Reinos.ReinoElectionsSystem.IsPlayerAllowedForCity(pm, cityId))
+            if (!Server.Custom.Reinos.ReinoElectionsSystem.IsPlayerAllowedForCity(pm, cityId))
                 return false;
 
-            if (pm.OSUReinoLeader && pm.OSUReinoLeaderCityId == cityId)
+            if (IsCurrentGovernor(pm, cityId))
                 return true;
 
             if (HasGovernorKey(pm, cityId))
                 return true;
 
             return false;
+        }
+
+        public static bool IsCurrentGovernor(PlayerMobile pm, int cityId)
+        {
+            if (pm == null || pm.Deleted)
+                return false;
+
+            ReinoCityData city;
+            if (!ReinoElectionsSystem._cities.TryGetValue(cityId, out city) || city == null)
+                return false;
+
+            return city.GovernorSerial == pm.Serial.Value;
+        }
+
+        public static int GetGovernorCityId(PlayerMobile pm)
+        {
+            if (pm == null || pm.Deleted)
+                return -1;
+
+            foreach (KeyValuePair<int, ReinoCityData> kv in ReinoElectionsSystem._cities)
+            {
+                ReinoCityData city = kv.Value;
+                if (city != null && city.GovernorSerial == pm.Serial.Value)
+                    return kv.Key;
+            }
+
+            return -1;
         }
 
         public static bool HasGovernorKey(PlayerMobile pm, int cityId)
@@ -89,9 +116,6 @@ namespace Server.Custom.Systems.Reinos
             if (pm == null || pm.Deleted)
                 return;
 
-            pm.OSUReinoLeader = true;
-            pm.OSUReinoLeaderCityId = cityId;
-
             if (giveKey)
             {
                 DeleteAllGovernorKeysInWorld(cityId);
@@ -109,12 +133,6 @@ namespace Server.Custom.Systems.Reinos
 
         public static void RevokeGovernorAccess(PlayerMobile pm, int cityId)
         {
-            if (pm != null && !pm.Deleted && pm.OSUReinoLeaderCityId == cityId)
-            {
-                pm.OSUReinoLeader = false;
-                pm.OSUReinoLeaderCityId = -1;
-            }
-
             DeleteAllGovernorKeysInWorld(cityId);
         }
 

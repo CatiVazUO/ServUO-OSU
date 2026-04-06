@@ -10,7 +10,7 @@ using Server.Network;
 using Server.Targeting;
 using Server.Items;
 using Server.Accounting;
-using Server.Custom.Systems.Reinos;
+using Server.Custom.Reinos;
 
 namespace Server.Custom.Correios
 {

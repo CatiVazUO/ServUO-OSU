@@ -1,5 +1,6 @@
 using System;
 using Server;
+using Server.Custom.Reinos;
 
 namespace Server.Mobiles
 {
@@ -30,24 +31,12 @@ namespace Server.Mobiles
 
         public bool IsOSUAmbassadorFor(string cityId)
         {
-            if (!OSUAmbassador)
-                return false;
-
-            return String.Equals(
-                NormalizeOSUCityId(OSUCitizenCityId),
-                NormalizeOSUCityId(cityId),
-                StringComparison.OrdinalIgnoreCase);
+            return ReinoEmploymentSystem.IsRoleAmbassadorFor(this, cityId);
         }
 
         public bool IsOSUDispatcherFor(string cityId)
         {
-            if (!OSUDispatcher)
-                return false;
-
-            return String.Equals(
-                NormalizeOSUCityId(OSUCitizenCityId),
-                NormalizeOSUCityId(cityId),
-                StringComparison.OrdinalIgnoreCase);
+            return ReinoEmploymentSystem.IsRoleDispatcherFor(this, cityId);
         }
     }
 }

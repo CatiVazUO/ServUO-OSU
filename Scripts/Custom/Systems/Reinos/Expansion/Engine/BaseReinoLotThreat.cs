@@ -1,8 +1,8 @@
 using System;
-using Server.Custom.Systems.Reinos;
+using Server.Custom.Reinos;
 using Server.Mobiles;
 
-namespace Server.Custom.Systems.Reinos.Expansion.Engine
+namespace Server.Custom.Reinos.Expansion.Engine
 {
     public abstract class BaseReinoLotThreat : BaseCreature
     {

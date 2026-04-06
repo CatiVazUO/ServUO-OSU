@@ -3,7 +3,7 @@ using Server.Commands;
 using Server.Items;
 using Server.Mobiles;
 using Server.Network;
-using Server.Custom.Systems.Reinos;
+using Server.Custom.Reinos;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -52,10 +52,13 @@ namespace Server.Custom.Systems.Postos
         {
             PlayerMobile pm = e.Mobile as PlayerMobile;
 
-            if (pm == null || pm.Deleted || !pm.OSUReinoLeader)
+            if (pm == null || pm.Deleted)
                 return;
 
-            int leaderCityId = pm.OSUReinoLeaderCityId;
+            int leaderCityId = ReinoAccessHelper.GetGovernorCityId(pm);
+            if (leaderCityId < 0)
+                return;
+
             string leaderCityName = GetCityNameByIndex(leaderCityId);
 
             if (String.IsNullOrWhiteSpace(leaderCityName))
@@ -1347,7 +1350,7 @@ namespace Server.Custom.Systems.Postos
                 if (pm == null || pm.Deleted || pm.NetState == null)
                     continue;
 
-                if (pm.OSUReinoLeader && pm.OSUReinoLeaderCityId == cityIndex)
+                if (ReinoAccessHelper.IsCurrentGovernor(pm, cityIndex))
                     return pm;
             }
 

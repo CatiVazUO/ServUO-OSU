@@ -5,7 +5,7 @@ using Server;
 using Server.Items;
 using Server.Custom.Systems.Rent;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public enum ReinoAreaType
     {

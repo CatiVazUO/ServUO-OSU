@@ -4,7 +4,7 @@ using Server.Network;
 using System;
 using System.Collections.Generic;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public partial class ReinoExpansionGump
     {
@@ -156,11 +156,27 @@ namespace Server.Custom.Systems.Reinos
 
             if (button >= 1 && button <= 12)
             {
+                if (button != 5)
+                {
+                    string pageMessage;
+                    if (!ReinoEmploymentSystem.CanUseGovernmentPage(from, m_CityId, button, out pageMessage))
+                    {
+                        if (!String.IsNullOrWhiteSpace(pageMessage))
+                            from.SendMessage(pageMessage);
+
+                        from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 5));
+                        return;
+                    }
+                }
+
                 from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, button));
                 return;
             }
 
             if (HandleMaintenanceResponse(from, info))
+                return;
+
+            if (HandleGovernmentResponse(from, info))
                 return;
 
             if (button >= ButtonSelectLeftLotBase && button < ButtonSelectRightLotBase)

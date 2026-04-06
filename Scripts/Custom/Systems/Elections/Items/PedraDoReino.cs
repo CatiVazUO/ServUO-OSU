@@ -3,9 +3,9 @@ using Server;
 using Server.Gumps;
 using Server.Mobiles;
 using Server.Network;
-using Server.Custom.Systems.Reinos;
+using Server.Custom.Reinos;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public class PedraDoReino : Item
     {
@@ -13,12 +13,12 @@ namespace Server.Custom.Systems.Reinos
         public int CityId { get; set; }
 
         [Constructable]
-        public PedraDoReino() : this(-1)
+        public PedraDoReino() : this(0)
         {
         }
 
         [Constructable]
-        public PedraDoReino(int cityId) : base(0x136C)
+        public PedraDoReino(int cityId) : base(0x0ED4)
         {
             Movable = false;
             Weight = 255.0;

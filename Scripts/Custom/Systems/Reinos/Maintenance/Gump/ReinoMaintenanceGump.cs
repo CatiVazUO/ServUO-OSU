@@ -5,7 +5,7 @@ using Server.Gumps;
 using Server.Mobiles;
 using Server.Network;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public partial class ReinoExpansionGump
     {

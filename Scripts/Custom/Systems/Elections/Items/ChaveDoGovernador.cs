@@ -2,7 +2,7 @@ using Server;
 using Server.Mobiles;
 using System;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public class ChaveDoGovernador : Item
     {

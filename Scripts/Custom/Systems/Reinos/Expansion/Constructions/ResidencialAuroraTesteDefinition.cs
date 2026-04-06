@@ -6,7 +6,7 @@ using System;
 using System.Text;
 using System.Xml.Linq;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public static class ResidencialAuroraTesteDefinition
     {
@@ -118,6 +118,10 @@ namespace Server.Custom.Systems.Reinos
             sb.Append("Quando ficar pronta, esta construção cria automaticamente 2 placas residenciais " +
                 "de teste já com área, altura, lockdowns, secures e local da placa definidos. O governador " +
                 "precisa apenas liberar cada imóvel, ajustar nome, preço, frequência e povos permitidos.<BR><BR>");
+            sb.Append("Se o reino criar um cargo ligado a esta área residencial e esse cargo tiver permissão para decisões financeiras, " +
+                "o ocupante poderá abrir o gump de configuração dos aluguéis ao clicar na placa de uma casa do reino.<BR><BR>");
+            sb.Append("Se o reino criar um cargo ligado a esta área residencial e esse cargo tiver permissão para decisões financeiras, " +
+                "o ocupante poderá abrir o gump de configuração dos aluguéis ao clicar na placa de uma casa do reino.<BR><BR>");
             sb.Append("Os offsets desta versão são placeholders. Quando você tiver o multi residencial definitivo, " +
                 "use o comando de exportação para medir as placas reais e substituir esses números com precisão.");
             sb.Append("</BASEFONT>");

@@ -4,7 +4,7 @@ using Server;
 using Server.Items;
 using Server.Multis;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     // Implementação compatível com ServUO custom: o item principal é invisível,
     // e ele desenha os componentes do multi no mundo. Portas são convertidas em

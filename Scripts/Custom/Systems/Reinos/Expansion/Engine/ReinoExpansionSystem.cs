@@ -9,7 +9,7 @@ using Server.Mobiles;
 using Server.Multis;
 using Server.Custom.Systems.Rent;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public static partial class ReinoExpansionSystem
     {

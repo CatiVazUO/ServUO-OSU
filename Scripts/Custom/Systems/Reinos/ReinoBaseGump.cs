@@ -2,7 +2,7 @@ using System;
 using Server.Gumps;
 using Server.Mobiles;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public partial class ReinoExpansionGump : Gump
     {
@@ -82,7 +82,7 @@ namespace Server.Custom.Systems.Reinos
             AddLabel(250, 349, 0, @"Expansão");
             AddButton(211, 343, 439, 438, 4, GumpButtonType.Reply, 0);
 
-            AddLabel(250, 390, 0, @"Empregados");
+            AddLabel(250, 390, 0, @"Cargos");
             AddButton(211, 384, 439, 438, 5, GumpButtonType.Reply, 0);
 
             AddLabel(250, 429, 0, @"Diplomacia");
@@ -109,7 +109,13 @@ namespace Server.Custom.Systems.Reinos
 
         private void BuildCurrentSection()
         {
-            switch (m_InitialPage)
+            int page = m_InitialPage;
+            string pageMessage;
+
+            if (!ReinoEmploymentSystem.CanUseGovernmentPage(m_From, m_CityId, page, out pageMessage))
+                page = 5;
+
+            switch (page)
             {
                 case 3:
                     BuildMaintenancePage();
@@ -117,14 +123,20 @@ namespace Server.Custom.Systems.Reinos
                 case 4:
                     BuildExpansionPage();
                     break;
+                case 5:
+                    BuildGovernmentPage();
+                    break;
                 case 9:
                     BuildConstructionDetailPage();
                     break;
                 case 10:
                     BuildPostoDetailPage();
                     break;
+                case 17:
+                    BuildCreateRolePage();
+                    break;
                 default:
-                    BuildPlaceholderPage(GetPlaceholderTitle(m_InitialPage));
+                    BuildPlaceholderPage(GetPlaceholderTitle(page));
                     break;
             }
         }
@@ -135,7 +147,7 @@ namespace Server.Custom.Systems.Reinos
             {
                 case 1: return "Visão Geral";
                 case 2: return "Tesouro";
-                case 5: return "Empregados";
+                case 5: return "Cargos";
                 case 6: return "Diplomacia";
                 case 7: return "Visual";
                 case 8: return "Slot 1";

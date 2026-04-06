@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Server;
-using Server.Custom.Systems.Reinos.Expansion.Engine;
+using Server.Custom.Reinos.Expansion.Engine;
 using Server.Mobiles;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public static partial class ReinoExpansionSystem
     {

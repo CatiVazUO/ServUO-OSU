@@ -11,7 +11,7 @@ using Server.Custom.Systems.HtmlBooks.Engine;
 using Server.Custom.Systems.HtmlBooks.Gumps;
 using Server.Custom.Systems.HtmlBooks.Html.Readable;
 using Server.Custom.Biblioteca.Library;
-using Server.Custom.Systems.Reinos;
+using Server.Custom.Reinos;
 
 namespace Server.Custom.Biblioteca.Gumps
 {

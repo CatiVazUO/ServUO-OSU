@@ -125,7 +125,7 @@ namespace Server.Custom.Systems.Creation.Cultures
     Vivem de forma hedonista e pragmática, valorizando riqueza, poder e influência...<BR><BR>
     <B>Cidade Capital:</B> Lurone <BR>
     <B>Economia:</B> Capitalista, centrada na prestação de serviços<BR>
-    <B>Governado por:</B> Um líder escolhido democraticamente
+    <B>Governado por:</B> Autocracia Eletiva
     </BASEFONT>";
 
         public override string ProverbiosHtml =>

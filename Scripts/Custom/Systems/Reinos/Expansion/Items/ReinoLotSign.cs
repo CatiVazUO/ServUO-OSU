@@ -2,7 +2,7 @@ using System;
 using Server.Gumps;
 using Server.Mobiles;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public class ReinoLotSign : Item
     {

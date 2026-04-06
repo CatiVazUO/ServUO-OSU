@@ -1,6 +1,6 @@
 using Server;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public class CorreiosAuroraFase1Multi : ReinoPlacedMultiBase
     {

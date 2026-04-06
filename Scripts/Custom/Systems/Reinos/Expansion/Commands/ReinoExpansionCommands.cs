@@ -6,7 +6,7 @@ using Server.Targeting;
 using System;
 using System.Collections.Generic;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public class ReinoExpansionCommands
     {

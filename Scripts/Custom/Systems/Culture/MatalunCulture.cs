@@ -127,7 +127,7 @@ namespace Server.Custom.Systems.Creation.Cultures
     Rigorosos com novos moradores, mas abertos a visitantes... missionários viajam pregando o “canto”...<BR><BR>
     <B>Cidade Capital:</B> Xetá<BR>
     <B>Economia:</B> Socialismo, centrado na agricultura<BR>
-    <B>Regido por:</B> Sacerdotisa 
+    <B>Regido por:</B> Teocracia Coletiva
     </BASEFONT>";
 
         public override string ProverbiosHtml =>

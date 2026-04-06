@@ -2,7 +2,7 @@ using System;
 using System.Text;
 using Server;
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public static class BibliotecaAuroraTesteDefinition
     {

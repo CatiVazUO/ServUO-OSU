@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System;
 
 
-namespace Server.Custom.Systems.Reinos
+namespace Server.Custom.Reinos
 {
     public class ReinoDebugCommands
     {
