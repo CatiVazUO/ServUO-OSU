@@ -2,6 +2,8 @@ using System;
 using Server.Gumps;
 using Server.Mobiles;
 using Server.Network;
+using Server;
+using Server.Items;
 
 namespace Server.Custom.Reinos
 {
@@ -11,13 +13,15 @@ namespace Server.Custom.Reinos
         private readonly int m_RoleId;
         private readonly string m_InviterName;
         private readonly bool m_AllowAccept;
+        private readonly int m_SourceLetterSerial;
 
-        public ReinoCargoInvitationGump(PlayerMobile from, int cityId, int roleId, string inviterName, bool allowAccept) : base(0, 0)
+        public ReinoCargoInvitationGump(PlayerMobile from, int cityId, int roleId, string inviterName, bool allowAccept, int sourceLetterSerial) : base(0, 0)
         {
             m_CityId = cityId;
             m_RoleId = roleId;
             m_InviterName = inviterName ?? String.Empty;
             m_AllowAccept = allowAccept;
+            m_SourceLetterSerial = sourceLetterSerial;
 
             Closable = true;
             Disposable = true;
@@ -48,6 +52,17 @@ namespace Server.Custom.Reinos
             AddImage(535, 307, 2923);
         }
 
+        private void DeleteSourceLetter()
+        {
+            if (m_SourceLetterSerial <= 0)
+                return;
+
+            Item item = World.FindItem((Serial)m_SourceLetterSerial);
+
+            if (item != null && !item.Deleted)
+                item.Delete();
+        }
+
         public override void OnResponse(NetState sender, RelayInfo info)
         {
             PlayerMobile from = sender.Mobile as PlayerMobile;
@@ -55,11 +70,15 @@ namespace Server.Custom.Reinos
                 return;
 
             if (info.ButtonID != 1 || !m_AllowAccept)
+            {
+                DeleteSourceLetter();
                 return;
+            }
 
             string message;
             ReinoEmploymentSystem.AcceptInvitation(from, m_CityId, m_RoleId, m_InviterName, out message);
             from.SendMessage(message);
+            DeleteSourceLetter();
         }
     }
 }

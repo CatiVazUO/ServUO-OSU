@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Server.Gumps;
 using Server.Mobiles;
 using Server.Network;
+using Server.Items;
+using Server;
 
 namespace Server.Custom.Reinos
 {
@@ -13,14 +15,16 @@ namespace Server.Custom.Reinos
         private readonly bool m_ForHire;
         private readonly int m_Page;
         private readonly int m_SelectedRoleId;
+        private readonly int m_SourceLetterSerial;
 
-        public ReinoCargoLetterSetupGump(PlayerMobile from, int cityId, bool forHire, int page, int selectedRoleId, string typedName) : base(0, 0)
+        public ReinoCargoLetterSetupGump(PlayerMobile from, int cityId, bool forHire, int page, int selectedRoleId, string typedName, int sourceLetterSerial) : base(0, 0)
         {
             m_From = from;
             m_CityId = cityId;
             m_ForHire = forHire;
             m_Page = page < 0 ? 0 : page;
             m_SelectedRoleId = selectedRoleId;
+            m_SourceLetterSerial = sourceLetterSerial;
 
             Closable = true;
             Disposable = true;
@@ -47,7 +51,7 @@ namespace Server.Custom.Reinos
 
                 ReinoCargoEntry role = roles[idx];
                 AddLabel(267, y[i], 0, role.Title);
-                AddButton(234, y[i], 531, 248, 100 + role.RoleId, GumpButtonType.Reply, 0);
+                AddButton(234, y[i], m_SelectedRoleId == role.RoleId ? 528 : 531, 528, 100 + role.RoleId, GumpButtonType.Reply, 0);
             }
 
             AddTextEntry(319, 305, 200, 20, 0, 5, typedName ?? String.Empty);
@@ -59,6 +63,17 @@ namespace Server.Custom.Reinos
             AddLabel(266, 307, 0, @"Nome:");
         }
 
+
+        private void DeleteSourceLetter()
+        {
+            if (m_SourceLetterSerial <= 0)
+                return;
+
+            Item item = World.FindItem((Serial)m_SourceLetterSerial);
+
+            if (item != null && !item.Deleted)
+                item.Delete();
+        }
         public override void OnResponse(NetState sender, RelayInfo info)
         {
             PlayerMobile from = sender.Mobile as PlayerMobile;
@@ -70,20 +85,20 @@ namespace Server.Custom.Reinos
 
             if (info.ButtonID == 2)
             {
-                from.SendGump(new ReinoCargoLetterSetupGump(from, m_CityId, m_ForHire, m_Page - 1, m_SelectedRoleId, typedName));
+                from.SendGump(new ReinoCargoLetterSetupGump(from, m_CityId, m_ForHire, m_Page - 1, m_SelectedRoleId, typedName, m_SourceLetterSerial));
                 return;
             }
 
             if (info.ButtonID == 3)
             {
-                from.SendGump(new ReinoCargoLetterSetupGump(from, m_CityId, m_ForHire, m_Page + 1, m_SelectedRoleId, typedName));
+                from.SendGump(new ReinoCargoLetterSetupGump(from, m_CityId, m_ForHire, m_Page + 1, m_SelectedRoleId, typedName, m_SourceLetterSerial));
                 return;
             }
 
             if (info.ButtonID >= 100)
             {
                 int roleId = info.ButtonID - 100;
-                from.SendGump(new ReinoCargoLetterSetupGump(from, m_CityId, m_ForHire, m_Page, roleId, typedName));
+                from.SendGump(new ReinoCargoLetterSetupGump(from, m_CityId, m_ForHire, m_Page, roleId, typedName, m_SourceLetterSerial));
                 return;
             }
 
@@ -93,7 +108,7 @@ namespace Server.Custom.Reinos
             if (m_SelectedRoleId <= 0)
             {
                 from.SendMessage("Selecione um cargo.");
-                from.SendGump(new ReinoCargoLetterSetupGump(from, m_CityId, m_ForHire, m_Page, m_SelectedRoleId, typedName));
+                from.SendGump(new ReinoCargoLetterSetupGump(from, m_CityId, m_ForHire, m_Page, m_SelectedRoleId, typedName, m_SourceLetterSerial));
                 return;
             }
 
@@ -108,13 +123,14 @@ namespace Server.Custom.Reinos
             if (!ReinoEmploymentSystem.FindPlayerByName(typedName, out target))
             {
                 from.SendMessage("Jogador não encontrado.");
-                from.SendGump(new ReinoCargoLetterSetupGump(from, m_CityId, m_ForHire, m_Page, m_SelectedRoleId, typedName));
+                from.SendGump(new ReinoCargoLetterSetupGump(from, m_CityId, m_ForHire, m_Page, m_SelectedRoleId, typedName, m_SourceLetterSerial));
                 return;
             }
 
             if (m_ForHire)
             {
                 ReinoEmploymentSystem.DeliverInvitationLetter(from, target, m_CityId, m_SelectedRoleId);
+                DeleteSourceLetter();
                 from.SendMessage("Carta de convite enviada.");
                 return;
             }
@@ -123,11 +139,12 @@ namespace Server.Custom.Reinos
             if (role == null || !role.IsOccupied || !String.Equals(role.OccupantName, target.Name, StringComparison.OrdinalIgnoreCase))
             {
                 from.SendMessage("Esse jogador não ocupa o cargo selecionado.");
-                from.SendGump(new ReinoCargoLetterSetupGump(from, m_CityId, m_ForHire, m_Page, m_SelectedRoleId, typedName));
+                from.SendGump(new ReinoCargoLetterSetupGump(from, m_CityId, m_ForHire, m_Page, m_SelectedRoleId, typedName, m_SourceLetterSerial));
                 return;
             }
 
             ReinoEmploymentSystem.RemoveRoleOccupant(from, m_CityId, m_SelectedRoleId, true, out message);
+            DeleteSourceLetter();
             from.SendMessage(message);
         }
     }

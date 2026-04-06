@@ -61,13 +61,11 @@ namespace Server.Custom.Reinos
                 int yTop = 279 + (i * 34);
                 int yQty = 420 + (i * 61);
                 string label = ReinoEmploymentSystem.GetTradeResourceLabel(i);
-                int buyRemaining = GetBuyDisplayRemaining(i, state, ledger);
-                int sellRemaining = GetSellDisplayRemaining(i);
 
-                AddLabel(373, yTop, labelhue, buyRemaining + " " + label + ":");
+                AddLabel(373, yTop, labelhue, state.WeeklyBuyRemaining[i] + " " + label + ":");
                 AddLabel(476, yTop, labelhue, state.BuyPrices[i] > 0 ? (state.BuyPrices[i] + " moedas") : "-");
 
-                AddLabel(618, yTop, labelhue, sellRemaining + " " + label + ":");
+                AddLabel(618, yTop, labelhue, state.WeeklySellRemaining[i] + " " + label + ":");
                 AddLabel(721, yTop, labelhue, state.SellPrices[i] > 0 ? (state.SellPrices[i] + " moedas") : "-");
 
                 AddLabel(371, yQty, labelhue, ReinoEmploymentSystem.GetTradeResourceLabel(i));
@@ -93,63 +91,7 @@ namespace Server.Custom.Reinos
             if (m_CanSell)
                 AddButton(686, 657, 492, 492, 301, GumpButtonType.Reply, 0);
 
-            //AddLabel(365, 680, labelhue, "Tesouro: " + ledger.Gold + " moedas");
-        }
-
-        private int GetBuyDisplayRemaining(int index, ReinoCommercialTradeState state, ReinoResourceLedger ledger)
-        {
-            int remaining = ReinoEmploymentSystem.GetEffectiveRepresentativeBuyRemaining(m_CityId, index);
-            int price = index >= 0 && index < state.BuyPrices.Length ? Math.Max(0, state.BuyPrices[index]) : 0;
-            if (price <= 0)
-                return 0;
-
-            int availableGold = Math.Max(0, ledger.Gold - GetBuyTotal(state));
-            int affordable = availableGold / price;
-            if (affordable < 0)
-                affordable = 0;
-
-            return Math.Max(0, Math.Min(remaining, affordable + Math.Max(0, m_BuyQty[index])));
-        }
-
-        private int GetSellDisplayRemaining(int index)
-        {
-            int remaining = ReinoEmploymentSystem.GetEffectiveRepresentativeSellRemaining(m_CityId, index);
-            return Math.Max(0, remaining);
-        }
-
-        private void TryIncreaseBuyQuantity(int index)
-        {
-            ReinoCommercialTradeState state = ReinoEmploymentSystem.GetTradeState(m_CityId);
-            ReinoResourceLedger ledger = ReinoExpansionSystem.GetLedger(m_CityId);
-            int price = Math.Max(0, state.BuyPrices[index]);
-            if (price <= 0)
-                return;
-
-            int effectiveRemaining = ReinoEmploymentSystem.GetEffectiveRepresentativeBuyRemaining(m_CityId, index);
-            int nextQty = m_BuyQty[index] + 5;
-            if (nextQty > effectiveRemaining)
-                nextQty = effectiveRemaining;
-
-            int currentTotal = GetBuyTotal(state);
-            int nextTotal = currentTotal + (Math.Max(0, nextQty - m_BuyQty[index]) * price);
-            if (nextTotal > ledger.Gold)
-                return;
-
-            m_BuyQty[index] = Math.Max(0, nextQty);
-        }
-
-        private void TryIncreaseSellQuantity(int index)
-        {
-            ReinoCommercialTradeState state = ReinoEmploymentSystem.GetTradeState(m_CityId);
-            ReinoResourceLedger ledger = ReinoExpansionSystem.GetLedger(m_CityId);
-            int effectiveRemaining = ReinoEmploymentSystem.GetEffectiveRepresentativeSellRemaining(m_CityId, index);
-            int stock = Math.Max(0, ledger.Get(ReinoEmploymentSystem.GetTradeResourceType(index)));
-            int max = Math.Min(effectiveRemaining, stock);
-            int nextQty = m_SellQty[index] + 5;
-            if (nextQty > max)
-                nextQty = max;
-
-            m_SellQty[index] = Math.Max(0, nextQty);
+      //      AddLabel(365, 680, labelhue, "Tesouro: " + ledger.Gold + " moedas");
         }
 
         private int GetBuyTotal(ReinoCommercialTradeState state)
@@ -177,12 +119,30 @@ namespace Server.Custom.Reinos
             if (info.ButtonID == 0)
                 return;
 
+            ReinoCommercialTradeState state = ReinoEmploymentSystem.GetTradeState(m_CityId);
+            ReinoResourceLedger ledger = ReinoExpansionSystem.GetLedger(m_CityId);
+
             if (info.ButtonID >= 100 && info.ButtonID < 103)
-                TryIncreaseBuyQuantity(info.ButtonID - 100);
+            {
+                int index = info.ButtonID - 100;
+                int otherTotal = 0;
+                for (int i = 0; i < 3; i++)
+                    if (i != index) otherTotal += Math.Max(0, m_BuyQty[i]) * Math.Max(0, state.BuyPrices[i]);
+
+                int maxByRemaining = state.WeeklyBuyRemaining[index];
+                int maxByBackpack = ReinoEmploymentSystem.CountPlayerTradeResource(from, index);
+                int maxByGold = state.BuyPrices[index] > 0 ? Math.Max(0, (ledger.Gold - otherTotal) / state.BuyPrices[index]) : 0;
+                int limit = Math.Min(maxByRemaining, Math.Min(maxByBackpack, maxByGold));
+                m_BuyQty[index] = Math.Min(limit, m_BuyQty[index] + 5);
+            }
             else if (info.ButtonID >= 110 && info.ButtonID < 113)
                 m_BuyQty[info.ButtonID - 110] = Math.Max(0, m_BuyQty[info.ButtonID - 110] - 5);
             else if (info.ButtonID >= 200 && info.ButtonID < 203)
-                TryIncreaseSellQuantity(info.ButtonID - 200);
+            {
+                int index = info.ButtonID - 200;
+                int limit = Math.Min(state.WeeklySellRemaining[index], ledger.Get(ReinoEmploymentSystem.GetTradeResourceType(index)));
+                m_SellQty[index] = Math.Min(limit, m_SellQty[index] + 5);
+            }
             else if (info.ButtonID >= 210 && info.ButtonID < 213)
                 m_SellQty[info.ButtonID - 210] = Math.Max(0, m_SellQty[info.ButtonID - 210] - 5);
             else if (info.ButtonID == 300)

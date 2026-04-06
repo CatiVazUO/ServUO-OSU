@@ -1,9 +1,10 @@
-using System;
-using System.Collections.Generic;
 using Server.Gumps;
 using Server.Mobiles;
 using Server.Network;
 using Server.Targeting;
+using System;
+using System.Collections.Generic;
+using static Server.PooledEnumeration;
 
 namespace Server.Custom.Reinos
 {
@@ -17,12 +18,10 @@ namespace Server.Custom.Reinos
         private const int ButtonGovTopPrev = 56000;
         private const int ButtonGovTopNext = 56001;
         private const int ButtonGovShowAdd = 56002;
-
         private const int ButtonGovAddSelectBase = 56100;
         private const int ButtonGovAddConfirm = 56200;
         private const int ButtonGovAddRepresentative = 56201;
         private const int ButtonGovOpenCreate = 56202;
-
         private const int ButtonGovBottomPrev = 56210;
         private const int ButtonGovBottomNext = 56211;
 
@@ -37,7 +36,7 @@ namespace Server.Custom.Reinos
         private const int ButtonGovCreateConstructionNext = 57201;
         private const int ButtonGovCreateSubmit = 57202;
 
-        private const int EntryGovSalaryEdit = 5;
+        private const int EntryGovSalaryEdit = 58000;
         private const int EntryGovCreateName = 1;
         private const int EntryGovCreateSalary = 2;
         private const int EntryGovCreateDescription = 4;
@@ -64,7 +63,6 @@ namespace Server.Custom.Reinos
             int topStart = session.TopPage * 4;
             int[] topY = new int[] { 284, 314, 345, 375 };
             ReinoCargoEntry selectedTop = null;
-            ReinoCargoEntry firstVisibleTop = null;
 
             for (int i = 0; i < 4; i++)
             {
@@ -76,15 +74,12 @@ namespace Server.Custom.Reinos
                 if (role == null)
                     continue;
 
-                if (firstVisibleTop == null)
-                    firstVisibleTop = role;
-                if (role.RoleId == session.SelectedTopRoleId)
+                int y = topY[i];
+
+                if (selectedTop == null || role.RoleId == session.SelectedTopRoleId)
                     selectedTop = role;
 
-                int y = topY[i];
-                bool selected = role.RoleId == session.SelectedTopRoleId && !session.PreferBottomSelection;
-
-                AddButton(415, y + 1, selected ? 528 : 531, 528, ButtonGovTopSelectBase + role.RoleId, GumpButtonType.Reply, 0);
+                AddButton(415, y + 1, 531, 531, ButtonGovTopSelectBase + role.RoleId, GumpButtonType.Reply, 0);
                 AddLabel(447, y, 0, role.Title + ":");
                 AddLabel(598, y, 0, role.IsOccupied ? role.OccupantName : "Vago");
 
@@ -109,15 +104,17 @@ namespace Server.Custom.Reinos
                 AddLabel(969, y, 0, @"Salário:");
 
                 if (session.EditingSalaryRoleId == role.RoleId)
-                    AddTextEntry(1028, y, 90, 20, 0, EntryGovSalaryEdit, role.WeeklySalaryGold.ToString());
+                    AddTextEntry(1028, y, 90, 20, 0, EntryGovSalaryEdit, String.IsNullOrWhiteSpace(session.EditingSalaryText) ? role.WeeklySalaryGold.ToString() : session.EditingSalaryText);
                 else
                     AddLabel(1035, y, 0, role.WeeklySalaryGold.ToString());
 
                 AddLabel(1130, y, 0, @"Hierarquia: " + role.Hierarchy);
-            }
 
-            if (selectedTop == null)
-                selectedTop = firstVisibleTop;
+                if (role.IsPendingApproval)
+                    AddLabel(1130, y + 18, 33, @"Aguardando aprovação");
+                else if (role.IsRejected)
+                    AddLabel(1130, y + 18, 33, @"Cargo vetado");
+            }
 
             if (session.TopPage > 0)
                 AddButton(1050, 420, 498, 498, ButtonGovTopPrev, GumpButtonType.Reply, 0);
@@ -140,7 +137,7 @@ namespace Server.Custom.Reinos
             AddLabel(1138, 665, 0, @"Criar Cargo");
             AddButton(1108, 665, 529, 529, ButtonGovOpenCreate, GumpButtonType.Reply, 0);
 
-            ReinoCargoEntry htmlRole = session.ShowAddList && session.PreferBottomSelection && selectedBottom != null ? selectedBottom : selectedTop;
+            ReinoCargoEntry htmlRole = session.ShowAddList && selectedBottom != null ? selectedBottom : selectedTop;
             AddHtml(669, 477, 453, 145, BuildGovernmentRoleHtml(htmlRole), false, true);
 
             string missing = ReinoEmploymentSystem.GetMissingEssentialsMessage(m_CityId);
@@ -161,7 +158,6 @@ namespace Server.Custom.Reinos
             int start = session.BottomPage * 4;
             int[] y = new int[] { 477, 507, 537, 567 };
             ReinoCargoEntry selected = null;
-            ReinoCargoEntry firstVisible = null;
 
             for (int i = 0; i < 4; i++)
             {
@@ -173,29 +169,12 @@ namespace Server.Custom.Reinos
                 if (role == null)
                     continue;
 
-                if (firstVisible == null)
-                    firstVisible = role;
-                if (role.RoleId == session.SelectedBottomIndex)
+                bool isSelected = session.SelectedBottomIndex == role.RoleId;
+                if (selected == null || isSelected)
                     selected = role;
 
-                bool isSelected = role.RoleId == session.SelectedBottomIndex && session.PreferBottomSelection;
                 AddButton(415, y[i], isSelected ? 528 : 531, 528, ButtonGovAddSelectBase + i, GumpButtonType.Reply, 0);
                 AddLabel(447, y[i], 0, role.Title);
-            }
-
-            if (selected == null)
-            {
-                for (int i = 0; i < options.Count; i++)
-                {
-                    if (options[i] != null && options[i].RoleId == session.SelectedBottomIndex)
-                    {
-                        selected = options[i];
-                        break;
-                    }
-                }
-
-                if (selected == null)
-                    selected = firstVisible;
             }
 
             if (session.BottomPage > 0)
@@ -215,11 +194,33 @@ namespace Server.Custom.Reinos
                 return "<BASEFONT COLOR=#000000>Selecione um cargo para ver os detalhes.</BASEFONT>";
 
             int count = ReinoEmploymentSystem.GetRoleSlotCount(m_CityId, role.Title);
+
+            List<string> powers = new List<string>();
+            if (role.CanFinancial)
+                powers.Add("Pode tomar decisões financeiras");
+            if (role.CanMilitary)
+                powers.Add("Pode tomar decisões militares");
+            if (role.CanHireLower)
+                powers.Add("Pode contratar");
+            if (role.CanFireLower)
+                powers.Add("Pode exonerar");
+
+            string powersHtml = powers.Count > 0
+                ? String.Join("<BR>", powers.ToArray())
+                : "Sem poderes especiais";
+
             string html = "<BASEFONT COLOR=#000000><BIG><B>" + role.Title + "</B></BIG><BR><BR>";
             html += role.Description + "<BR><BR>";
             html += "Salário semanal: " + role.WeeklySalaryGold + " moedas.<BR>";
             html += "Hierarquia: " + role.Hierarchy + ".<BR>";
+            html += "<B>Poderes do Cargo:</B><BR>" + powersHtml + "<BR><BR>";
             html += "Quantidade existente: " + count + ".<BR>";
+
+            if (role.IsPendingApproval)
+                html += "Situação: aguardando aprovação do governo.<BR>";
+            else if (role.IsRejected)
+                html += "Situação: cargo vetado pelo governo.<BR>";
+
             html += role.IsOccupied ? ("Ocupante atual: " + role.OccupantName + ".") : "Cargo atualmente vago.";
             html += "</BASEFONT>";
             return html;
@@ -236,6 +237,8 @@ namespace Server.Custom.Reinos
             AddLabel(773, 172, 0, @"Criar Cargos");
 
             ReinoEmploymentSession session = ReinoEmploymentSystem.GetSession(m_From, m_CityId);
+            if (String.IsNullOrWhiteSpace(session.CreateHierarchy) || session.CreateHierarchy == "3")
+                session.CreateHierarchy = ReinoEmploymentSystem.GetNextAvailableHierarchy(m_CityId).ToString();
 
             AddTextEntry(525, 231, 200, 20, 0, EntryGovCreateName, session.CreateName ?? String.Empty);
             AddTextEntry(525, 260, 200, 20, 0, EntryGovCreateSalary, session.CreateSalary ?? "0");
@@ -299,29 +302,6 @@ namespace Server.Custom.Reinos
             AddLabel(487, 671, 0, (session.SelectedConstructionPage + 1) + "/" + pageCount);
         }
 
-        private string GetCreateRoleInfoHtml(ReinoEmploymentSession session)
-        {
-            if (session == null)
-                return "<BASEFONT COLOR=#000000>Selecione uma característica ou uma construção para ver a explicação.</BASEFONT>";
-
-            if (session.CreateInfoIsPermission)
-            {
-                switch ((session.CreateInfoKey ?? String.Empty).Trim().ToLowerInvariant())
-                {
-                    case "financial":
-                        return "<BASEFONT COLOR=#000000><B>Decisões financeiras</B><BR><BR>Permite que o ocupante tome decisões econômicas do reino. Sem vínculo de construção, o cargo atua nas decisões financeiras gerais. Com vínculo de construção, ele atua apenas naquela construção.</BASEFONT>";
-                    case "military":
-                        return "<BASEFONT COLOR=#000000><B>Decisões militares</B><BR><BR>Permite que o ocupante tome decisões militares do reino. Sem vínculo de construção, o cargo atua nas decisões militares gerais. Com vínculo de construção, ele atua apenas onde esse vínculo permitir.</BASEFONT>";
-                    case "hire":
-                        return "<BASEFONT COLOR=#000000><B>Pode contratar</B><BR><BR>Permite enviar convites para cargos de hierarquia mais baixa que a do próprio cargo. Nunca permite contratar cargos da mesma hierarquia ou acima dela.</BASEFONT>";
-                    case "fire":
-                        return "<BASEFONT COLOR=#000000><B>Pode exonerar</B><BR><BR>Permite exonerar cargos de hierarquia mais baixa que a do próprio cargo. Nunca permite exonerar cargos da mesma hierarquia ou acima dela.</BASEFONT>";
-                }
-            }
-
-            return "<BASEFONT COLOR=#000000>" + ReinoEmploymentSystem.GetConstructionRoleDescription(session.CreateLinkedConstructionKey) + "</BASEFONT>";
-        }
-
         private void UpdateCreateSessionFromResponse(ReinoEmploymentSession session, RelayInfo info)
         {
             if (session == null || info == null)
@@ -340,9 +320,21 @@ namespace Server.Custom.Reinos
             tr = info.GetTextEntry(EntryGovCreateDescription);
             if (tr != null)
                 session.CreateDescription = tr.Text;
+
+            tr = info.GetTextEntry(EntryGovSalaryEdit);
+            if (tr != null)
+                session.EditingSalaryText = tr.Text;
         }
 
-        private int GetSalaryEntryValue(RelayInfo info, int roleId, int current)
+        private string GetCreateRoleInfoHtml(ReinoEmploymentSession session)
+        {
+            string html = session != null ? session.CreateInfoHtml : String.Empty;
+            if (String.IsNullOrWhiteSpace(html))
+                html = ReinoEmploymentSystem.GetConstructionRoleDescription(session != null ? session.CreateLinkedConstructionKey : String.Empty);
+            return "<BASEFONT COLOR=#000000>" + html + "</BASEFONT>";
+        }
+
+        private int GetSalaryEntryValue(RelayInfo info, int current)
         {
             TextRelay tr = info.GetTextEntry(EntryGovSalaryEdit);
             if (tr == null || String.IsNullOrWhiteSpace(tr.Text))
@@ -355,6 +347,18 @@ namespace Server.Custom.Reinos
             return current;
         }
 
+        private string GetPermissionInfoHtml(int button)
+        {
+            switch (button)
+            {
+                case ButtonGovCreateToggleFinancial: return "Se este cargo estiver marcado com decisões financeiras, ele poderá operar sistemas financeiros do reino compatíveis com suas outras restrições e vínculos.";
+                case ButtonGovCreateToggleMilitary: return "Se este cargo estiver marcado com decisões militares, ele poderá operar sistemas militares do reino compatíveis com suas outras restrições e vínculos.";
+                case ButtonGovCreateToggleHire: return "Se este cargo puder contratar, ele poderá enviar convites apenas para cargos abaixo da própria hierarquia.";
+                case ButtonGovCreateToggleFire: return "Se este cargo puder exonerar, ele poderá remover apenas ocupantes de cargos abaixo da própria hierarquia.";
+                default: return String.Empty;
+            }
+        }
+
         private bool HandleGovernmentResponse(PlayerMobile from, RelayInfo info)
         {
             int button = info.ButtonID;
@@ -364,7 +368,6 @@ namespace Server.Custom.Reinos
             if (button >= ButtonGovTopSelectBase && button < ButtonGovSalaryBase)
             {
                 session.SelectedTopRoleId = button - ButtonGovTopSelectBase;
-                session.PreferBottomSelection = false;
                 from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 5));
                 return true;
             }
@@ -377,15 +380,17 @@ namespace Server.Custom.Reinos
                 {
                     if (session.EditingSalaryRoleId == roleId)
                     {
-                        int newSalary = GetSalaryEntryValue(info, roleId, role.WeeklySalaryGold);
+                        int newSalary = GetSalaryEntryValue(info, role.WeeklySalaryGold);
                         string message;
                         ReinoEmploymentSystem.UpdateRoleSalary(from, m_CityId, roleId, newSalary, out message);
                         from.SendMessage(message);
                         session.EditingSalaryRoleId = 0;
+                        session.EditingSalaryText = String.Empty;
                     }
                     else
                     {
                         session.EditingSalaryRoleId = roleId;
+                        session.EditingSalaryText = role.WeeklySalaryGold.ToString();
                     }
                 }
 
@@ -437,8 +442,6 @@ namespace Server.Custom.Reinos
                     return true;
                 case ButtonGovShowAdd:
                     session.ShowAddList = !session.ShowAddList;
-                    if (!session.ShowAddList)
-                        session.PreferBottomSelection = false;
                     from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 5));
                     return true;
                 case ButtonGovAddConfirm:
@@ -458,59 +461,58 @@ namespace Server.Custom.Reinos
                         return true;
                     }
                 case ButtonGovOpenCreate:
+                    session.CreateHierarchy = ReinoEmploymentSystem.GetNextAvailableHierarchy(m_CityId).ToString();
+                    session.CreateInfoHtml = ReinoEmploymentSystem.GetConstructionRoleDescription(session.CreateLinkedConstructionKey);
                     from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 17));
                     return true;
-
                 case ButtonGovBottomPrev:
                     session.BottomPage--;
                     from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 5));
                     return true;
-
                 case ButtonGovBottomNext:
                     session.BottomPage++;
                     from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 5));
                     return true;
-
                 case ButtonGovCreateHierarchyDown:
                     {
                         int h;
-                        if (!Int32.TryParse(session.CreateHierarchy, out h))
-                            h = 3;
-                        session.CreateHierarchy = Math.Max(3, h - 1).ToString();
+                        int minHierarchy = ReinoEmploymentSystem.GetGovernmentCultureId(m_CityId) == "sarangs" ? 2 : 3;
+
+                        if (!Int32.TryParse(session.CreateHierarchy, out h) || h <= 0)
+                            h = ReinoEmploymentSystem.GetNextAvailableHierarchy(m_CityId);
+
+                        session.CreateHierarchy = Math.Max(minHierarchy, h - 1).ToString();
                         from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 17));
                         return true;
                     }
                 case ButtonGovCreateHierarchyUp:
                     {
                         int h;
-                        if (!Int32.TryParse(session.CreateHierarchy, out h))
-                            h = 3;
+                        if (!Int32.TryParse(session.CreateHierarchy, out h) || h <= 0)
+                            h = ReinoEmploymentSystem.GetNextAvailableHierarchy(m_CityId);
+
                         session.CreateHierarchy = Math.Min(99, h + 1).ToString();
                         from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 17));
                         return true;
                     }
                 case ButtonGovCreateToggleFinancial:
                     session.CreateCanFinancial = !session.CreateCanFinancial;
-                    session.CreateInfoIsPermission = true;
-                    session.CreateInfoKey = "financial";
+                    session.CreateInfoHtml = GetPermissionInfoHtml(button);
                     from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 17));
                     return true;
                 case ButtonGovCreateToggleMilitary:
                     session.CreateCanMilitary = !session.CreateCanMilitary;
-                    session.CreateInfoIsPermission = true;
-                    session.CreateInfoKey = "military";
+                    session.CreateInfoHtml = GetPermissionInfoHtml(button);
                     from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 17));
                     return true;
                 case ButtonGovCreateToggleHire:
                     session.CreateCanHire = !session.CreateCanHire;
-                    session.CreateInfoIsPermission = true;
-                    session.CreateInfoKey = "hire";
+                    session.CreateInfoHtml = GetPermissionInfoHtml(button);
                     from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 17));
                     return true;
                 case ButtonGovCreateToggleFire:
                     session.CreateCanFire = !session.CreateCanFire;
-                    session.CreateInfoIsPermission = true;
-                    session.CreateInfoKey = "fire";
+                    session.CreateInfoHtml = GetPermissionInfoHtml(button);
                     from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 17));
                     return true;
                 case ButtonGovCreateConstructionPrev:
@@ -534,17 +536,18 @@ namespace Server.Custom.Reinos
                         string message;
                         ReinoEmploymentSystem.CreateCustomRole(from, m_CityId, createdTitle, session.CreateDescription, salary, hierarchy, session.CreateCanFinancial, session.CreateCanMilitary, session.CreateCanHire, session.CreateCanFire, session.CreateLinkedConstructionKey, out message);
                         from.SendMessage(message);
-                        if (message.IndexOf("sucesso", StringComparison.OrdinalIgnoreCase) >= 0)
+                        if (message.IndexOf("sucesso", StringComparison.OrdinalIgnoreCase) >= 0 || message.IndexOf("aprovação", StringComparison.OrdinalIgnoreCase) >= 0)
                         {
                             session.CreateName = String.Empty;
                             session.CreateSalary = "0";
-                            session.CreateHierarchy = "3";
+                            session.CreateHierarchy = ReinoEmploymentSystem.GetNextAvailableHierarchy(m_CityId).ToString();
                             session.CreateDescription = String.Empty;
                             session.CreateLinkedConstructionKey = String.Empty;
                             session.CreateCanFinancial = false;
                             session.CreateCanMilitary = false;
                             session.CreateCanHire = false;
                             session.CreateCanFire = false;
+                            session.CreateInfoHtml = String.Empty;
                             session.ShowAddList = true;
 
                             List<ReinoCargoEntry> addable = ReinoEmploymentSystem.GetAddableRoleTemplates(m_CityId);
@@ -553,7 +556,6 @@ namespace Server.Custom.Reinos
                                 if (String.Equals(addable[i].Title, createdTitle, StringComparison.OrdinalIgnoreCase))
                                 {
                                     session.SelectedBottomIndex = addable[i].RoleId;
-                                    session.PreferBottomSelection = true;
                                     break;
                                 }
                             }
@@ -572,16 +574,8 @@ namespace Server.Custom.Reinos
                 int visibleIndex = button - ButtonGovAddSelectBase;
                 List<ReinoCargoEntry> options = ReinoEmploymentSystem.GetAddableRoleTemplates(m_CityId);
                 int real = session.BottomPage * 4 + visibleIndex;
-
                 if (real >= 0 && real < options.Count && options[real] != null)
-                {
                     session.SelectedBottomIndex = options[real].RoleId;
-                    session.PreferBottomSelection = true;
-                }
-                else
-                {
-                    session.PreferBottomSelection = false;
-                }
 
                 from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 5));
                 return true;
@@ -595,8 +589,7 @@ namespace Server.Custom.Reinos
                 if (real >= 0 && real < active.Count)
                 {
                     session.CreateLinkedConstructionKey = active[real].Key;
-                    session.CreateInfoIsPermission = false;
-                    session.CreateInfoKey = active[real].Key;
+                    session.CreateInfoHtml = ReinoEmploymentSystem.GetConstructionRoleDescription(session.CreateLinkedConstructionKey);
                 }
 
                 from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 17));
@@ -637,7 +630,7 @@ namespace Server.Custom.Reinos
                 return;
 
             target.CloseGump(typeof(ReinoCargoInvitationGump));
-            target.SendGump(new ReinoCargoInvitationGump(target, m_CityId, m_RoleId, m_Actor.Name, true));
+            target.SendGump(new ReinoCargoInvitationGump(target, m_CityId, m_RoleId, m_Actor.Name, true, 0));
             m_Actor.SendMessage(target.Name + " recebeu o convite para o cargo de " + role.Title + ".");
             target.SendMessage("Você recebeu um convite para o cargo de " + role.Title + ".");
         }

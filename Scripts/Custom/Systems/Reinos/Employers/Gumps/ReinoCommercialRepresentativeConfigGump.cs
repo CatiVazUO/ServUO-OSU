@@ -77,7 +77,7 @@ namespace Server.Custom.Reinos
                 AddLabel(727, yTop, labelhue, m_BuyPrices[i].ToString());
             }
 
-            AddLabel(419, 451, labelhue, @"Vendo no Máximo");
+            AddLabel(419, 451, labelhue, @"Vendo No Máximo");
             AddLabel(675, 451, labelhue, @"Compro No Máximo");
 
             for (int i = 0; i < 3; i++)
@@ -121,9 +121,9 @@ namespace Server.Custom.Reinos
                 m_BuyPrices[info.ButtonID - 210] = Math.Max(0, m_BuyPrices[info.ButtonID - 210] - 1);
             else if (info.ButtonID >= 300 && info.ButtonID < 303)
             {
-                int idx = info.ButtonID - 300;
-                int stock = Math.Max(0, ledger.Get(ReinoEmploymentSystem.GetTradeResourceType(idx)));
-                m_SellCaps[idx] = Math.Min(stock, m_SellCaps[idx] + 5);
+                int index = info.ButtonID - 300;
+                int max = ledger.Get(ReinoEmploymentSystem.GetTradeResourceType(index));
+                m_SellCaps[index] = Math.Min(max, m_SellCaps[index] + 5);
             }
             else if (info.ButtonID >= 310 && info.ButtonID < 313)
                 m_SellCaps[info.ButtonID - 310] = Math.Max(0, m_SellCaps[info.ButtonID - 310] - 5);
@@ -134,7 +134,7 @@ namespace Server.Custom.Reinos
             else if (info.ButtonID == 500)
             {
                 string message;
-                ReinoEmploymentSystem.UpdateTradeConfig(m_CityId, m_BuyPrices, m_SellPrices, m_BuyCaps, m_SellCaps, out message);
+                ReinoEmploymentSystem.UpdateTradeConfig(from, m_CityId, m_BuyPrices, m_SellPrices, m_BuyCaps, m_SellCaps, out message);
                 from.SendMessage(message);
             }
 

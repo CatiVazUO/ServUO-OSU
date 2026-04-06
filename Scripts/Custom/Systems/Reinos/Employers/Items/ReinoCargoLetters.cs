@@ -13,7 +13,6 @@ namespace Server.Custom.Reinos
         protected ReinoCargoLetterBase() : base(0x14ED)
         {
             Weight = 1.0;
-            LootType = LootType.Blessed;
             Name = "carta";
         }
 
@@ -64,7 +63,7 @@ namespace Server.Custom.Reinos
                 return;
             }
 
-            pm.SendGump(new ReinoCargoLetterSetupGump(pm, cityId, true, 0, 0, String.Empty));
+            pm.SendGump(new ReinoCargoLetterSetupGump(pm, cityId, true, 0, 0, String.Empty, Serial.Value));
         }
 
         public override void Serialize(GenericWriter writer)
@@ -113,7 +112,7 @@ namespace Server.Custom.Reinos
                 return;
             }
 
-            pm.SendGump(new ReinoCargoLetterSetupGump(pm, cityId, false, 0, 0, String.Empty));
+            pm.SendGump(new ReinoCargoLetterSetupGump(pm, cityId, false, 0, 0, String.Empty, Serial.Value)); pm.SendGump(new ReinoCargoLetterSetupGump(pm, cityId, false, 0, 0, String.Empty, 0));
         }
 
         public override void Serialize(GenericWriter writer)
@@ -167,7 +166,7 @@ namespace Server.Custom.Reinos
                 return;
 
             bool allowAccept = pm.Serial.Value == TargetSerial;
-            pm.SendGump(new ReinoCargoInvitationGump(pm, CityId, RoleId, InviterName, allowAccept));
+            pm.SendGump(new ReinoCargoInvitationGump(pm, CityId, RoleId, InviterName, allowAccept, Serial.Value));
         }
 
         public override void Serialize(GenericWriter writer)
@@ -227,7 +226,7 @@ namespace Server.Custom.Reinos
                 body += "<BR><BR>Responsável pela exoneração: " + DismissedBy + ".";
             body += "</BASEFONT>";
 
-            from.SendGump(new ReinoCargoDismissalNoticeGump("Carta de exoneração", body));
+            from.SendGump(new ReinoCargoDismissalNoticeGump("Carta de exoneração", body, Serial.Value));
         }
 
         public override void Serialize(GenericWriter writer)

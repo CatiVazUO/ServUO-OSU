@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using Server.Engines.Craft;
 using Server;
 using Server.Custom.Correios;
@@ -47,6 +48,7 @@ namespace Server.Custom.Reinos
 
         public int OccupantSerial;
         public string OccupantName;
+        public int ApprovalState;
 
         public ReinoCargoEntry()
         {
@@ -55,6 +57,7 @@ namespace Server.Custom.Reinos
             LinkedConstructionKey = String.Empty;
             OccupantName = String.Empty;
             Hierarchy = 99;
+            ApprovalState = 0;
         }
 
         public bool IsOccupied
@@ -65,6 +68,21 @@ namespace Server.Custom.Reinos
         public bool IsLeaderRole
         {
             get { return Kind == ReinoCargoKind.Leader; }
+        }
+
+        public bool IsApproved
+        {
+            get { return ApprovalState == 0; }
+        }
+
+        public bool IsPendingApproval
+        {
+            get { return ApprovalState == 1; }
+        }
+
+        public bool IsRejected
+        {
+            get { return ApprovalState == 2; }
         }
     }
 
@@ -96,6 +114,89 @@ namespace Server.Custom.Reinos
         }
     }
 
+
+    public enum ReinoApprovalChangeType
+    {
+        None = 0,
+        CreateRole,
+        SalaryChange,
+        TradeConfig
+    }
+
+    public enum ReinoApprovalDecision
+    {
+        Pending = 0,
+        Approved,
+        Rejected
+    }
+
+    public class ReinoPendingApprovalVote
+    {
+        public int VoterSerial;
+        public string VoterName;
+        public int Decision;
+        public DateTime DecisionUtc;
+
+        public ReinoPendingApprovalVote()
+        {
+            VoterName = String.Empty;
+            Decision = 0;
+            DecisionUtc = DateTime.MinValue;
+        }
+    }
+
+    public class ReinoPendingApproval
+    {
+        public int ApprovalId;
+        public int CityId;
+        public int CreatedBySerial;
+        public string CreatedByName;
+        public DateTime CreatedUtc;
+        public DateTime ResolvedUtc;
+        public int Status;
+        public ReinoApprovalChangeType ChangeType;
+        public string Html;
+
+        public int RoleId;
+        public int OldSalary;
+        public int NewSalary;
+
+        public int[] OldBuyPrices;
+        public int[] OldSellPrices;
+        public int[] OldBuyCaps;
+        public int[] OldSellCaps;
+        public int[] NewBuyPrices;
+        public int[] NewSellPrices;
+        public int[] NewBuyCaps;
+        public int[] NewSellCaps;
+
+        public List<ReinoPendingApprovalVote> Votes;
+
+        public ReinoPendingApproval()
+        {
+            CreatedByName = String.Empty;
+            Html = String.Empty;
+            Votes = new List<ReinoPendingApprovalVote>();
+            OldBuyPrices = new int[3];
+            OldSellPrices = new int[3];
+            OldBuyCaps = new int[3];
+            OldSellCaps = new int[3];
+            NewBuyPrices = new int[3];
+            NewSellPrices = new int[3];
+            NewBuyCaps = new int[3];
+            NewSellCaps = new int[3];
+            CreatedUtc = DateTime.UtcNow;
+            ResolvedUtc = DateTime.MinValue;
+            Status = 0;
+            ChangeType = ReinoApprovalChangeType.None;
+        }
+
+        public bool IsPending
+        {
+            get { return Status == 0; }
+        }
+    }
+
     public class ReinoEmploymentSession
     {
         public int CityId;
@@ -105,7 +206,8 @@ namespace Server.Custom.Reinos
         public int SelectedTopRoleId;
         public int SelectedBottomIndex;
         public int EditingSalaryRoleId;
-        public bool PreferBottomSelection;
+        public string EditingSalaryText;
+        public string CreateInfoHtml;
 
         public int CreatedRolesPage;
         public int SelectedConstructionPage;
@@ -118,18 +220,16 @@ namespace Server.Custom.Reinos
         public bool CreateCanMilitary;
         public bool CreateCanHire;
         public bool CreateCanFire;
-        public string CreateInfoKey;
-        public bool CreateInfoIsPermission;
 
         public ReinoEmploymentSession()
         {
             CreateName = String.Empty;
             CreateSalary = "0";
-            CreateHierarchy = "3";
+            CreateHierarchy = "0";
             CreateDescription = String.Empty;
             CreateLinkedConstructionKey = String.Empty;
-            CreateInfoKey = String.Empty;
-            CreateInfoIsPermission = false;
+            EditingSalaryText = String.Empty;
+            CreateInfoHtml = String.Empty;
         }
     }
 
@@ -140,9 +240,11 @@ namespace Server.Custom.Reinos
         private static readonly Dictionary<int, List<ReinoCargoEntry>> m_RolesByCity = new Dictionary<int, List<ReinoCargoEntry>>();
         private static readonly Dictionary<int, ReinoCommercialTradeState> m_TradeByCity = new Dictionary<int, ReinoCommercialTradeState>();
         private static readonly Dictionary<int, ReinoEmploymentSession> m_Sessions = new Dictionary<int, ReinoEmploymentSession>();
+        private static readonly List<ReinoPendingApproval> m_PendingApprovals = new List<ReinoPendingApproval>();
 
         private static int m_NextRoleId = 1;
-        private static DateTime m_LastWeeklyEmploymentRunUtc = DateTime.MinValue;
+        private static int m_NextApprovalId = 1;
+        private static DateTime m_LastWeeklyPayrollUtc = DateTime.MinValue;
 
         public const int RepresentativeWeeklySalary = 200;
 
@@ -155,6 +257,9 @@ namespace Server.Custom.Reinos
             SyncAllLegacyFlags();
             SyncAllCommissionedConstructionState();
 
+            if (m_LastWeeklyPayrollUtc == DateTime.MinValue)
+                m_LastWeeklyPayrollUtc = GetCurrentWeeklyWindowStartUtc();
+
             EventSink.WorldSave += delegate { Save(); };
             EventSink.Login += OnLogin;
 
@@ -165,8 +270,9 @@ namespace Server.Custom.Reinos
         {
             try
             {
-                RunWeeklyEmploymentIfNeeded();
+                ProcessWeeklyTickIfNeeded();
                 ResetTradeWindowsIfNeeded();
+                ProcessPendingApprovals();
                 SyncAllLeaders();
                 SyncAllLegacyFlags();
                 SyncAllCommissionedConstructionState();
@@ -183,6 +289,127 @@ namespace Server.Custom.Reinos
                 return;
 
             RefreshLegacyFlags(pm);
+            ShowPendingApprovalGump(pm);
+        }
+
+        private static bool IsSarangGovernment(int cityId)
+        {
+            return String.Equals(GetGovernmentCultureId(cityId), "sarangs", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static int GetMinimumCustomHierarchy(int cityId)
+        {
+            return IsSarangGovernment(cityId) ? 2 : 3;
+        }
+
+        private static int GetDefaultAmbassadorHierarchy(int cityId)
+        {
+            return IsSarangGovernment(cityId) ? 2 : 3;
+        }
+
+        private static int GetDefaultDispatcherHierarchy(int cityId)
+        {
+            return IsSarangGovernment(cityId) ? 3 : 4;
+        }
+
+        private static bool IsProtectedHierarchyRole(int cityId, ReinoCargoEntry role)
+        {
+            if (role == null)
+                return false;
+
+            if (role.IsLeaderRole)
+                return true;
+
+            if (!IsSarangGovernment(cityId) && role.IsEssential && role.Hierarchy == 2)
+                return true;
+
+            return false;
+        }
+
+        private static DateTime GetCurrentWeeklyWindowStartUtc()
+        {
+            DateTime localNow = DateTime.UtcNow.AddHours(-3.0);
+            int mondayOffset = ((int)localNow.DayOfWeek + 6) % 7;
+            DateTime currentMonday = localNow.Date.AddDays(-mondayOffset).AddHours(18.0);
+
+            if (localNow < currentMonday)
+                currentMonday = currentMonday.AddDays(-7.0);
+
+            return currentMonday.AddHours(3.0);
+        }
+
+        public static int GetNextAvailableHierarchy(int cityId)
+        {
+            int next = GetMinimumCustomHierarchy(cityId);
+            List<ReinoCargoEntry> roles = GetRoles(cityId);
+            for (int i = 0; i < roles.Count; i++)
+            {
+                ReinoCargoEntry role = roles[i];
+                if (role != null && role.Hierarchy >= next)
+                    next = role.Hierarchy + 1;
+            }
+            return next;
+        }
+
+        private static int GetDistinctRoleTypeCount(int cityId)
+        {
+            HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            List<ReinoCargoEntry> roles = GetRoles(cityId);
+            for (int i = 0; i < roles.Count; i++)
+            {
+                ReinoCargoEntry role = roles[i];
+                if (role == null || role.Kind == ReinoCargoKind.CommercialRepresentative)
+                    continue;
+
+                string title = (role.Title ?? String.Empty).Trim();
+                if (!String.IsNullOrWhiteSpace(title))
+                    seen.Add(title);
+            }
+            return seen.Count;
+        }
+
+        private static void ShiftHierarchiesForInsert(int cityId, List<ReinoCargoEntry> list, int startHierarchy, int exceptRoleId)
+        {
+            if (list == null)
+                return;
+
+            List<ReinoCargoEntry> ordered = new List<ReinoCargoEntry>(list);
+            ordered.Sort(delegate (ReinoCargoEntry a, ReinoCargoEntry b) { return b.Hierarchy.CompareTo(a.Hierarchy); });
+
+            for (int i = 0; i < ordered.Count; i++)
+            {
+                ReinoCargoEntry role = ordered[i];
+                if (role == null || role.RoleId == exceptRoleId)
+                    continue;
+
+                if (IsProtectedHierarchyRole(cityId, role))
+                    continue;
+
+                if (role.Hierarchy >= startHierarchy)
+                    role.Hierarchy++;
+            }
+        }
+
+        private static bool HasPendingApprovalForRole(int cityId, int roleId, ReinoApprovalChangeType type)
+        {
+            for (int i = 0; i < m_PendingApprovals.Count; i++)
+            {
+                ReinoPendingApproval proposal = m_PendingApprovals[i];
+                if (proposal != null && proposal.IsPending && proposal.CityId == cityId && proposal.RoleId == roleId && proposal.ChangeType == type)
+                    return true;
+            }
+            return false;
+        }
+
+        private static bool HasPendingTradeApproval(int cityId)
+        {
+            for (int i = 0; i < m_PendingApprovals.Count; i++)
+            {
+                ReinoPendingApproval proposal = m_PendingApprovals[i];
+                if (proposal != null && proposal.IsPending && proposal.CityId == cityId && proposal.ChangeType == ReinoApprovalChangeType.TradeConfig)
+                    return true;
+            }
+            return false;
         }
 
         public static void EnsureDefaults()
@@ -220,12 +447,12 @@ namespace Server.Custom.Reinos
                 case "zosteros":
                     EnsureNthCouncilRole(list, cityId, 1);
                     EnsureNthCouncilRole(list, cityId, 2);
-                    EnsureNthCouncilRole(list, cityId, 3);
+                    RemoveExtraDefaultCouncilRoles(list, 2);
                     break;
             }
 
-            EnsureSingleRole(list, cityId, ReinoCargoKind.Ambassador, "Embaixador", "Pode agir em nome do reino em assuntos ligados a postos e representante comercial.", 0, 3, true, false, false, true, true, false, false, String.Empty);
-            EnsureSingleRole(list, cityId, ReinoCargoKind.Dispatcher, "Dispachante", "Responsável por retirar e despachar recursos dos postos do reino.", 0, 4, true, false, false, false, false, false, false, String.Empty);
+            EnsureSingleRole(list, cityId, ReinoCargoKind.Ambassador, "Embaixador", "Pode agir em nome do reino em assuntos ligados a postos e representante comercial.", 0, GetDefaultAmbassadorHierarchy(cityId), true, false, false, true, true, false, false, String.Empty);
+            EnsureSingleRole(list, cityId, ReinoCargoKind.Dispatcher, "Dispachante", "Responsável por retirar e despachar recursos dos postos do reino.", 0, GetDefaultDispatcherHierarchy(cityId), true, false, false, false, false, false, false, String.Empty);
         }
 
         private static void EnsureNthCouncilRole(List<ReinoCargoEntry> list, int cityId, int number)
@@ -249,6 +476,21 @@ namespace Server.Custom.Reinos
             }
         }
 
+        private static void RemoveExtraDefaultCouncilRoles(List<ReinoCargoEntry> list, int keepCount)
+        {
+            int found = 0;
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                ReinoCargoEntry role = list[i];
+                if (role == null || role.Kind != ReinoCargoKind.CouncilMember)
+                    continue;
+
+                found++;
+                if (found > keepCount && !role.IsOccupied)
+                    list.RemoveAt(i);
+            }
+        }
+
         private static void EnsureSingleRole(List<ReinoCargoEntry> list, int cityId, ReinoCargoKind kind, string title, string description, int salary, int hierarchy, bool isDefault, bool removable, bool essential, bool canFinancial, bool canMilitary, bool canHire, bool canFire, string linkedKey)
         {
             for (int i = 0; i < list.Count; i++)
@@ -261,18 +503,42 @@ namespace Server.Custom.Reinos
                     continue;
 
                 role.CityId = cityId;
-                role.Title = title;
-                role.Description = description;
-                role.WeeklySalaryGold = Math.Max(0, salary);
-                role.Hierarchy = hierarchy;
+                role.Kind = kind;
                 role.IsDefault = isDefault;
                 role.IsRemovable = removable;
                 role.IsEssential = essential;
-                role.CanFinancial = canFinancial;
-                role.CanMilitary = canMilitary;
-                role.CanHireLower = canHire;
-                role.CanFireLower = canFire;
-                role.LinkedConstructionKey = linkedKey ?? String.Empty;
+
+                if (String.IsNullOrWhiteSpace(role.Title))
+                    role.Title = title;
+                if (String.IsNullOrWhiteSpace(role.Description))
+                    role.Description = description;
+                if (role.Hierarchy <= 0)
+                    role.Hierarchy = hierarchy;
+
+                if (kind == ReinoCargoKind.Leader)
+                {
+                    role.Title = title;
+                    role.Description = description;
+                    if (IsSarangGovernment(cityId))
+                        role.WeeklySalaryGold = 0;
+                    role.Hierarchy = 1;
+                }
+
+                if (kind == ReinoCargoKind.Ambassador)
+                {
+                    if (role.Hierarchy < GetMinimumCustomHierarchy(cityId))
+                        role.Hierarchy = GetDefaultAmbassadorHierarchy(cityId);
+                }
+
+                if (kind == ReinoCargoKind.Dispatcher)
+                {
+                    if (role.Hierarchy < GetMinimumCustomHierarchy(cityId))
+                        role.Hierarchy = GetDefaultDispatcherHierarchy(cityId);
+                }
+
+                if (!role.IsApproved && role.IsDefault)
+                    role.ApprovalState = 0;
+
                 return;
             }
 
@@ -465,7 +731,7 @@ namespace Server.Custom.Reinos
             if (missing.Count == 0)
                 return String.Empty;
 
-            return "Cargos essenciais pendentes: " + String.Join(", ", missing.ToArray()) + ".";
+            return "Faltam preencher os cargos essenciais: " + String.Join(", ", missing.ToArray()) + ".";
         }
 
         public static bool PlayerHasAnyCommissionedRole(PlayerMobile pm, int cityId)
@@ -559,6 +825,18 @@ namespace Server.Custom.Reinos
             return true;
         }
 
+        private static bool IsCitizenOfCity(PlayerMobile pm, int cityId)
+        {
+            if (pm == null || pm.Deleted)
+                return false;
+
+            string citizenCity = PlayerMobile.NormalizeOSUCityId(pm.OSUCitizenCityId);
+            string cityName = PlayerMobile.NormalizeOSUCityId(ReinoElectionsSystem.GetCityName(cityId));
+
+            return !String.IsNullOrWhiteSpace(citizenCity)
+                && String.Equals(citizenCity, cityName, StringComparison.OrdinalIgnoreCase);
+        }
+
         public static bool CanNominateFromEmploymentPage(PlayerMobile actor, int cityId, int roleId, Mobile target, out string message)
         {
             message = String.Empty;
@@ -594,6 +872,18 @@ namespace Server.Custom.Reinos
                 return false;
             }
 
+            if (role.IsPendingApproval)
+            {
+                message = "Este cargo ainda aguarda aprovação do governo.";
+                return false;
+            }
+
+            if (role.IsRejected)
+            {
+                message = "Este cargo não foi aprovado pelo governo e não pode receber nomeações.";
+                return false;
+            }
+
             if (role.IsOccupied)
             {
                 message = "Este cargo já está ocupado.";
@@ -607,9 +897,9 @@ namespace Server.Custom.Reinos
                 return false;
             }
 
-            if (!ReinoElectionsSystem.IsPlayerAllowedForCity(targetPm, cityId))
+            if (!IsCitizenOfCity(targetPm, cityId))
             {
-                message = "Esse jogador não pertence ao povo que pode governar este reino.";
+                message = "Esse jogador não é cidadão deste reino.";
                 return false;
             }
 
@@ -651,9 +941,9 @@ namespace Server.Custom.Reinos
                 return false;
             }
 
-            if (!ReinoElectionsSystem.IsPlayerAllowedForCity(target, cityId))
+            if (!IsCitizenOfCity(target, cityId))
             {
-                message = "Você não pertence ao povo que pode governar este reino.";
+                message = "Você não é cidadão deste reino.";
                 return false;
             }
 
@@ -768,9 +1058,44 @@ namespace Server.Custom.Reinos
                 return false;
             }
 
-            role.WeeklySalaryGold = Math.Max(0, newSalary);
-            SyncRoleDependentState(cityId);
-            message = "Salário atualizado para " + role.WeeklySalaryGold + " moedas semanais.";
+            if (role.IsRejected)
+            {
+                message = "Esse cargo foi vetado pelo governo e não pode receber salário.";
+                return false;
+            }
+
+            if (role.Kind == ReinoCargoKind.Leader && IsSarangGovernment(cityId))
+            {
+                message = "O Líder Absoluto sarang não recebe salário.";
+                return false;
+            }
+
+            newSalary = Math.Max(0, newSalary);
+
+            if (!GovernmentNeedsApprovals(cityId))
+            {
+                List<ReinoCargoEntry> matches = GetRolesByTitleForWrite(cityId, role.Title);
+                for (int i = 0; i < matches.Count; i++)
+                    matches[i].WeeklySalaryGold = newSalary;
+                SyncRoleDependentState(cityId);
+                message = "Salário atualizado para " + newSalary + " moedas semanais.";
+                return true;
+            }
+
+            if (HasPendingApprovalForRole(cityId, roleId, ReinoApprovalChangeType.SalaryChange))
+            {
+                message = "Já existe uma mudança de salário desse cargo aguardando aprovação.";
+                return false;
+            }
+
+            ReinoPendingApproval proposal = CreateSalaryApproval(actor, cityId, role, newSalary);
+            if (proposal == null)
+            {
+                message = "Não foi possível criar a aprovação da mudança de salário.";
+                return false;
+            }
+
+            message = "Mudança de salário enviada para aprovação do governo.";
             return true;
         }
 
@@ -794,15 +1119,22 @@ namespace Server.Custom.Reinos
                 return false;
             }
 
-            if (hierarchy <= 2)
+            int minimumHierarchy = GetMinimumCustomHierarchy(cityId);
+            if (hierarchy < minimumHierarchy)
             {
-                message = "A hierarquia do cargo criado deve ser maior que 2.";
+                message = "A hierarquia mínima para esse reino é " + minimumHierarchy + ".";
                 return false;
             }
 
             if (String.IsNullOrWhiteSpace(description))
             {
                 message = "Preencha a descrição do cargo.";
+                return false;
+            }
+
+            if (GetDistinctRoleTypeCount(cityId) >= 15)
+            {
+                message = "Cada reino pode ter no máximo 15 tipos de cargo.";
                 return false;
             }
 
@@ -818,18 +1150,26 @@ namespace Server.Custom.Reinos
                     message = "Já existe um cargo com esse nome.";
                     return false;
                 }
-
-                if (existing.Hierarchy == hierarchy && existing.Hierarchy != 2)
-                {
-                    message = "Essa hierarquia já está sendo usada por outro cargo.";
-                    return false;
-                }
             }
 
+            salary = Math.Max(0, salary);
+            ShiftHierarchiesForInsert(cityId, list, hierarchy, 0);
+
             ReinoCargoEntry role = CreateRole(cityId, ReinoCargoKind.Custom, title, description, salary, hierarchy, false, true, false, canFinancial, canMilitary, canHire, canFire, linkedConstructionKey);
+            role.ApprovalState = GovernmentNeedsApprovals(cityId) ? 1 : 0;
             list.Add(role);
             SyncRoleDependentState(cityId);
-            message = "Cargo criado com sucesso.";
+
+            if (GovernmentNeedsApprovals(cityId))
+            {
+                CreateRoleApproval(actor, cityId, role);
+                message = "Cargo criado e enviado para aprovação do governo.";
+            }
+            else
+            {
+                message = "Cargo criado com sucesso.";
+            }
+
             return true;
         }
 
@@ -872,6 +1212,9 @@ namespace Server.Custom.Reinos
                 if (role.Hierarchy <= 2)
                     continue;
 
+                if (!role.IsApproved)
+                    continue;
+
                 string key = (role.Title ?? String.Empty).Trim();
                 if (String.IsNullOrWhiteSpace(key) || seen.Contains(key))
                     continue;
@@ -881,6 +1224,35 @@ namespace Server.Custom.Reinos
             }
 
             return list;
+        }
+
+        private static List<ReinoCargoEntry> GetRolesByTitleForWrite(int cityId, string title)
+        {
+            List<ReinoCargoEntry> matches = new List<ReinoCargoEntry>();
+            if (String.IsNullOrWhiteSpace(title))
+                return matches;
+
+            List<ReinoCargoEntry> roles = GetRolesForWrite(cityId);
+            for (int i = 0; i < roles.Count; i++)
+            {
+                ReinoCargoEntry role = roles[i];
+                if (role != null && String.Equals(role.Title, title, StringComparison.OrdinalIgnoreCase))
+                    matches.Add(role);
+            }
+            return matches;
+        }
+
+        private static int GetOccupiedRoleCountByTitle(int cityId, string title)
+        {
+            int count = 0;
+            List<ReinoCargoEntry> roles = GetRoles(cityId);
+            for (int i = 0; i < roles.Count; i++)
+            {
+                ReinoCargoEntry role = roles[i];
+                if (role != null && role.IsOccupied && String.Equals(role.Title, title, StringComparison.OrdinalIgnoreCase))
+                    count++;
+            }
+            return count;
         }
 
         public static int GetRoleSlotCount(int cityId, string title)
@@ -923,10 +1295,17 @@ namespace Server.Custom.Reinos
                 return false;
             }
 
+            if (!template.IsApproved)
+            {
+                message = "Este cargo ainda não foi aprovado pelo governo.";
+                return false;
+            }
+
             List<ReinoCargoEntry> list = GetRolesForWrite(cityId);
-            ReinoCargoEntry copy = CreateRole(cityId, template.Kind, template.Title, template.Description, template.WeeklySalaryGold, template.Hierarchy, false, true, false, template.CanFinancial, template.CanMilitary, template.CanHireLower, template.CanFireLower, template.LinkedConstructionKey);
+            ReinoCargoEntry copy = CreateRole(cityId, template.Kind, template.Title, template.Description, template.WeeklySalaryGold, template.Hierarchy, template.IsDefault, template.IsRemovable, template.IsEssential, template.CanFinancial, template.CanMilitary, template.CanHireLower, template.CanFireLower, template.LinkedConstructionKey);
             copy.RepresentativeOnlyFinancial = template.RepresentativeOnlyFinancial;
             copy.PostosOnlyMilitary = template.PostosOnlyMilitary;
+            copy.ApprovalState = template.ApprovalState;
             list.Add(copy);
             SyncRoleDependentState(cityId);
             message = "Nova vaga do cargo " + template.Title + " adicionada.";
@@ -997,6 +1376,12 @@ namespace Server.Custom.Reinos
                 return false;
             }
 
+            if (!target.IsApproved)
+            {
+                message = "Esse cargo ainda não pode receber alterações porque não foi aprovado pelo governo.";
+                return false;
+            }
+
             if (ReinoAccessHelper.HasGovernmentAccess(actor, cityId))
                 return true;
 
@@ -1036,6 +1421,8 @@ namespace Server.Custom.Reinos
             if (actor == null || actor.Deleted)
                 return result;
 
+            bool isSarang = IsSarangGovernment(cityId);
+
             List<ReinoCargoEntry> roles = GetRoles(cityId);
             for (int i = 0; i < roles.Count; i++)
             {
@@ -1043,8 +1430,33 @@ namespace Server.Custom.Reinos
                 if (role == null || role.IsLeaderRole)
                     continue;
 
-                if (CanActorManageLowerRole(actor, cityId, role.RoleId, forHire, out message))
-                    result.Add(role);
+                if (!CanActorManageLowerRole(actor, cityId, role.RoleId, forHire, out message))
+                    continue;
+
+                if (forHire)
+                {
+                    // Convite só faz sentido para cargo vago.
+                    if (role.IsOccupied)
+                        continue;
+
+                    // Nos reinos normais:
+                    // - mostra cargos de hierarquia 3+
+                    // - mas também mostra os de hierarquia 2 se estiverem vagos
+                    // Nos sarangs:
+                    // - começa na hierarquia 2
+                    if (!isSarang)
+                    {
+                        if (role.Hierarchy < 2)
+                            continue;
+                    }
+                    else
+                    {
+                        if (role.Hierarchy < 2)
+                            continue;
+                    }
+                }
+
+                result.Add(role);
             }
 
             return result;
@@ -1173,6 +1585,469 @@ namespace Server.Custom.Reinos
             return "Este vínculo torna o cargo responsável por decisões ligadas a esta construção. Sem as permissões adequadas, o cargo fica apenas como posição de roleplay.";
         }
 
+        private static bool GovernmentNeedsApprovals(int cityId)
+        {
+            return !IsSarangGovernment(cityId);
+        }
+
+        private static List<ReinoCargoEntry> GetApprovalRoles(int cityId)
+        {
+            List<ReinoCargoEntry> list = new List<ReinoCargoEntry>();
+            List<ReinoCargoEntry> roles = GetRoles(cityId);
+            string culture = GetGovernmentCultureId(cityId);
+
+            for (int i = 0; i < roles.Count; i++)
+            {
+                ReinoCargoEntry role = roles[i];
+                if (role == null || !role.IsOccupied)
+                    continue;
+
+                if (String.Equals(culture, "kamay", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (role.Kind == ReinoCargoKind.MinisterEconomy)
+                        list.Add(role);
+                }
+                else if (String.Equals(culture, "matalun", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (role.Kind == ReinoCargoKind.Priest)
+                        list.Add(role);
+                }
+                else if (String.Equals(culture, "zosteros", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (role.Kind == ReinoCargoKind.CouncilMember)
+                        list.Add(role);
+                }
+            }
+
+            return list;
+        }
+
+        private static string GetRolePowersLine(ReinoCargoEntry role)
+        {
+            List<string> powers = new List<string>();
+            if (role.CanFinancial) powers.Add("decisões financeiras");
+            if (role.CanMilitary) powers.Add("decisões militares");
+            if (role.CanHireLower) powers.Add("pode contratar");
+            if (role.CanFireLower) powers.Add("pode exonerar");
+            if (powers.Count == 0)
+                return "Poderes: nenhum.";
+            return "Poderes: " + String.Join(", ", powers.ToArray()) + ".";
+        }
+
+        private static ReinoPendingApproval CreateBaseApproval(PlayerMobile actor, int cityId, ReinoApprovalChangeType type, string html)
+        {
+            List<ReinoCargoEntry> approvers = GetApprovalRoles(cityId);
+            ReinoPendingApproval proposal = new ReinoPendingApproval();
+            proposal.ApprovalId = m_NextApprovalId++;
+            proposal.CityId = cityId;
+            proposal.ChangeType = type;
+            proposal.CreatedUtc = DateTime.UtcNow;
+            proposal.CreatedBySerial = actor != null ? actor.Serial.Value : 0;
+            proposal.CreatedByName = actor != null ? actor.Name : String.Empty;
+            proposal.Html = html ?? String.Empty;
+
+            for (int i = 0; i < approvers.Count; i++)
+            {
+                ReinoCargoEntry role = approvers[i];
+                if (role == null || !role.IsOccupied)
+                    continue;
+
+                ReinoPendingApprovalVote vote = new ReinoPendingApprovalVote();
+                vote.VoterSerial = role.OccupantSerial;
+                vote.VoterName = role.OccupantName ?? String.Empty;
+                proposal.Votes.Add(vote);
+            }
+
+            m_PendingApprovals.Add(proposal);
+            return proposal;
+        }
+
+        private static void FinalizeNewProposal(ReinoPendingApproval proposal)
+        {
+            if (proposal == null)
+                return;
+
+            if (proposal.Votes.Count == 0)
+            {
+                proposal.Status = (int)ReinoApprovalDecision.Approved;
+                proposal.ResolvedUtc = DateTime.UtcNow;
+                ApplyApprovedProposal(proposal);
+            }
+            else
+            {
+                SendProposalToOnlineApprovers(proposal);
+            }
+        }
+
+        private static ReinoPendingApproval CreateRoleApproval(PlayerMobile actor, int cityId, ReinoCargoEntry role)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("<BASEFONT COLOR=#000000><BIG><B>Mudança proposta pelo líder do reino</B></BIG><BR><BR>");
+            sb.Append("Foi criado o cargo <B>").Append(role.Title).Append("</B>.<BR>");
+            sb.Append("Salário semanal: ").Append(role.WeeklySalaryGold).Append(" moedas.<BR>");
+            sb.Append("Hierarquia: ").Append(role.Hierarchy).Append(".<BR>");
+            sb.Append(GetRolePowersLine(role)).Append("<BR><BR>");
+            sb.Append(role.Description).Append("</BASEFONT>");
+
+            ReinoPendingApproval proposal = CreateBaseApproval(actor, cityId, ReinoApprovalChangeType.CreateRole, sb.ToString());
+            proposal.RoleId = role.RoleId;
+            FinalizeNewProposal(proposal);
+            return proposal;
+        }
+
+        private static ReinoPendingApproval CreateSalaryApproval(PlayerMobile actor, int cityId, ReinoCargoEntry role, int newSalary)
+        {
+            int oldSalary = role != null ? role.WeeklySalaryGold : 0;
+            int occupied = role != null ? GetOccupiedRoleCountByTitle(cityId, role.Title) : 0;
+            int extra = (newSalary - oldSalary) * occupied;
+
+            StringBuilder occupiedNames = new StringBuilder();
+            List<ReinoCargoEntry> roles = GetRoles(cityId);
+
+            if (role != null)
+            {
+                for (int i = 0; i < roles.Count; i++)
+                {
+                    ReinoCargoEntry other = roles[i];
+                    if (other == null)
+                        continue;
+
+                    if (!String.Equals(other.Title, role.Title, StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    if (!other.IsOccupied)
+                        continue;
+
+                    if (occupiedNames.Length > 0)
+                        occupiedNames.Append(", ");
+
+                    occupiedNames.Append(other.OccupantName);
+                }
+            }
+
+            StringBuilder sb = new StringBuilder();
+            sb.Append("<BASEFONT COLOR=#000000><BIG><B>Mudança proposta pelo líder do reino</B></BIG><BR><BR>");
+            sb.Append("Cargo: <B>").Append(role.Title).Append("</B><BR>");
+            sb.Append("Salário antigo: ").Append(oldSalary).Append(" moedas.<BR>");
+            sb.Append("Novo salário: ").Append(newSalary).Append(" moedas.<BR>");
+            sb.Append("Posições ocupadas nesse cargo: ").Append(occupied).Append(".<BR>");
+
+            if (occupiedNames.Length > 0)
+                sb.Append("Ocupantes atuais: ").Append(occupiedNames.ToString()).Append(".<BR>");
+            else
+                sb.Append("Ocupantes atuais: nenhum.<BR>");
+
+            sb.Append("Impacto semanal imediato: ").Append(extra).Append(" moedas.</BASEFONT>");
+
+            ReinoPendingApproval proposal = CreateBaseApproval(actor, cityId, ReinoApprovalChangeType.SalaryChange, sb.ToString());
+            proposal.RoleId = role.RoleId;
+            proposal.OldSalary = oldSalary;
+            proposal.NewSalary = newSalary;
+            FinalizeNewProposal(proposal);
+            return proposal;
+        }
+
+        private static string BuildTradeConfigHtml(ReinoCommercialTradeState oldState, int[] newBuyPrices, int[] newSellPrices, int[] newBuyCaps, int[] newSellCaps)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("<BASEFONT COLOR=#000000><BIG><B>Mudança proposta pelo líder do reino</B></BIG><BR><BR>");
+
+            for (int i = 0; i < 3; i++)
+            {
+                string label = GetTradeResourceLabel(i);
+                if (oldState.BuyPrices[i] != newBuyPrices[i])
+                    sb.Append(label).Append(" compra: ").Append(oldState.BuyPrices[i]).Append(" -> ").Append(newBuyPrices[i]).Append(" moedas.<BR>");
+                if (oldState.SellPrices[i] != newSellPrices[i])
+                    sb.Append(label).Append(" venda: ").Append(oldState.SellPrices[i]).Append(" -> ").Append(newSellPrices[i]).Append(" moedas.<BR>");
+                if (oldState.WeeklyBuyCaps[i] != newBuyCaps[i])
+                    sb.Append(label).Append(" máximo de compra semanal: ").Append(oldState.WeeklyBuyCaps[i]).Append(" -> ").Append(newBuyCaps[i]).Append(".<BR>");
+                if (oldState.WeeklySellCaps[i] != newSellCaps[i])
+                    sb.Append(label).Append(" máximo de venda semanal: ").Append(oldState.WeeklySellCaps[i]).Append(" -> ").Append(newSellCaps[i]).Append(".<BR>");
+            }
+
+            sb.Append("</BASEFONT>");
+            return sb.ToString();
+        }
+
+        private static ReinoPendingApproval CreateTradeApproval(PlayerMobile actor, int cityId, int[] newBuyPrices, int[] newSellPrices, int[] newBuyCaps, int[] newSellCaps)
+        {
+            ReinoCommercialTradeState state = GetTradeState(cityId);
+            ReinoPendingApproval proposal = CreateBaseApproval(actor, cityId, ReinoApprovalChangeType.TradeConfig, BuildTradeConfigHtml(state, newBuyPrices, newSellPrices, newBuyCaps, newSellCaps));
+            for (int i = 0; i < 3; i++)
+            {
+                proposal.OldBuyPrices[i] = state.BuyPrices[i];
+                proposal.OldSellPrices[i] = state.SellPrices[i];
+                proposal.OldBuyCaps[i] = state.WeeklyBuyCaps[i];
+                proposal.OldSellCaps[i] = state.WeeklySellCaps[i];
+                proposal.NewBuyPrices[i] = Math.Max(0, newBuyPrices[i]);
+                proposal.NewSellPrices[i] = Math.Max(0, newSellPrices[i]);
+                proposal.NewBuyCaps[i] = Math.Max(0, newBuyCaps[i]);
+                proposal.NewSellCaps[i] = Math.Max(0, newSellCaps[i]);
+            }
+            FinalizeNewProposal(proposal);
+            return proposal;
+        }
+
+        private static void SendProposalToOnlineApprovers(ReinoPendingApproval proposal)
+        {
+            if (proposal == null || !proposal.IsPending)
+                return;
+
+            for (int i = 0; i < proposal.Votes.Count; i++)
+            {
+                PlayerMobile pm = World.FindMobile((Serial)proposal.Votes[i].VoterSerial) as PlayerMobile;
+                if (pm != null && !pm.Deleted && pm.NetState != null)
+                {
+                    pm.CloseGump(typeof(ReinoApprovalChangeGump));
+                    pm.SendGump(new ReinoApprovalChangeGump(pm, proposal.ApprovalId));
+                }
+            }
+        }
+
+        public static ReinoPendingApproval GetPendingApproval(int approvalId)
+        {
+            for (int i = 0; i < m_PendingApprovals.Count; i++)
+            {
+                ReinoPendingApproval proposal = m_PendingApprovals[i];
+                if (proposal != null && proposal.ApprovalId == approvalId)
+                    return proposal;
+            }
+            return null;
+        }
+
+        public static ReinoPendingApproval GetPendingApprovalFor(PlayerMobile pm)
+        {
+            if (pm == null || pm.Deleted)
+                return null;
+
+            ProcessPendingApprovals();
+
+            for (int i = 0; i < m_PendingApprovals.Count; i++)
+            {
+                ReinoPendingApproval proposal = m_PendingApprovals[i];
+                if (proposal == null || !proposal.IsPending)
+                    continue;
+
+                for (int v = 0; v < proposal.Votes.Count; v++)
+                {
+                    ReinoPendingApprovalVote vote = proposal.Votes[v];
+                    if (vote != null && vote.VoterSerial == pm.Serial.Value && vote.Decision == 0)
+                        return proposal;
+                }
+            }
+
+            return null;
+        }
+
+        public static void ShowPendingApprovalGump(PlayerMobile pm)
+        {
+            ReinoPendingApproval proposal = GetPendingApprovalFor(pm);
+            if (proposal == null)
+                return;
+
+            pm.CloseGump(typeof(ReinoApprovalChangeGump));
+            pm.SendGump(new ReinoApprovalChangeGump(pm, proposal.ApprovalId));
+        }
+
+        public static bool VotePendingApproval(PlayerMobile pm, int approvalId, bool approve, out string message)
+        {
+            message = String.Empty;
+            ReinoPendingApproval proposal = GetPendingApproval(approvalId);
+            if (proposal == null || !proposal.IsPending)
+            {
+                message = "Essa mudança já foi resolvida.";
+                return false;
+            }
+
+            for (int i = 0; i < proposal.Votes.Count; i++)
+            {
+                ReinoPendingApprovalVote vote = proposal.Votes[i];
+                if (vote != null && vote.VoterSerial == pm.Serial.Value)
+                {
+                    vote.Decision = approve ? 1 : 2;
+                    vote.DecisionUtc = DateTime.UtcNow;
+                    EvaluateProposal(proposal, true);
+                    message = approve ? "Você aprovou a mudança." : "Você vetou a mudança.";
+                    return true;
+                }
+            }
+
+            message = "Você não pode votar nessa mudança.";
+            return false;
+        }
+
+        private static void ProcessPendingApprovals()
+        {
+            for (int i = 0; i < m_PendingApprovals.Count; i++)
+            {
+                ReinoPendingApproval proposal = m_PendingApprovals[i];
+                if (proposal != null && proposal.IsPending)
+                    EvaluateProposal(proposal, false);
+            }
+        }
+
+        private static void EvaluateProposal(ReinoPendingApproval proposal, bool interactive)
+        {
+            if (proposal == null || !proposal.IsPending)
+                return;
+
+            string culture = GetGovernmentCultureId(proposal.CityId);
+            DateTime now = DateTime.UtcNow;
+            bool anyYes = false;
+            bool allNo = proposal.Votes.Count > 0;
+            bool allAnswered = true;
+
+            for (int i = 0; i < proposal.Votes.Count; i++)
+            {
+                ReinoPendingApprovalVote vote = proposal.Votes[i];
+                if (vote == null)
+                    continue;
+
+                if (vote.Decision == 0 && (now - proposal.CreatedUtc) >= TimeSpan.FromHours(48.0))
+                {
+                    vote.Decision = 1;
+                    vote.DecisionUtc = now;
+                }
+
+                if (vote.Decision == 1)
+                    anyYes = true;
+
+                if (vote.Decision != 2)
+                    allNo = false;
+
+                if (vote.Decision == 0)
+                    allAnswered = false;
+            }
+
+            if (String.Equals(culture, "zosteros", StringComparison.OrdinalIgnoreCase))
+            {
+                if (anyYes)
+                    FinalizeProposal(proposal, true);
+                else if (allAnswered && allNo)
+                    FinalizeProposal(proposal, false);
+            }
+            else
+            {
+                if (anyYes && allAnswered)
+                    FinalizeProposal(proposal, true);
+                else if (allAnswered && !anyYes)
+                    FinalizeProposal(proposal, false);
+            }
+
+            if (interactive)
+            {
+                for (int i = 0; i < proposal.Votes.Count; i++)
+                {
+                    PlayerMobile voter = World.FindMobile((Serial)proposal.Votes[i].VoterSerial) as PlayerMobile;
+                    if (voter != null && !voter.Deleted && voter.NetState != null && proposal.IsPending)
+                        ShowPendingApprovalGump(voter);
+                }
+            }
+        }
+
+        private static void FinalizeProposal(ReinoPendingApproval proposal, bool approved)
+        {
+            if (proposal == null || !proposal.IsPending)
+                return;
+
+            proposal.Status = approved ? 1 : 2;
+            proposal.ResolvedUtc = DateTime.UtcNow;
+
+            if (approved)
+                ApplyApprovedProposal(proposal);
+            else
+                ApplyRejectedProposal(proposal);
+        }
+
+        private static void ApplyApprovedProposal(ReinoPendingApproval proposal)
+        {
+            if (proposal == null)
+                return;
+
+            if (proposal.ChangeType == ReinoApprovalChangeType.CreateRole)
+            {
+                ReinoCargoEntry role = GetRole(proposal.CityId, proposal.RoleId);
+                if (role != null)
+                    role.ApprovalState = 0;
+            }
+            else if (proposal.ChangeType == ReinoApprovalChangeType.SalaryChange)
+            {
+                ReinoCargoEntry role = GetRole(proposal.CityId, proposal.RoleId);
+                if (role != null)
+                {
+                    List<ReinoCargoEntry> matches = GetRolesByTitleForWrite(proposal.CityId, role.Title);
+                    for (int i = 0; i < matches.Count; i++)
+                        matches[i].WeeklySalaryGold = Math.Max(0, proposal.NewSalary);
+                }
+            }
+            else if (proposal.ChangeType == ReinoApprovalChangeType.TradeConfig)
+            {
+                ApplyTradeConfig(proposal.CityId, proposal.NewBuyPrices, proposal.NewSellPrices, proposal.NewBuyCaps, proposal.NewSellCaps);
+            }
+
+            SyncRoleDependentState(proposal.CityId);
+        }
+
+        private static void ApplyRejectedProposal(ReinoPendingApproval proposal)
+        {
+            if (proposal == null)
+                return;
+
+            if (proposal.ChangeType == ReinoApprovalChangeType.CreateRole)
+            {
+                ReinoCargoEntry role = GetRole(proposal.CityId, proposal.RoleId);
+                if (role != null)
+                    role.ApprovalState = 2;
+            }
+
+            SyncRoleDependentState(proposal.CityId);
+        }
+
+        private static void ProcessWeeklyTickIfNeeded()
+        {
+            DateTime currentWindow = GetCurrentWeeklyWindowStartUtc();
+            if (m_LastWeeklyPayrollUtc >= currentWindow)
+                return;
+
+            for (int cityId = 0; cityId < (ReinoElectionsSystem.CityNames != null ? ReinoElectionsSystem.CityNames.Length : 4); cityId++)
+            {
+                ResetTradeWindow(GetTradeState(cityId), false);
+                PayWeeklySalaries(cityId);
+            }
+
+            m_LastWeeklyPayrollUtc = currentWindow;
+        }
+
+        private static void PayWeeklySalaries(int cityId)
+        {
+            ReinoResourceLedger ledger = ReinoExpansionSystem.GetLedger(cityId);
+            if (ledger == null)
+                return;
+
+            List<ReinoCargoEntry> roles = GetRoles(cityId);
+            roles.Sort(CompareRoles);
+
+            for (int i = 0; i < roles.Count; i++)
+            {
+                ReinoCargoEntry role = roles[i];
+                if (role == null || !role.IsOccupied || role.WeeklySalaryGold <= 0 || !role.IsApproved)
+                    continue;
+
+                if (role.Kind == ReinoCargoKind.Leader && IsSarangGovernment(cityId))
+                    continue;
+
+                if (ledger.Gold < role.WeeklySalaryGold)
+                    continue;
+
+                PlayerMobile pm = World.FindMobile((Serial)role.OccupantSerial) as PlayerMobile;
+                if (pm == null || pm.Deleted || pm.BankBox == null)
+                    continue;
+
+                ledger.Add(ReinoResourceType.Gold, -role.WeeklySalaryGold);
+                pm.BankBox.DropItem(new Gold(role.WeeklySalaryGold));
+            }
+        }
+
         public static void SyncRoleDependentState(int cityId)
         {
             SyncLeaderRole(cityId, m_RolesByCity.ContainsKey(cityId) ? m_RolesByCity[cityId] : null);
@@ -1297,7 +2172,7 @@ namespace Server.Custom.Reinos
             {
                 state = new ReinoCommercialTradeState(cityId);
                 m_TradeByCity[cityId] = state;
-                ResetTradeWindow(state, true, GetCurrentWeeklyEmploymentSlotUtc());
+                ResetTradeWindow(state, false);
             }
 
             ResetTradeWindowIfNeeded(state);
@@ -1310,113 +2185,31 @@ namespace Server.Custom.Reinos
                 ResetTradeWindowIfNeeded(kv.Value);
         }
 
-        private static DateTime GetCurrentWeeklyEmploymentSlotUtc()
-        {
-            DateTime now = DateTime.UtcNow;
-            int daysSinceMonday = ((int)now.DayOfWeek + 6) % 7;
-            DateTime monday = now.Date.AddDays(-daysSinceMonday);
-            DateTime slot = monday.AddHours(21); // segunda 21:00 UTC = 18:00 Recife
-
-            if (now < slot)
-                slot = slot.AddDays(-7);
-
-            return slot;
-        }
-
-        private static void RunWeeklyEmploymentIfNeeded()
-        {
-            DateTime slot = GetCurrentWeeklyEmploymentSlotUtc();
-            if (DateTime.UtcNow < slot)
-                return;
-
-            if (m_LastWeeklyEmploymentRunUtc >= slot)
-                return;
-
-            m_LastWeeklyEmploymentRunUtc = slot;
-            PayWeeklySalaries();
-
-            foreach (KeyValuePair<int, ReinoCommercialTradeState> kv in m_TradeByCity)
-                ResetTradeWindow(kv.Value, false, slot);
-        }
-
-        private static void PayWeeklySalaries()
-        {
-            foreach (KeyValuePair<int, List<ReinoCargoEntry>> kv in m_RolesByCity)
-            {
-                int cityId = kv.Key;
-                List<ReinoCargoEntry> roles = GetRoles(cityId);
-                ReinoResourceLedger ledger = ReinoExpansionSystem.GetLedger(cityId);
-
-                for (int i = 0; i < roles.Count; i++)
-                {
-                    ReinoCargoEntry role = roles[i];
-                    if (role == null || !role.IsOccupied || role.WeeklySalaryGold <= 0)
-                        continue;
-
-                    if (ledger.Gold < role.WeeklySalaryGold)
-                        continue;
-
-                    PlayerMobile pm = World.FindMobile((Serial)role.OccupantSerial) as PlayerMobile;
-                    if (pm == null || pm.Deleted)
-                        continue;
-
-                    ledger.Add(ReinoResourceType.Gold, -role.WeeklySalaryGold);
-                    Gold gold = new Gold(role.WeeklySalaryGold);
-
-                    if (pm.BankBox != null)
-                    {
-                        pm.BankBox.DropItem(gold);
-                        pm.SendMessage("Seu salário do cargo de " + role.Title + " foi pago no banco.");
-                    }
-                    else if (pm.Backpack != null)
-                    {
-                        pm.Backpack.DropItem(gold);
-                        pm.SendMessage("Seu salário do cargo de " + role.Title + " foi pago na mochila.");
-                    }
-                    else
-                    {
-                        gold.MoveToWorld(pm.Location, pm.Map);
-                        pm.SendMessage("Seu salário do cargo de " + role.Title + " foi pago no chão aos seus pés.");
-                    }
-                }
-            }
-        }
-
         private static void ResetTradeWindowIfNeeded(ReinoCommercialTradeState state)
         {
             if (state == null)
                 return;
 
-            DateTime slot = GetCurrentWeeklyEmploymentSlotUtc();
-            if (state.WindowStartUtc < slot)
-                ResetTradeWindow(state, false, slot);
+            DateTime currentWindow = GetCurrentWeeklyWindowStartUtc();
+            if (state.WindowStartUtc < currentWindow)
+                ResetTradeWindow(state, false);
         }
 
-        private static void ResetTradeWindow(ReinoCommercialTradeState state, bool onlyIfEmpty, DateTime slot)
+        private static void ResetTradeWindow(ReinoCommercialTradeState state, bool keepRemaining)
         {
             if (state == null)
                 return;
 
-            for (int i = 0; i < 3; i++)
+            if (!keepRemaining)
             {
-                int buyCap = Math.Max(0, state.WeeklyBuyCaps[i]);
-                int sellCap = Math.Max(0, state.WeeklySellCaps[i]);
-
-                if (onlyIfEmpty)
+                for (int i = 0; i < 3; i++)
                 {
-                    if (state.WeeklyBuyRemaining[i] <= 0)
-                        state.WeeklyBuyRemaining[i] = buyCap;
-                    if (state.WeeklySellRemaining[i] <= 0)
-                        state.WeeklySellRemaining[i] = sellCap;
-                }
-                else
-                {
-                    state.WeeklyBuyRemaining[i] = buyCap;
-                    state.WeeklySellRemaining[i] = sellCap;
+                    state.WeeklyBuyRemaining[i] = Math.Max(0, state.WeeklyBuyCaps[i]);
+                    state.WeeklySellRemaining[i] = Math.Max(0, state.WeeklySellCaps[i]);
                 }
             }
 
-            state.WindowStartUtc = slot == DateTime.MinValue ? DateTime.UtcNow : slot;
+            state.WindowStartUtc = GetCurrentWeeklyWindowStartUtc();
         }
 
         public static ReinoResourceType GetTradeResourceType(int index)
@@ -1441,56 +2234,67 @@ namespace Server.Custom.Reinos
             }
         }
 
-        public static int GetEffectiveRepresentativeBuyRemaining(int cityId, int index)
+        private static void ApplyTradeConfig(int cityId, int[] buyPrices, int[] sellPrices, int[] buyCaps, int[] sellCaps)
         {
-            ReinoCommercialTradeState state = GetTradeState(cityId);
-            ReinoResourceLedger ledger = ReinoExpansionSystem.GetLedger(cityId);
-            int remaining = index >= 0 && index < state.WeeklyBuyRemaining.Length ? Math.Max(0, state.WeeklyBuyRemaining[index]) : 0;
-            int price = index >= 0 && index < state.BuyPrices.Length ? Math.Max(0, state.BuyPrices[index]) : 0;
-            if (price <= 0)
-                return 0;
-
-            int affordable = ledger.Gold / price;
-            if (affordable < 0)
-                affordable = 0;
-
-            return Math.Min(remaining, affordable);
-        }
-
-        public static int GetEffectiveRepresentativeSellRemaining(int cityId, int index)
-        {
-            ReinoCommercialTradeState state = GetTradeState(cityId);
-            ReinoResourceLedger ledger = ReinoExpansionSystem.GetLedger(cityId);
-            int remaining = index >= 0 && index < state.WeeklySellRemaining.Length ? Math.Max(0, state.WeeklySellRemaining[index]) : 0;
-            int stock = ledger.Get(GetTradeResourceType(index));
-            return Math.Min(remaining, Math.Max(0, stock));
-        }
-
-        public static bool UpdateTradeConfig(int cityId, int[] buyPrices, int[] sellPrices, int[] buyCaps, int[] sellCaps, out string message)
-        {
-            message = String.Empty;
             ReinoCommercialTradeState state = GetTradeState(cityId);
             ReinoResourceLedger ledger = ReinoExpansionSystem.GetLedger(cityId);
 
             for (int i = 0; i < 3; i++)
             {
-                int buyPrice = buyPrices != null && i < buyPrices.Length ? Math.Max(0, buyPrices[i]) : 0;
-                int sellPrice = sellPrices != null && i < sellPrices.Length ? Math.Max(0, sellPrices[i]) : 0;
-                int buyCap = buyCaps != null && i < buyCaps.Length ? Math.Max(0, buyCaps[i]) : 0;
-                int sellCap = sellCaps != null && i < sellCaps.Length ? Math.Max(0, sellCaps[i]) : 0;
+                int oldBuyCap = state.WeeklyBuyCaps[i];
+                int oldSellCap = state.WeeklySellCaps[i];
+                int alreadyBought = Math.Max(0, oldBuyCap - state.WeeklyBuyRemaining[i]);
+                int alreadySold = Math.Max(0, oldSellCap - state.WeeklySellRemaining[i]);
 
-                int stock = Math.Max(0, ledger.Get(GetTradeResourceType(i)));
-                if (sellCap > stock)
-                    sellCap = stock;
+                state.BuyPrices[i] = Math.Max(0, buyPrices[i]);
+                state.SellPrices[i] = Math.Max(0, sellPrices[i]);
+                state.WeeklyBuyCaps[i] = Math.Max(0, buyCaps[i]);
+                state.WeeklySellCaps[i] = Math.Max(0, Math.Min(sellCaps[i], ledger.Get(GetTradeResourceType(i))));
 
-                state.BuyPrices[i] = buyPrice;
-                state.SellPrices[i] = sellPrice;
-                state.WeeklyBuyCaps[i] = buyCap;
-                state.WeeklySellCaps[i] = sellCap;
+                state.WeeklyBuyRemaining[i] = Math.Max(0, state.WeeklyBuyCaps[i] - alreadyBought);
+                state.WeeklySellRemaining[i] = Math.Max(0, state.WeeklySellCaps[i] - alreadySold);
+            }
+        }
+
+        public static bool UpdateTradeConfig(PlayerMobile actor, int cityId, int[] buyPrices, int[] sellPrices, int[] buyCaps, int[] sellCaps, out string message)
+        {
+            message = String.Empty;
+
+            if (actor == null || actor.Deleted || !ReinoAccessHelper.HasGovernmentAccess(actor, cityId))
+            {
+                message = "Somente o governo do reino pode configurar o representante comercial.";
+                return false;
             }
 
-            ResetTradeWindow(state, false, GetCurrentWeeklyEmploymentSlotUtc());
-            message = "Configuração do representante comercial atualizada.";
+            int[] safeBuyPrices = new int[3];
+            int[] safeSellPrices = new int[3];
+            int[] safeBuyCaps = new int[3];
+            int[] safeSellCaps = new int[3];
+            ReinoResourceLedger ledger = ReinoExpansionSystem.GetLedger(cityId);
+
+            for (int i = 0; i < 3; i++)
+            {
+                safeBuyPrices[i] = Math.Max(0, buyPrices[i]);
+                safeSellPrices[i] = Math.Max(0, sellPrices[i]);
+                safeBuyCaps[i] = Math.Max(0, buyCaps[i]);
+                safeSellCaps[i] = Math.Max(0, Math.Min(sellCaps[i], ledger.Get(GetTradeResourceType(i))));
+            }
+
+            if (!GovernmentNeedsApprovals(cityId))
+            {
+                ApplyTradeConfig(cityId, safeBuyPrices, safeSellPrices, safeBuyCaps, safeSellCaps);
+                message = "Configuração do representante comercial atualizada.";
+                return true;
+            }
+
+            if (HasPendingTradeApproval(cityId))
+            {
+                message = "Já existe uma mudança do representante comercial aguardando aprovação.";
+                return false;
+            }
+
+            CreateTradeApproval(actor, cityId, safeBuyPrices, safeSellPrices, safeBuyCaps, safeSellCaps);
+            message = "Mudança do representante comercial enviada para aprovação do governo.";
             return true;
         }
 
@@ -1626,6 +2430,11 @@ namespace Server.Custom.Reinos
                     total += Math.Max(1, item.Amount);
             }
             return total;
+        }
+
+        public static int CountPlayerTradeResource(PlayerMobile pm, int index)
+        {
+            return pm != null && pm.Backpack != null ? CountTradeResourceInContainer(pm.Backpack, index) : 0;
         }
 
         private static bool IsMatchingTradeResource(Item item, int index)
@@ -1907,9 +2716,10 @@ namespace Server.Custom.Reinos
                 using (FileStream fs = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.None))
                 using (BinaryWriter bw = new BinaryWriter(fs))
                 {
-                    bw.Write(2);
+                    bw.Write(3);
                     bw.Write(m_NextRoleId);
-                    bw.Write(m_LastWeeklyEmploymentRunUtc.ToBinary());
+                    bw.Write(m_NextApprovalId);
+                    bw.Write(m_LastWeeklyPayrollUtc.ToBinary());
 
                     bw.Write(m_RolesByCity.Count);
                     foreach (KeyValuePair<int, List<ReinoCargoEntry>> kv in m_RolesByCity)
@@ -1940,6 +2750,7 @@ namespace Server.Custom.Reinos
                             bw.Write(role.LinkedConstructionKey ?? String.Empty);
                             bw.Write(role.OccupantSerial);
                             bw.Write(role.OccupantName ?? String.Empty);
+                            bw.Write(role.ApprovalState);
                         }
                     }
 
@@ -1959,6 +2770,45 @@ namespace Server.Custom.Reinos
                             bw.Write(state.WeeklySellRemaining[i]);
                         }
                     }
+
+                    bw.Write(m_PendingApprovals.Count);
+                    for (int i = 0; i < m_PendingApprovals.Count; i++)
+                    {
+                        ReinoPendingApproval proposal = m_PendingApprovals[i] ?? new ReinoPendingApproval();
+                        bw.Write(proposal.ApprovalId);
+                        bw.Write(proposal.CityId);
+                        bw.Write(proposal.CreatedBySerial);
+                        bw.Write(proposal.CreatedByName ?? String.Empty);
+                        bw.Write(proposal.CreatedUtc.ToBinary());
+                        bw.Write(proposal.ResolvedUtc.ToBinary());
+                        bw.Write(proposal.Status);
+                        bw.Write((int)proposal.ChangeType);
+                        bw.Write(proposal.Html ?? String.Empty);
+                        bw.Write(proposal.RoleId);
+                        bw.Write(proposal.OldSalary);
+                        bw.Write(proposal.NewSalary);
+                        for (int r = 0; r < 3; r++)
+                        {
+                            bw.Write(proposal.OldBuyPrices[r]);
+                            bw.Write(proposal.OldSellPrices[r]);
+                            bw.Write(proposal.OldBuyCaps[r]);
+                            bw.Write(proposal.OldSellCaps[r]);
+                            bw.Write(proposal.NewBuyPrices[r]);
+                            bw.Write(proposal.NewSellPrices[r]);
+                            bw.Write(proposal.NewBuyCaps[r]);
+                            bw.Write(proposal.NewSellCaps[r]);
+                        }
+
+                        bw.Write(proposal.Votes.Count);
+                        for (int v = 0; v < proposal.Votes.Count; v++)
+                        {
+                            ReinoPendingApprovalVote vote = proposal.Votes[v] ?? new ReinoPendingApprovalVote();
+                            bw.Write(vote.VoterSerial);
+                            bw.Write(vote.VoterName ?? String.Empty);
+                            bw.Write(vote.Decision);
+                            bw.Write(vote.DecisionUtc.ToBinary());
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -1974,6 +2824,7 @@ namespace Server.Custom.Reinos
             {
                 m_RolesByCity.Clear();
                 m_TradeByCity.Clear();
+                m_PendingApprovals.Clear();
 
                 if (!File.Exists(FilePath))
                     return;
@@ -1986,7 +2837,8 @@ namespace Server.Custom.Reinos
                         return;
 
                     m_NextRoleId = br.ReadInt32();
-                    m_LastWeeklyEmploymentRunUtc = version >= 2 ? DateTime.FromBinary(br.ReadInt64()) : DateTime.MinValue;
+                    m_NextApprovalId = version >= 3 ? br.ReadInt32() : 1;
+                    m_LastWeeklyPayrollUtc = version >= 3 ? DateTime.FromBinary(br.ReadInt64()) : DateTime.MinValue;
 
                     int cityCount = br.ReadInt32();
                     for (int c = 0; c < cityCount; c++)
@@ -2017,6 +2869,7 @@ namespace Server.Custom.Reinos
                             role.LinkedConstructionKey = br.ReadString();
                             role.OccupantSerial = br.ReadInt32();
                             role.OccupantName = br.ReadString();
+                            role.ApprovalState = version >= 3 ? br.ReadInt32() : 0;
                             list.Add(role);
                         }
 
@@ -2039,6 +2892,52 @@ namespace Server.Custom.Reinos
                             state.WeeklySellRemaining[i] = br.ReadInt32();
                         }
                         m_TradeByCity[cityId] = state;
+                    }
+
+                    if (version >= 3 && br.BaseStream.Position < br.BaseStream.Length)
+                    {
+                        int approvalCount = br.ReadInt32();
+                        for (int a = 0; a < approvalCount; a++)
+                        {
+                            ReinoPendingApproval proposal = new ReinoPendingApproval();
+                            proposal.ApprovalId = br.ReadInt32();
+                            proposal.CityId = br.ReadInt32();
+                            proposal.CreatedBySerial = br.ReadInt32();
+                            proposal.CreatedByName = br.ReadString();
+                            proposal.CreatedUtc = DateTime.FromBinary(br.ReadInt64());
+                            proposal.ResolvedUtc = DateTime.FromBinary(br.ReadInt64());
+                            proposal.Status = br.ReadInt32();
+                            proposal.ChangeType = (ReinoApprovalChangeType)br.ReadInt32();
+                            proposal.Html = br.ReadString();
+                            proposal.RoleId = br.ReadInt32();
+                            proposal.OldSalary = br.ReadInt32();
+                            proposal.NewSalary = br.ReadInt32();
+                            for (int r = 0; r < 3; r++)
+                            {
+                                proposal.OldBuyPrices[r] = br.ReadInt32();
+                                proposal.OldSellPrices[r] = br.ReadInt32();
+                                proposal.OldBuyCaps[r] = br.ReadInt32();
+                                proposal.OldSellCaps[r] = br.ReadInt32();
+                                proposal.NewBuyPrices[r] = br.ReadInt32();
+                                proposal.NewSellPrices[r] = br.ReadInt32();
+                                proposal.NewBuyCaps[r] = br.ReadInt32();
+                                proposal.NewSellCaps[r] = br.ReadInt32();
+                            }
+
+                            int voteCount = br.ReadInt32();
+                            proposal.Votes.Clear();
+                            for (int v = 0; v < voteCount; v++)
+                            {
+                                ReinoPendingApprovalVote vote = new ReinoPendingApprovalVote();
+                                vote.VoterSerial = br.ReadInt32();
+                                vote.VoterName = br.ReadString();
+                                vote.Decision = br.ReadInt32();
+                                vote.DecisionUtc = DateTime.FromBinary(br.ReadInt64());
+                                proposal.Votes.Add(vote);
+                            }
+
+                            m_PendingApprovals.Add(proposal);
+                        }
                     }
                 }
             }
