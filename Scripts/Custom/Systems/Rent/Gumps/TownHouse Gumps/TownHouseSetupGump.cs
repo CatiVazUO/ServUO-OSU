@@ -202,6 +202,9 @@ namespace Server.Custom.Systems.Rent
 
             AddButton(496, 734, 559, 559, c_Sign.Owned ? "Salvar" : "Criar Casa", new GumpCallback(ClaimOrSave));
             AddLabel(419, 734, 0, c_Sign.Owned ? "Salvar Alterações" : (c_Sign.PropertyType == OSUPropertyType.Tomb ? "Criar Tumba" : (c_Sign.PropertyType == OSUPropertyType.Commercial ? "Criar Comercial" : "Criar Casa")));
+
+            AddLabel(596, 661, 0, "Ir");
+            AddButton(648, 661, 535, 535, "GoToSign", new GumpCallback(GoToSign));
         }
 
         private void DrawCultureButton(int x, int y, string cultureValue)
@@ -256,6 +259,16 @@ namespace Server.Custom.Systems.Rent
         {
             Owner.SendMessage(c_Sign.PropertyType == OSUPropertyType.Tomb ? "Aponte o local da tumba." : "Aponte o local da placa da casa.");
             Owner.Target = new InternalTarget(this, c_Sign, TargetType.SignLoc);
+        }
+
+        private void GoToSign()
+        {
+            if (c_Sign == null || c_Sign.Deleted || c_Sign.Map == null || c_Sign.Map == Map.Internal)
+                return;
+
+            Owner.Hidden = false;
+            Owner.MoveToWorld(new Point3D(c_Sign.SignLoc.X, c_Sign.SignLoc.Y, c_Sign.SignLoc.Z), c_Sign.Map);
+            NewGump();
         }
 
         private void MinZSelect()
