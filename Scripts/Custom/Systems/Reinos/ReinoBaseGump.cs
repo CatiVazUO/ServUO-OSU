@@ -16,12 +16,12 @@ namespace Server.Custom.Reinos
         protected readonly bool m_DemolishConfirm;
 
         public ReinoExpansionGump(PlayerMobile from, int cityId)
-            : this(from, cityId, -1, -1, String.Empty, 0, 4, false)
+            : this(from, cityId, -1, -1, String.Empty, 0, 1, false)
         {
         }
 
         public ReinoExpansionGump(PlayerMobile from, int cityId, int selectedLotId, int selectedWallAreaId, string selectedBuildingId, int buildingPage)
-            : this(from, cityId, selectedLotId, selectedWallAreaId, selectedBuildingId, buildingPage, 4, false)
+            : this(from, cityId, selectedLotId, selectedWallAreaId, selectedBuildingId, buildingPage, 1, false)
         {
         }
 
@@ -125,6 +125,12 @@ namespace Server.Custom.Reinos
                     break;
                 case 5:
                     BuildGovernmentPage();
+                    break;
+                case 1:
+                    BuildGeneralPage();
+                    break;
+                case 2:
+                    BuildTreasurePage();
                     break;
                 case 9:
                     BuildConstructionDetailPage();

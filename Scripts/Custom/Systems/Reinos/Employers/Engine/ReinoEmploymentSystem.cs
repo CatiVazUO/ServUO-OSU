@@ -2036,15 +2036,20 @@ namespace Server.Custom.Reinos
                 if (role.Kind == ReinoCargoKind.Leader && IsSarangGovernment(cityId))
                     continue;
 
-                if (ledger.Gold < role.WeeklySalaryGold)
+                int taxAmount;
+                int netSalary;
+                ReinoTreasurySystem.CalculateSalaryTax(cityId, role.WeeklySalaryGold, out taxAmount, out netSalary);
+
+                if (ledger.Gold < netSalary)
                     continue;
 
                 PlayerMobile pm = World.FindMobile((Serial)role.OccupantSerial) as PlayerMobile;
                 if (pm == null || pm.Deleted || pm.BankBox == null)
                     continue;
 
-                ledger.Add(ReinoResourceType.Gold, -role.WeeklySalaryGold);
-                pm.BankBox.DropItem(new Gold(role.WeeklySalaryGold));
+                ledger.Add(ReinoResourceType.Gold, -netSalary);
+                pm.BankBox.DropItem(new Gold(netSalary));
+                ReinoTreasurySystem.RecordSalaryPayout(cityId, role.WeeklySalaryGold, taxAmount, netSalary);
             }
         }
 
@@ -2406,6 +2411,7 @@ namespace Server.Custom.Reinos
             }
 
             ledger.Add(ReinoResourceType.Gold, total);
+            ReinoTreasurySystem.RecordRepresentativeSale(cityId, total);
             message = "Venda confirmada. Total recebido: " + total + " moedas.";
             return true;
         }
@@ -2561,6 +2567,7 @@ namespace Server.Custom.Reinos
             }
 
             ledger.Add(ReinoResourceType.Gold, -totalGold);
+            ReinoTreasurySystem.RecordRepresentativePurchase(cityId, totalGold);
             seller.AddToBackpack(new Gold(totalGold));
             message = "Venda confirmada. Você recebeu " + totalGold + " moedas.";
             return true;

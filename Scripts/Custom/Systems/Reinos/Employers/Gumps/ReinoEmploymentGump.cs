@@ -35,6 +35,7 @@ namespace Server.Custom.Reinos
         private const int ButtonGovCreateConstructionPrev = 57200;
         private const int ButtonGovCreateConstructionNext = 57201;
         private const int ButtonGovCreateSubmit = 57202;
+        private const int ButtonGovResign = 57203;
 
         private const int EntryGovSalaryEdit = 58000;
         private const int EntryGovCreateName = 1;
@@ -45,6 +46,8 @@ namespace Server.Custom.Reinos
         {
             AddPage(0);
             AddLabel(779, 173, 0, @"Cargos");
+            AddButton(1016, 227, 529, 529, ButtonGovResign, GumpButtonType.Reply, 0);
+            AddLabel(1046, 227, 0, @"Resignar Liderança do Reino");
             AddLabel(413, 231, 0, @"Cargos");
             AddImageTiled(407, 261, 825, 5, 367);
             AddImageTiled(407, 455, 825, 5, 367);
@@ -523,6 +526,14 @@ namespace Server.Custom.Reinos
                     session.SelectedConstructionPage++;
                     from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 17));
                     return true;
+                case ButtonGovResign:
+                    {
+                        string message;
+                        ReinoTreasurySystem.ResignLeadership(from, m_CityId, out message);
+                        from.SendMessage(message);
+                        from.SendGump(new ReinoExpansionGump(from, m_CityId, m_SelectedLotId, m_SelectedWallAreaId, m_SelectedBuildingId, m_BuildingPage, 5));
+                        return true;
+                    }
                 case ButtonGovCreateSubmit:
                     {
                         int salary;

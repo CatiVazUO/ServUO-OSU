@@ -93,7 +93,14 @@ namespace Server.Gumps
                         commission = (int)(m_VI.Price * (m_Vendor.CommissionPerc / 100));
                     }
 
-                    m_Vendor.HoldGold += m_VI.Price - commission;
+                    int kingdomTax = 0;
+                    Server.Custom.Reinos.ReinoTreasurySystem.ApplyVendorSaleTax(m_Vendor, m_VI.Price, out kingdomTax);
+
+                    int vendorShare = m_VI.Price - commission - kingdomTax;
+                    if (vendorShare < 0)
+                        vendorShare = 0;
+
+                    m_Vendor.HoldGold += vendorShare;
 
                     from.SendLocalizedMessage(503201); // You take the item.
                 }

@@ -173,6 +173,12 @@ namespace Server.Custom.Reinos
                 return;
             }
 
+            if (HandleGeneralResponse(from, info))
+                return;
+
+            if (HandleTreasuryResponse(from, info))
+                return;
+
             if (HandleMaintenanceResponse(from, info))
                 return;
 
