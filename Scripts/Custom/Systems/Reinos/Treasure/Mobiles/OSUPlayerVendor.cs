@@ -1,7 +1,12 @@
 using Server;
+using Server.Custom.Reinos;
+using Server.Custom.Systems.Rent;
 using Server.Items;
 using Server.Mobiles;
 using Server.Multis;
+using Server.Network;
+using System;
+
 
 namespace Server.Mobiles
 {
@@ -14,6 +19,50 @@ namespace Server.Mobiles
 
         public OSUPlayerVendor(Serial serial) : base(serial)
         {
+        }
+
+        private bool CanTradeWith(Mobile from)
+        {
+            PlayerMobile pm = from as PlayerMobile;
+            TownHouse house = House as TownHouse;
+            TownHouseSign sign = house != null ? house.ForSaleSign : null;
+
+            if (pm != null && sign != null)
+            {
+                string diplomacyReason;
+                if (!ReinoDiplomacySystem.CanUsePlayerVendor(pm, sign, out diplomacyReason))
+                {
+                    if (!String.IsNullOrWhiteSpace(diplomacyReason))
+                        pm.SendMessage(diplomacyReason);
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public override void OnDoubleClick(Mobile from)
+        {
+            if (!IsOwner(from) && !CanTradeWith(from))
+                return;
+
+            base.OnDoubleClick(from);
+        }
+
+        public override void OnSpeech(SpeechEventArgs e)
+        {
+            if (!IsOwner(e.Mobile) && !CanTradeWith(e.Mobile))
+                return;
+
+            base.OnSpeech(e);
+        }
+
+        public override void DisplayPaperdollTo(Mobile m)
+        {
+            if (!IsOwner(m) && !CanTradeWith(m))
+                return;
+
+            base.DisplayPaperdollTo(m);
         }
 
         public override void Serialize(GenericWriter writer)

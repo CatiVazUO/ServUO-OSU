@@ -4,6 +4,7 @@ using Server.Custom.Mobiles;
 using Server.Gumps;
 using Server.Mobiles;
 using System;
+using Server.Custom.Reinos;
 
 namespace Server.Custom.Correios
 {
@@ -64,6 +65,18 @@ namespace Server.Custom.Correios
 
         private void OpenGump(Mobile from)
         {
+            PlayerMobile pm = from as PlayerMobile;
+
+            if (pm != null)
+            {
+                string reason;
+                if (!ReinoDiplomacySystem.CanUsePostOffice(pm, m_GovernmentCityId, out reason))
+                {
+                    pm.SendMessage(reason);
+                    return;
+                }
+            }
+
             CorreioStorage.Ensure();
 
             CorreioSession session = CorreiosGump.GetSession(from);

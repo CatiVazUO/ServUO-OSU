@@ -76,6 +76,15 @@ namespace Server.Custom.Reinos
 
             pm.CloseGump(typeof(ReinoCommercialRepresentativeTradeGump));
             pm.CloseGump(typeof(ReinoCommercialRepresentativeConfigGump));
+
+            string diplomacyReason;
+            if (!ReinoDiplomacySystem.CanUseCommercialRepresentative(pm, GovernmentCityId, out diplomacyReason))
+            {
+                if (!String.IsNullOrWhiteSpace(diplomacyReason))
+                    pm.SendMessage(diplomacyReason);
+                return;
+            }
+
             pm.SendGump(new ReinoCommercialRepresentativeTradeGump(pm, GovernmentCityId));
 
             if (ReinoEmploymentSystem.CanUseCommercialRepresentative(pm, GovernmentCityId))

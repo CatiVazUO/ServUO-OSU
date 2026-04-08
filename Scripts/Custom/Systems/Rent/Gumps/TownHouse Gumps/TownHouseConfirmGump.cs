@@ -20,7 +20,9 @@ namespace Server.Custom.Systems.Rent
         protected override void BuildGump()
         {
             bool cultureAllowed = c_Sign.IsCultureAllowed(Owner);
-            bool canConfirm = cultureAllowed && c_Sign.CanBuyHouse(Owner) && c_Sign.CanOwnThisProperty(Owner);
+            string diplomacyReason;
+            bool diplomacyAllowed = c_Sign.CanAcquireByDiplomacy(Owner, out diplomacyReason);
+            bool canConfirm = cultureAllowed && diplomacyAllowed && c_Sign.CanBuyHouse(Owner) && c_Sign.CanOwnThisProperty(Owner);
 
             AddPage(0);
 
@@ -68,6 +70,10 @@ namespace Server.Custom.Systems.Rent
 
             if (!c_Sign.CanOwnThisProperty(Owner))
                 AddHtml(286, 276, 200, 40, "<CENTER>" + c_Sign.CannotOwnMessage(Owner) + "</CENTER>", false, false);
+            else if (!cultureAllowed)
+                AddHtml(286, 276, 200, 40, "<CENTER>Seu povo não pode adquirir esta propriedade.</CENTER>", false, false);
+            else if (!diplomacyAllowed)
+                AddHtml(286, 276, 200, 50, "<CENTER>" + diplomacyReason + "</CENTER>", false, false);
             else if (!c_Sign.CanBuyHouse(Owner))
                 AddHtml(286, 276, 200, 40, "<CENTER>Você não atende aos requisitos desta propriedade.</CENTER>", false, false);
             else if (!c_Sign.PriceReady)

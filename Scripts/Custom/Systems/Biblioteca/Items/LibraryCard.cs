@@ -9,6 +9,9 @@ namespace Server.Custom.Biblioteca.Library
     {
         private DateTime _lastFeePaidUtc;
 
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int IssuerCityId { get; set; }
+
         public override string DefaultName
         {
             get { return "Cartão da Biblioteca"; }
@@ -20,6 +23,7 @@ namespace Server.Custom.Biblioteca.Library
             LootType = LootType.Blessed;
             Movable = true;
             _lastFeePaidUtc = DateTime.UtcNow;
+            IssuerCityId = -1;
         }
 
         public LibraryCard(Serial serial) : base(serial)
@@ -74,16 +78,25 @@ namespace Server.Custom.Biblioteca.Library
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write(0); // version
+            writer.Write(1);
             writer.Write(_lastFeePaidUtc);
+            writer.Write(IssuerCityId);
         }
 
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);
             int version = reader.ReadInt();
+
             _lastFeePaidUtc = reader.ReadDateTime();
+
+            if (version >= 1)
+                IssuerCityId = reader.ReadInt();
+            else
+                IssuerCityId = -1;
+
             LootType = LootType.Newbied;
-        }
+        }        
+        
     }
 }

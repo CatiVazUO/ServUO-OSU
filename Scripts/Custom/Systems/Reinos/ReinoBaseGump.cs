@@ -126,6 +126,9 @@ namespace Server.Custom.Reinos
                 case 5:
                     BuildGovernmentPage();
                     break;
+                case 6:
+                    BuildDiplomacyPage();
+                    break;
                 case 1:
                     BuildGeneralPage();
                     break;

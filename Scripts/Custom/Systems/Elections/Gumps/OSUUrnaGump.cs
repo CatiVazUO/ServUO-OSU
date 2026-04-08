@@ -383,6 +383,15 @@ namespace Server.Custom.Reinos
                 ReinoCandidateEntry entry = city.Candidates[index];
                 string reason;
 
+                string diplomacyReason;
+                if (!ReinoDiplomacySystem.CanVoteInCity(_from, _cityId, out diplomacyReason))
+                {
+                    _from.SendMessage(diplomacyReason);
+                    _from.CloseGump(typeof(OSUUrnaGump));
+                    _from.SendGump(new OSUUrnaGump(_from, _urna));
+                    return;
+                }
+
                 if (ReinoElectionsSystem.RegisterVote(_from, _cityId, entry.Serial, out reason))
                 {
                     _from.SendMessage("Seu voto em {0} foi registrado.", entry.Nome);

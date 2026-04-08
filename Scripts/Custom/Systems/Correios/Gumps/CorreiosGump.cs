@@ -12,6 +12,7 @@ using Server.Items;
 using Server.Accounting;
 using Server.Custom.Reinos;
 
+
 namespace Server.Custom.Correios
 {
     public class CorreioSession
@@ -153,6 +154,12 @@ namespace Server.Custom.Correios
         private Mobile GetContextNpc()
         {
             return _s != null && _s.ContextNpcSerial > 0 ? World.FindMobile((Serial)_s.ContextNpcSerial) : null;
+        }
+
+        private int GetContextNpcCityId()
+        {
+            CorreioNPC npc = GetContextNpc() as CorreioNPC;
+            return npc != null ? npc.GovernmentCityId : -1;
         }
 
         private bool WithdrawWithKingdomRevenue(Mobile payer, int amount)
@@ -1493,6 +1500,17 @@ namespace Server.Custom.Correios
                 return;
             }
 
+            PlayerMobile senderPm = from as PlayerMobile;
+
+            string diplomacyReason;
+
+            if (senderPm != null && !ReinoDiplomacySystem.CanExchangeMail(senderPm, dest, GetContextNpcCityId(), out diplomacyReason))
+            {
+                from.SendMessage(diplomacyReason);
+                from.SendGump(new CorreiosGump(from, 3));
+                return;
+            }
+
             if (_s.MailAttachments == null || _s.MailAttachments.Count == 0)
             {
                 from.SendMessage("Você precisa anexar ao menos um item.");
@@ -2080,24 +2098,35 @@ namespace Server.Custom.Correios
         }
 
 
-    private void ExecuteSendMail(Mobile from)
-    {
-        Mobile dest;
-        if (!CorreioStorage.Instance.TryFindMobileByName(_s.ToName, out dest))
+        private void ExecuteSendMail(Mobile from)
         {
-            from.SendMessage("Destinatário não encontrado.");
-            from.SendGump(new CorreiosGump(from, 3));
-            return;
-        }
+            Mobile dest;
+            if (!CorreioStorage.Instance.TryFindMobileByName(_s.ToName, out dest))
+            {
+                from.SendMessage("Destinatário não encontrado.");
+                from.SendGump(new CorreiosGump(from, 3));
+                return;
+            }
 
-        if (_s.MailAttachments == null || _s.MailAttachments.Count == 0)
-        {
-            from.SendMessage("Você precisa anexar ao menos um item.");
-            from.SendGump(new CorreiosGump(from, 3));
-            return;
-        }   
+            PlayerMobile senderPm = from as PlayerMobile;
+            string diplomacyReason;
 
-        List<Item> attachments = new List<Item>();
+            if (senderPm != null && !ReinoDiplomacySystem.CanExchangeMail(senderPm, dest, GetContextNpcCityId(), out diplomacyReason))
+            {
+                from.SendMessage(diplomacyReason);
+                from.SendGump(new CorreiosGump(from, 3));
+                return;
+            }
+
+
+            if (_s.MailAttachments == null || _s.MailAttachments.Count == 0)
+            {
+                from.SendMessage("Você precisa anexar ao menos um item.");
+                from.SendGump(new CorreiosGump(from, 3));
+            return;
+            }   
+
+            List<Item> attachments = new List<Item>();
 
             for (int i = 0; i < _s.MailAttachments.Count; i++)
             {
@@ -2134,38 +2163,39 @@ namespace Server.Custom.Correios
             }
 
             int total = CalculateMailSendCost(attachments);
-        if (total > 0 && !WithdrawWithKingdomRevenue(from, total))
-        {
-            from.SendMessage("Você não tem dinheiro suficiente no banco.");
-            from.SendGump(new CorreiosGump(from, 3));
-            return;
-        }
-
-        for (int i = 0; i < attachments.Count; i++)
-        {
-            try
+            if (total > 0 && !WithdrawWithKingdomRevenue(from, total))
             {
-                CorreioStorage.Instance.ItemVault.DropItem(attachments[i]);
-            }
-            catch
-            {
-                Banker.DepositUpTo(from, total);
-                from.SendMessage("Não foi possível mover um dos anexos.");
+                from.SendMessage("Você não tem dinheiro suficiente no banco.");
                 from.SendGump(new CorreiosGump(from, 3));
                 return;
             }
+
+            for (int i = 0; i < attachments.Count; i++)
+            {
+                try
+                {
+                    CorreioStorage.Instance.ItemVault.DropItem(attachments[i]);
+                }
+                catch
+                {
+                    Banker.DepositUpTo(from, total);
+                    from.SendMessage("Não foi possível mover um dos anexos.");
+                    from.SendGump(new CorreiosGump(from, 3));
+                    return;
+                }
+            }
+
+            string title = attachments.Count == 1
+                ? (attachments[0].Name ?? attachments[0].GetType().Name)
+                : string.Format("Correio de {0}", from.Name);
+
+            CorreioStorage.Instance.CreateMail(from, dest, title, null, attachments);
+
+            from.SendMessage("Correio enviado.");
+            _s.ClearMailDraft(from);
+            from.SendGump(new CorreiosGump(from, 1));
+
         }
-
-        string title = attachments.Count == 1
-            ? (attachments[0].Name ?? attachments[0].GetType().Name)
-            : string.Format("Correio de {0}", from.Name);
-
-        CorreioStorage.Instance.CreateMail(from, dest, title, null, attachments);
-
-        from.SendMessage("Correio enviado.");
-        _s.ClearMailDraft(from);
-        from.SendGump(new CorreiosGump(from, 1));
-    }
 
         private void ExecuteSubscribe(Mobile from)
         {

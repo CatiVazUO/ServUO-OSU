@@ -154,6 +154,33 @@ namespace Server.Custom.Reinos
             return false;
         }
 
+        private static void ApplyGovernmentCityId(Mobile mob, int cityId)
+        {
+            if (mob == null || cityId < 0)
+                return;
+
+            Server.Custom.Correios.CorreioNPC correio = mob as Server.Custom.Correios.CorreioNPC;
+            if (correio != null)
+            {
+                correio.GovernmentCityId = cityId;
+                return;
+            }
+
+            Server.Custom.Biblioteca.Bibliotecario bibliotecario = mob as Server.Custom.Biblioteca.Bibliotecario;
+            if (bibliotecario != null)
+            {
+                bibliotecario.GovernmentCityId = cityId;
+                return;
+            }
+
+            Server.Custom.Reinos.ReinoCommercialRepresentative rep = mob as Server.Custom.Reinos.ReinoCommercialRepresentative;
+            if (rep != null)
+            {
+                rep.GovernmentCityId = cityId;
+                return;
+            }
+        }
+
         public static bool TryParseResourceType(string raw, out ReinoResourceType type)
         {
             type = ReinoResourceType.None;
@@ -1540,6 +1567,8 @@ namespace Server.Custom.Reinos
                     if (mob == null)
                         continue;
 
+                    ApplyGovernmentCityId(mob, lot.CityId);
+
                     Point3D p = new Point3D(
                         lot.NorthWest.X + spawn.Offset.X,
                         lot.NorthWest.Y + spawn.Offset.Y,
@@ -1570,6 +1599,8 @@ namespace Server.Custom.Reinos
             Mobile fallbackMob = fallbackObj as Mobile;
             if (fallbackMob == null)
                 return;
+
+            ApplyGovernmentCityId(fallbackMob, lot.CityId);
 
             Point3D fallbackPoint = new Point3D(
                 lot.NorthWest.X + def.NpcOffset.X,

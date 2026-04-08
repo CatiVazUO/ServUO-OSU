@@ -100,16 +100,34 @@ namespace Server.Custom.Biblioteca.Gumps
             LibraryCard card;
             bool hasCard = TryFindCard(_pm, out card);
 
-            if (hasCard && card != null)
+            int libraryCityId = GetLibraryCityId();
+            string libraryReason;
+
+            if (!ReinoDiplomacySystem.CanUseLibrary(_pm, libraryCityId, out libraryReason))
             {
-                string feeFail;
-                if (!card.EnsureWeeklyFee(_pm, _npc, out feeFail))
+                hasCard = false;
+                card = null;
+                _pm.SendMessage(0x22, libraryReason);
+            }
+            else if (hasCard && card != null)
+            {
+                string cardReason;
+                if (!ReinoDiplomacySystem.CanUseLibraryCard(card.IssuerCityId, libraryCityId, out cardReason))
                 {
-                    // revoke if cannot pay
-                    card.Delete();
                     hasCard = false;
-                    _pm.SendMessage(0x22, feeFail);
-                    _pm.SendMessage(0x22, "Seu cartão foi revogado por falta de pagamento.");
+                    card = null;
+                    _pm.SendMessage(0x22, cardReason);
+                }
+                else
+                {
+                    string feeFail;
+                    if (!card.EnsureWeeklyFee(_pm, _npc, out feeFail))
+                    {
+                        card.Delete();
+                        hasCard = false;
+                        _pm.SendMessage(0x22, feeFail);
+                        _pm.SendMessage(0x22, "Seu cartão foi revogado por falta de pagamento.");
+                    }
                 }
             }
 
@@ -156,6 +174,12 @@ namespace Server.Custom.Biblioteca.Gumps
                     DrawCardTab(hasCard, card);
                     break;
             }
+        }
+
+        private int GetLibraryCityId()
+        {
+            Bibliotecario npc = _npc as Bibliotecario;
+            return npc != null ? npc.GovernmentCityId : -1;
         }
 
         private bool EnsureHasCardOrRedirect(bool hasCard)
@@ -432,6 +456,8 @@ namespace Server.Custom.Biblioteca.Gumps
                 }
 
                 LibraryCard c = new LibraryCard();
+                c.IssuerCityId = GetLibraryCityId();
+
                 if (_pm.Backpack != null)
                     _pm.Backpack.DropItem(c);
                 else

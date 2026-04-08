@@ -75,6 +75,18 @@ namespace Server.Custom.Reinos
                 return;
             }
 
+            ReinoCargoEntry role = ReinoEmploymentSystem.GetRole(m_CityId, m_RoleId);
+            if (role != null)
+            {
+                string diplomacyReason;
+                if (!ReinoDiplomacySystem.CanAcceptRoleIn(from, m_CityId, role.Hierarchy, out diplomacyReason))
+                {
+                    from.SendMessage(diplomacyReason);
+                    DeleteSourceLetter();
+                    return;
+                }
+            }
+
             string message;
             ReinoEmploymentSystem.AcceptInvitation(from, m_CityId, m_RoleId, m_InviterName, out message);
             from.SendMessage(message);

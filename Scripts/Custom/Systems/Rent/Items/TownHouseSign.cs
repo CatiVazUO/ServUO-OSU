@@ -713,6 +713,15 @@ namespace Server.Custom.Systems.Rent
                     ItemID = TombSelectedItemID;
             }
 
+            PlayerMobile pmDiplomacy = m as PlayerMobile;
+            string diplomacyReason;
+            if (pmDiplomacy != null && !ReinoDiplomacySystem.CanRentGovernmentProperty(pmDiplomacy, this, out diplomacyReason))
+            {
+                pmDiplomacy.SendMessage(diplomacyReason);
+                return;
+            }
+
+
             try
             {
                 if (Owned)
@@ -724,6 +733,12 @@ namespace Server.Custom.Systems.Rent
                 if (!CanOwnThisProperty(m))
                 {
                     m.SendMessage(CannotOwnMessage(m));
+                    return;
+                }
+
+                if (!CanAcquireByDiplomacy(m, out diplomacyReason))
+                {
+                    m.SendMessage(diplomacyReason);
                     return;
                 }
 
@@ -849,6 +864,11 @@ namespace Server.Custom.Systems.Rent
                     if (c_House.Sign != null && !c_House.Sign.Deleted)
                         c_House.Sign.Visible = false;
                 }
+
+                PlayerMobile pm = m as PlayerMobile;
+                if (pm != null && (PropertyType == OSUPropertyType.House || PropertyType == OSUPropertyType.Commercial))
+                    ReinoDiplomacySystem.HandleCitizenshipAfterPropertyAcquired(pm, CitizenCityId);
+
             }
             catch(Exception e)
             {
@@ -954,6 +974,20 @@ namespace Server.Custom.Systems.Rent
                 return ContainsCulture(csv, pm.OSUCultureId);
 
             return String.IsNullOrWhiteSpace(m_AllowedCulture) || m_AllowedCulture == "Todos" || String.Equals(pm.OSUCultureId, m_AllowedCulture, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public bool CanAcquireByDiplomacy(Mobile m, out string reason)
+        {
+            reason = String.Empty;
+
+            PlayerMobile pm = m as PlayerMobile;
+            if (pm == null)
+                return true;
+
+            if (PropertyType != OSUPropertyType.House && PropertyType != OSUPropertyType.Commercial)
+                return true;
+
+            return ReinoDiplomacySystem.CanAcquireProperty(pm, CitizenCityId, out reason);
         }
 
         private void HideOtherSigns()
@@ -1628,7 +1662,23 @@ namespace Server.Custom.Systems.Rent
 			return false;
 		}
 
-		public bool CanOwnThisProperty(Mobile m)
+        public bool IsOwnedBy(Mobile m)
+        {
+            return m != null && Owned && c_House != null && !c_House.Deleted && c_House.Owner == m;
+        }
+
+        public void ForceGovernmentExileVacate(string reason)
+        {
+            if (!Owned || c_House == null || c_House.Deleted)
+                return;
+
+            if (c_House.Owner != null && !String.IsNullOrWhiteSpace(reason))
+                c_House.Owner.SendMessage(reason);
+
+            PackUpHouse();
+        }
+
+        public bool CanOwnThisProperty(Mobile m)
 		{
 			if (m == null)
 				return false;
@@ -1897,6 +1947,14 @@ namespace Server.Custom.Systems.Rent
             if (m_GovernmentManaged && !m_GovernorConfigured)
             {
                 m.SendMessage("Este imóvel ainda não foi liberado pelo governo.");
+                return;
+            }
+
+            PlayerMobile pmDiplomacy = m as PlayerMobile;
+            string diplomacyReason;
+            if (pmDiplomacy != null && !ReinoDiplomacySystem.CanRentGovernmentProperty(pmDiplomacy, this, out diplomacyReason))
+            {
+                pmDiplomacy.SendMessage(diplomacyReason);
                 return;
             }
 

@@ -5,6 +5,7 @@ using System.Linq;
 
 using Server.Accounting;
 using Server.ContextMenus;
+using Server.Custom.Reinos;
 using Server.Items;
 using Server.Network;
 
@@ -44,25 +45,48 @@ namespace Server.Mobiles
 
         private bool CanUseThisBank(Mobile from)
         {
-            // Se não configurou cidade, banco é livre
+            string reason;
+            return CanUseThisBank(from, out reason);
+        }
+
+        private bool CanUseThisBank(Mobile from, out string reason)
+        {
+            reason = String.Empty;
+
             if (String.IsNullOrWhiteSpace(OSUBankCityId))
                 return true;
 
             PlayerMobile pm = from as PlayerMobile;
-            if (pm == null) // NPCs/creatures não importam
+            if (pm == null)
                 return true;
 
-            return String.Equals(pm.OSUCitizenCityId, OSUBankCityId, StringComparison.OrdinalIgnoreCase);
+            int cityId = ReinoDiplomacySystem.ResolveCityId(OSUBankCityId);
+
+            if (cityId >= 0)
+                return ReinoDiplomacySystem.CanUseBank(pm, cityId, out reason);
+
+            bool isCitizen = String.Equals(pm.OSUCitizenCityId, OSUBankCityId, StringComparison.OrdinalIgnoreCase);
+
+            if (!isCitizen)
+                reason = "Você não possui permissão para usar o banco desta cidade.";
+
+            return isCitizen;
         }
 
         private void SayNoBankAccess(Mobile from)
         {
+            string reason;
+            if (!CanUseThisBank(from, out reason) && !String.IsNullOrWhiteSpace(reason))
+            {
+                Say(reason);
+                return;
+            }
+
             string cityName = GetBankCityName();
             if (String.IsNullOrWhiteSpace(cityName))
                 cityName = "esta cidade";
 
-            // Mensagem pedida: sempre a mesma resposta
-            Say($"Você não é um cidadão de {cityName}, portanto não pode acessar o banco aqui.");
+            Say("Você não possui permissão para acessar o banco de " + cityName + ".");
         }
 
         public static int GetBalance(Mobile m)

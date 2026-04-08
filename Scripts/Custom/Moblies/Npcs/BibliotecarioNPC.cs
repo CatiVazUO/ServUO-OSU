@@ -43,6 +43,13 @@ namespace Server.Custom.Biblioteca
             if (pm == null)
                 return;
 
+            string reason;
+            if (!ReinoDiplomacySystem.CanUseLibrary(pm, m_GovernmentCityId, out reason))
+            {
+                pm.SendMessage(reason);
+                return;
+            }
+
             pm.CloseGump(typeof(GumpLibrary));
             pm.SendGump(new GumpLibrary(pm, this));
         }

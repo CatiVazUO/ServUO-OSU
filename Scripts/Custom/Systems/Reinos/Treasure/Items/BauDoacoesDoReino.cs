@@ -71,7 +71,16 @@ namespace Server.Custom.Reinos
 
             PlayerMobile pm = from as PlayerMobile;
             if (pm != null)
+            {
+                string diplomacyReason;
+                if (!ReinoDiplomacySystem.CanUseDonationChest(pm, CityId, out diplomacyReason))
+                {
+                    pm.SendMessage(diplomacyReason);
+                    return false;
+                }
+
                 pm.Emote("*faz uma doação*");
+            }
 
             ReinoTreasurySystem.RecordDonationToKingdom(CityId, gold, cloth, iron, wood);
             dropped.Delete();

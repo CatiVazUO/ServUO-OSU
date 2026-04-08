@@ -69,9 +69,23 @@ namespace Server.Custom.Reinos
                 return;
             }
 
+            string failReason;
+            if (!ReinoDiplomacySystem.CanBecomeCitizen(pm, CityId, out failReason))
+            {
+                pm.SendMessage(failReason);
+                return;
+            }
+
             if (pm.IsCitizenOf(cityName))
             {
                 pm.SendMessage("Você já é cidadão de " + cityName + ".");
+                return;
+            }
+
+            string diplomacyReason;
+            if (!ReinoDiplomacySystem.CanBecomeCitizen(pm, CityId, out diplomacyReason))
+            {
+                pm.SendMessage(diplomacyReason);
                 return;
             }
 

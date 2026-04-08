@@ -7,7 +7,7 @@ namespace Server.Custom.Reinos
 {
     public class ReinoTaxNoticeGump : Gump
     {
-        public ReinoTaxNoticeGump(PlayerMobile from, int cityId, int amount) : base(0, 0)
+        public ReinoTaxNoticeGump(PlayerMobile from, int cityId, int amount, int noticeType) : base(0, 0)
         {
             Closable = true;
             Disposable = true;
@@ -16,10 +16,10 @@ namespace Server.Custom.Reinos
 
             AddPage(0);
             AddImage(113, 55, 3557);
-            AddLabel(320, 128, 0, @"Nova cobrança de impostos");
+            AddLabel(260, 128, 0, ReinoTreasurySystem.GetCitizenTaxNoticeTitle(cityId, amount, noticeType));
             AddHtml(221, 154, 377, 168,
                 "<BASEFONT COLOR=#000000>" +
-                ReinoTreasurySystem.GetCitizenTaxNoticeText(cityId, amount) +
+                ReinoTreasurySystem.GetCitizenTaxNoticeText(cityId, amount, noticeType) +
                 "</BASEFONT>",
                 false, true);
             AddImage(535, 307, 2923);
