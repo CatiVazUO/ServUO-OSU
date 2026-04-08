@@ -589,6 +589,7 @@ namespace Server.Custom.Reinos
                 return list;
 
             AddCosts(list, info.Definition.MaintenanceCosts);
+            ReinoMilitarySystem.AddDynamicWeeklyCosts(info, list);
 
             int npcCost = GetNpcCount(info) * Math.Max(0, info.Definition.NpcWeeklySalaryGold);
             if (npcCost > 0)

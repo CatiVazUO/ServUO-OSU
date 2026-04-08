@@ -11,6 +11,7 @@ using Server.Engines.Quests.Haven;
 using Server.Engines.XmlSpawner2;
 using Server.Guilds;
 using Server.Misc;
+using Server.Custom.Reinos;
 using Server.Mobiles;
 using Server.Network;
 #endregion
@@ -1096,6 +1097,9 @@ namespace Server.Items
         public override void OnItemLifted(Mobile from, Item item)
         {
             base.OnItemLifted(from, item);
+
+            if (item != this && OSUKnockoutCorpse)
+                ReinoMilitarySystem.NotifyLootKnockedOut(from, this);
 
             if (item != this && from != m_Owner)
             {

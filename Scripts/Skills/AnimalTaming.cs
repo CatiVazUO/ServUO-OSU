@@ -141,9 +141,12 @@ namespace Server.SkillHandlers
 				{
 					if (targeted is BaseCreature)
 					{
+
 						BaseCreature creature = (BaseCreature)targeted;
 
-						if (!creature.Tamable)
+                        Server.Custom.Reinos.ReinoMilitarySystem.NotifyAnimalTaming(from, creature);
+
+                        if (!creature.Tamable)
 						{
 							creature.PrivateOverheadMessage(MessageType.Regular, 0x3B2, 1049655, from.NetState);
 								// That creature cannot be tamed.

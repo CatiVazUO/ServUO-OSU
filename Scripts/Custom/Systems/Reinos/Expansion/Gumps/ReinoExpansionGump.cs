@@ -188,6 +188,9 @@ namespace Server.Custom.Reinos
             if (HandleDiplomacyResponse(from, info))
                 return;
 
+            if (HandleMilitaryResponse(from, info))
+                return;
+
             if (button >= ButtonSelectLeftLotBase && button < ButtonSelectRightLotBase)
             {
                 int lotId = button - ButtonSelectLeftLotBase;

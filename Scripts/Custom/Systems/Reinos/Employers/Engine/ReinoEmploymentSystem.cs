@@ -810,6 +810,24 @@ namespace Server.Custom.Reinos
                 return false;
             }
 
+            if (page == 8)
+            {
+                if (!ReinoMilitarySystem.CanAccessMilitaryGovernmentPage(pm, cityId)
+                    && !ReinoMilitarySystem.CanAccessBarracksSubGump(pm, cityId))
+                {
+                    message = "Você não tem acesso à aba militar deste reino.";
+                    return false;
+                }
+
+                if (!AreEssentialRolesFilled(cityId))
+                {
+                    message = GetMissingEssentialsMessage(cityId);
+                    return false;
+                }
+
+                return true;
+            }
+
             if (!ReinoAccessHelper.HasGovernmentAccess(pm, cityId))
             {
                 message = "Somente o governador ou alguém com a chave do governador pode abrir esta página.";

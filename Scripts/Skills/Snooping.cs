@@ -87,6 +87,7 @@ namespace Server.SkillHandlers
                     if (cont is TrapableContainer && ((TrapableContainer)cont).ExecuteTrap(from))
                         return;
 
+                    Server.Custom.Reinos.ReinoMilitarySystem.NotifySnooping(from, root);
                     cont.DisplayTo(from);
                 }
                 else

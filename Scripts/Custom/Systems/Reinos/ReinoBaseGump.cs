@@ -91,7 +91,7 @@ namespace Server.Custom.Reinos
             AddLabel(250, 469, 0, @"Visual");
             AddButton(211, 463, 439, 438, 7, GumpButtonType.Reply, 0);
 
-            AddLabel(250, 508, 0, @"Slot 1");
+            AddLabel(250, 508, 0, @"Militar");
             AddButton(211, 502, 439, 438, 8, GumpButtonType.Reply, 0);
 
             AddLabel(250, 548, 0, @"Detalhe");
@@ -129,6 +129,11 @@ namespace Server.Custom.Reinos
                 case 6:
                     BuildDiplomacyPage();
                     break;
+                case 8:
+                    if (ReinoMilitarySystem.CanManageWantedList(m_From, m_CityId))
+                        ReinoMilitarySystem.GetSession(m_From).RestrictToBarracksView = false;
+                    BuildMilitaryPage();
+                    break;
                 case 1:
                     BuildGeneralPage();
                     break;
@@ -159,7 +164,7 @@ namespace Server.Custom.Reinos
                 case 5: return "Cargos";
                 case 6: return "Diplomacia";
                 case 7: return "Visual";
-                case 8: return "Slot 1";
+                case 8: return "Militar";
                 case 11: return "Slot 4";
                 case 12: return "Slot 5";
                 default: return "Página";

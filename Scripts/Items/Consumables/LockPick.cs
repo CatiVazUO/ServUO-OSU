@@ -2,6 +2,7 @@ using Server.Targeting;
 using System;
 using System.Linq;
 using Server.Mobiles;
+using Server.Custom.Reinos;
 
 
 namespace Server.Items
@@ -201,6 +202,9 @@ namespace Server.Items
                 }
 
                 if (m_Item.Deleted)
+                    return;
+
+                if (ReinoDoorLockSystem.TryHandleLockpickTarget(from, m_Item, targeted))
                     return;
 
                 if (targeted is ILockpickable)

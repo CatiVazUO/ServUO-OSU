@@ -781,6 +781,17 @@ namespace Server.Engines.Craft
             }
             #endregion
 
+            #region Fechaduras de Porta do Reino
+            index = AddCraft(typeof(IronDoorLockKit), "Fechaduras", "Fechadura de ferro", 65.0, 115.0, typeof(IronIngot), 1044036, 12, 1044037);
+            index = AddCraft(typeof(DullCopperDoorLockKit), "Fechaduras", "Fechadura de dull copper", 70.0, 120.0, typeof(DullCopperIngot), 1044036, 12, 1044037);
+            index = AddCraft(typeof(CopperDoorLockKit), "Fechaduras", "Fechadura de copper", 75.0, 125.0, typeof(CopperIngot), 1044036, 12, 1044037);
+            index = AddCraft(typeof(BronzeDoorLockKit), "Fechaduras", "Fechadura de bronze", 80.0, 130.0, typeof(BronzeIngot), 1044036, 12, 1044037);
+            index = AddCraft(typeof(GoldDoorLockKit), "Fechaduras", "Fechadura de gold", 85.0, 135.0, typeof(GoldIngot), 1044036, 12, 1044037);
+            index = AddCraft(typeof(AgapiteDoorLockKit), "Fechaduras", "Fechadura de agapite", 90.0, 140.0, typeof(AgapiteIngot), 1044036, 12, 1044037);
+            index = AddCraft(typeof(VeriteDoorLockKit), "Fechaduras", "Fechadura de verite", 95.0, 145.0, typeof(VeriteIngot), 1044036, 12, 1044037);
+            index = AddCraft(typeof(ValoriteDoorLockKit), "Fechaduras", "Fechadura de valorite", 99.0, 149.0, typeof(ValoriteIngot), 1044036, 12, 1044037);
+            #endregion
+
             // Set the overridable material
             SetSubRes(typeof(IronIngot), 1044022);
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Server.Commands;
+using Server.Custom.Reinos;
 using Server.Network;
 using Server.Targeting;
 
@@ -96,7 +97,10 @@ namespace Server.Items
                     Effects.PlaySound(this, Map, m_Open ? m_OpenedSound : m_ClosedSound);
 
                     if (m_Open)
+                    {
                         m_Timer.Start();
+                        ReinoDoorLockSystem.OnDoorOpened(this);
+                    }
                     else
                         m_Timer.Stop();
                 }
@@ -331,6 +335,12 @@ namespace Server.Items
                 from.LocalOverheadMessage(MessageType.Regular, 0x3B2, 1019045); // I can't reach that.
             else
                 Use(from);
+        }
+
+        public override void GetProperties(ObjectPropertyList list)
+        {
+            base.GetProperties(list);
+            ReinoDoorLockSystem.AddDoorProperties(this, list);
         }
 
         public override void Serialize(GenericWriter writer)
