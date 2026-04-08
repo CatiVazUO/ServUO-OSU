@@ -810,8 +810,8 @@ namespace Server.Custom.Reinos
                 }
             }
 
-            BaseHouse house = BaseHouse.FindHouseAt(p, map, 16);
-            if (house != null && house.ForSaleSign != null && house.ForSaleSign.IsOwnedBy(actor))
+            TownHouse townHouse = BaseHouse.FindHouseAt(p, map, 16) as TownHouse;
+            if (townHouse != null && townHouse.ForSaleSign != null && townHouse.ForSaleSign.IsOwnedBy(actor))
                 return true;
 
             return false;
