@@ -40,7 +40,7 @@ namespace Server.Custom.Systems.HtmlBooks.Html.Readable
             l.PreviewLabelY = 282;
 
             // ====== HTML (página esquerda)
-            l.LeftHtmlX = 111;
+            l.LeftHtmlX = 140;
             l.HtmlY = 313;
 
             // Distância entre páginas (esquerda->direita)

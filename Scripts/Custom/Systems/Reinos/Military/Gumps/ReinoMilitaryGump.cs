@@ -30,7 +30,7 @@ namespace Server.Custom.Reinos
         private const int ButtonRemoveGuardPoint = 58221;
         private const int ButtonCycleFacing = 58222;
         private const int ButtonAddGuard = 58223;
-        private const int ButtonUniformize = 58224;
+        private const int ButtonMiniGump = 58224;
 
         private const int ButtonCreateRoutePoint = 58300;
         private const int ButtonLinkRoutePoints = 58301;
@@ -43,6 +43,7 @@ namespace Server.Custom.Reinos
         private const int ButtonRouteSchedule = 58308;
         private const int ButtonResetRoute = 58309;
         private const int ButtonRevealRoutes = 58310;
+        private const int ButtonResetRouteConfig = 58311;
 
         private const int ButtonTrainingBase = 58400;
         private const int ButtonTrainingPrev = 58490;
@@ -98,9 +99,13 @@ namespace Server.Custom.Reinos
         {
             AddLabel(412, 302, 0, @"Ação Para Procurados:");
             AddButton(577, 302, session.SelectedWantedAction == ReinoGuardAction.Kill ? 530 : 531, session.SelectedWantedAction == ReinoGuardAction.Kill ? 530 : 531, ButtonWantedKill, GumpButtonType.Reply, 0);
-            AddButton(663, 302, session.SelectedWantedAction == ReinoGuardAction.Arrest ? 530 : 531, session.SelectedWantedAction == ReinoGuardAction.Arrest ? 530 : 531, ButtonWantedArrest, GumpButtonType.Reply, 0);
             AddLabel(603, 303, 0, @"Matar");
-            AddLabel(689, 303, 0, @"Prender");
+
+            if (ReinoMilitarySystem.HasPrison(m_CityId))
+            {
+                AddButton(663, 302, session.SelectedWantedAction == ReinoGuardAction.Arrest ? 530 : 531, session.SelectedWantedAction == ReinoGuardAction.Arrest ? 530 : 531, ButtonWantedArrest, GumpButtonType.Reply, 0);
+                AddLabel(689, 303, 0, @"Prender");
+            }
 
             AddLabel(412, 351, 0, @"Adicionar Por Nome:");
             AddTextEntry(553, 346, 200, 20, 0, TextWantedAdd, String.Empty);
@@ -116,9 +121,13 @@ namespace Server.Custom.Reinos
             AddLabel(429, 438, 0, @"Ação Para Atos Criminais:");
             ReinoMilitaryPolicy policy = ReinoMilitarySystem.GetPolicy(m_CityId);
             AddButton(690, 437, policy.CrimeDefaultAction == ReinoGuardAction.Report ? 530 : 531, policy.CrimeDefaultAction == ReinoGuardAction.Report ? 530 : 531, ButtonCrimeReport, GumpButtonType.Reply, 0);
-            AddButton(822, 437, policy.CrimeDefaultAction == ReinoGuardAction.Arrest ? 530 : 531, policy.CrimeDefaultAction == ReinoGuardAction.Arrest ? 530 : 531, ButtonCrimeArrest, GumpButtonType.Reply, 0);
             AddLabel(716, 438, 0, @"Reportar");
-            AddLabel(848, 438, 0, @"Prender");
+
+            if (ReinoMilitarySystem.HasPrison(m_CityId))
+            {
+                AddButton(822, 437, policy.CrimeDefaultAction == ReinoGuardAction.Arrest ? 530 : 531, policy.CrimeDefaultAction == ReinoGuardAction.Arrest ? 530 : 531, ButtonCrimeArrest, GumpButtonType.Reply, 0);
+                AddLabel(848, 438, 0, @"Prender");
+            }
 
             AddImageTiled(405, 419, 825, 5, 367);
             AddImageTiled(405, 473, 825, 5, 367);
@@ -181,8 +190,8 @@ namespace Server.Custom.Reinos
             AddImageTiled(584, 338, 6, 357, 365);
             AddLabel(443, 335, 0, @"Tipos de Guarda");
             AddImageTiled(1018, 337, 6, 357, 365);
-            AddLabel(1087, 337, 0, @"Para Contratação");
-            AddLabel(1096, 523, 0, @"Custo Semanal");
+            AddLabel(1087, 337, 0, @"Por Guarda / Semana");
+            AddLabel(1087, 523, 0, @"Total Semanal do Quartel");
             AddImageTiled(1049, 366, 183, 5, 367);
             AddImageTiled(1047, 553, 183, 5, 367);
 
@@ -209,28 +218,30 @@ namespace Server.Custom.Reinos
 
             int hireGold, hireCloth, hireIron, hireWood, wkGold, wkCloth, wkIron, wkWood;
             ReinoMilitarySystem.GetGuardCosts(session.SelectedGuardKind, out hireGold, out hireCloth, out hireIron, out hireWood, out wkGold, out wkCloth, out wkIron, out wkWood);
+            int totalGold, totalCloth, totalIron, totalWood;
+            ReinoMilitarySystem.GetTotalWeeklyGuardCost(m_CityId, out totalGold, out totalCloth, out totalIron, out totalWood);
 
-            AddLabel(1050, 390, 0, @"Moedas:"); AddLabel(1130, 390, 0, hireGold.ToString());
-            AddLabel(1050, 418, 0, @"Tecidos:"); AddLabel(1130, 418, 0, hireCloth.ToString());
-            AddLabel(1050, 448, 0, @"Ferro:"); AddLabel(1130, 448, 0, hireIron.ToString());
-            AddLabel(1050, 479, 0, @"Madeira:"); AddLabel(1130, 479, 0, hireWood.ToString());
+            AddLabel(1050, 390, 0, @"Moedas:"); AddLabel(1130, 390, 0, wkGold.ToString());
+            AddLabel(1050, 418, 0, @"Tecidos:"); AddLabel(1130, 418, 0, wkCloth.ToString());
+            AddLabel(1050, 448, 0, @"Ferro:"); AddLabel(1130, 448, 0, wkIron.ToString());
+            AddLabel(1050, 479, 0, @"Madeira:"); AddLabel(1130, 479, 0, wkWood.ToString());
 
-            AddLabel(1050, 577, 0, @"Moedas:"); AddLabel(1130, 577, 0, wkGold.ToString());
-            AddLabel(1050, 605, 0, @"Tecidos:"); AddLabel(1130, 605, 0, wkCloth.ToString());
-            AddLabel(1050, 635, 0, @"Ferro:"); AddLabel(1130, 635, 0, wkIron.ToString());
-            AddLabel(1050, 666, 0, @"Madeira:"); AddLabel(1130, 666, 0, wkWood.ToString());
+            AddLabel(1050, 577, 0, @"Moedas:"); AddLabel(1130, 577, 0, totalGold + " (+" + wkGold + ")");
+            AddLabel(1050, 605, 0, @"Tecidos:"); AddLabel(1130, 605, 0, totalCloth + " (+" + wkCloth + ")");
+            AddLabel(1050, 635, 0, @"Ferro:"); AddLabel(1130, 635, 0, totalIron + " (+" + wkIron + ")");
+            AddLabel(1050, 666, 0, @"Madeira:"); AddLabel(1130, 666, 0, totalWood + " (+" + wkWood + ")");
 
             AddLabel(668, 534, 0, @"Adicionar Ponto de Guarda");
             AddLabel(668, 561, 0, @"Remover Ponto de Guarda");
             AddLabel(668, 592, 0, @"Direção");
             AddLabel(740, 592, 0, ReinoMilitarySystem.GetFacingLabel(session.FacingIndex));
             AddLabel(668, 622, 0, @"Adicionar Guarda");
-            AddLabel(668, 670, 0, @"Uniformizar");
+            AddLabel(668, 670, 0, @"Gump Mini");
             AddButton(638, 533, 531, 531, ButtonAddGuardPoint, GumpButtonType.Reply, 0);
             AddButton(638, 563, 531, 531, ButtonRemoveGuardPoint, GumpButtonType.Reply, 0);
             AddButton(638, 593, 531, 531, ButtonCycleFacing, GumpButtonType.Reply, 0);
             AddButton(638, 623, 531, 531, ButtonAddGuard, GumpButtonType.Reply, 0);
-            AddButton(638, 671, 531, 531, ButtonUniformize, GumpButtonType.Reply, 0);
+            AddButton(638, 671, 531, 531, ButtonMiniGump, GumpButtonType.Reply, 0);
         }
 
         private void BuildMilitaryRoutesPage(ReinoMilitarySession session)
@@ -268,11 +279,14 @@ namespace Server.Custom.Reinos
             AddButton(734, 599, session.SelectedRouteSpeed == ReinoRouteSpeed.Long ? 530 : 531, session.SelectedRouteSpeed == ReinoRouteSpeed.Long ? 530 : 531, ButtonRouteSpeedLong, GumpButtonType.Reply, 0);
 
             AddLabel(1076, 544, 0, @"Rota Por Tempo");
+            AddLabel(1076, 560, 0, ReinoMilitarySystem.GetRouteScheduleLabel(session.SelectedRouteSchedule));
             AddButton(1046, 545, 531, 531, ButtonRouteSchedule, GumpButtonType.Reply, 0);
             AddLabel(1076, 575, 0, @"Resetar Rota");
             AddButton(1046, 576, 531, 531, ButtonResetRoute, GumpButtonType.Reply, 0);
-            AddLabel(766, 658, 0, @"Selecionar Rota");
+            AddLabel(766, 658, 0, @"Mostrar/Ocultar Pontos");
             AddButton(736, 659, 531, 531, ButtonRevealRoutes, GumpButtonType.Reply, 0);
+            AddLabel(1076, 606, 0, @"Resetar Config de Rota");
+            AddButton(1046, 607, 531, 531, ButtonResetRouteConfig, GumpButtonType.Reply, 0);
             AddImageTiled(680, 534, 6, 154, 365);
             AddImageTiled(990, 536, 6, 154, 365);
         }
@@ -312,7 +326,7 @@ namespace Server.Custom.Reinos
 
                 ReinoGuardPostInfo post = entries[real];
                 OSUCityGuard guard = ReinoMilitarySystem.FindGuard(post);
-                string guardName = guard != null ? guard.Name : (post.Training ? "Em treinamento" : "Sem guarda");
+                string guardName = post.Training ? ("Posto #" + post.Id + " - Em treinamento") : (guard != null ? ("Posto #" + post.Id + " - " + guard.Name) : ("Posto #" + post.Id + " - Sem guarda"));
                 string location = post.Location.X + ", " + post.Location.Y;
                 int cost = ReinoMilitarySystem.GetGuardTrainingCost(post.GuardKind, post.Level);
 
@@ -337,7 +351,7 @@ namespace Server.Custom.Reinos
             AddButton(837, 673, 499, 499, ButtonTrainingNext, GumpButtonType.Reply, 0);
 
             AddHtml(416, 580, 808, 75,
-                "<BASEFONT COLOR=#000000>Quando um guarda começa o treinamento, ele some do posto por <B>3 dias</B>. Ao voltar, ganha atributos e skills melhores, mas não muda de tipo. O nível máximo é <B>5</B>.</BASEFONT>",
+                "<BASEFONT COLOR=#000000>Durante os testes, quando um guarda começa o treinamento ele some do posto por <B>1 minuto</B>. Ao voltar, ganha atributos e skills melhores, mas não muda de tipo. O nível máximo é <B>5</B>.</BASEFONT>",
                 false, false);
         }
 
@@ -383,7 +397,8 @@ namespace Server.Custom.Reinos
 
             if (button == ButtonWantedArrest)
             {
-                session.SelectedWantedAction = ReinoGuardAction.Arrest;
+                if (ReinoMilitarySystem.HasPrison(m_CityId))
+                    session.SelectedWantedAction = ReinoGuardAction.Arrest;
                 from.SendGump(new ReinoExpansionGump(from, m_CityId, -1, -1, String.Empty, 0, 8));
                 return true;
             }
@@ -392,6 +407,8 @@ namespace Server.Custom.Reinos
             {
                 if (!ReinoMilitarySystem.CanManageWantedList(from, m_CityId))
                     from.SendMessage("Você não pode mudar a política militar do reino.");
+                else if (button == ButtonCrimeArrest && !ReinoMilitarySystem.HasPrison(m_CityId))
+                    from.SendMessage("É preciso ter uma prisão construída para usar a ação de prender.");
                 else
                     ReinoMilitarySystem.GetPolicy(m_CityId).CrimeDefaultAction = (button == ButtonCrimeReport ? ReinoGuardAction.Report : ReinoGuardAction.Arrest);
 
@@ -469,21 +486,9 @@ namespace Server.Custom.Reinos
                 return true;
             }
 
-            if (button == ButtonUniformize)
+            if (button == ButtonMiniGump)
             {
-                if (!session.UniformConfirm)
-                {
-                    session.UniformConfirm = true;
-                    from.SendMessage(ReinoMilitarySystem.GetUniformizationCostPreview(m_CityId));
-                }
-                else
-                {
-                    session.UniformConfirm = false;
-                    from.SendMessage(ReinoMilitarySystem.UniformizeAllGuards(from, m_CityId));
-                }
-
-                session.Tab = ReinoMilitaryTab.Guards;
-                from.SendGump(new ReinoExpansionGump(from, m_CityId, -1, -1, String.Empty, 0, 8));
+                from.SendGump(new ReinoMilitaryMiniGump(from, m_CityId, ReinoMilitaryTab.Guards));
                 return true;
             }
 
@@ -518,7 +523,7 @@ namespace Server.Custom.Reinos
             if (button == ButtonActivateRoute)
             {
                 session.Tab = ReinoMilitaryTab.Routes;
-                from.SendMessage("Os guardas com rota ligada passarão a seguir o agendamento configurado.");
+                from.SendMessage(ReinoMilitarySystem.ActivateRouteAtCurrentPoint(from, m_CityId));
                 from.SendGump(new ReinoExpansionGump(from, m_CityId, -1, -1, String.Empty, 0, 8));
                 return true;
             }
@@ -544,6 +549,15 @@ namespace Server.Custom.Reinos
                 session.SelectedRouteSchedule = ReinoRouteSchedule.Infinite;
                 session.SelectedRouteSpeed = ReinoRouteSpeed.Short;
                 from.SendMessage(ReinoMilitarySystem.ResetRouteAtCurrentPoint(from, m_CityId));
+                from.SendGump(new ReinoExpansionGump(from, m_CityId, -1, -1, String.Empty, 0, 8));
+                return true;
+            }
+            if (button == ButtonResetRouteConfig)
+            {
+                session.Tab = ReinoMilitaryTab.Routes;
+                session.SelectedRouteSchedule = ReinoRouteSchedule.Infinite;
+                session.SelectedRouteSpeed = ReinoRouteSpeed.Short;
+                from.SendMessage(ReinoMilitarySystem.ResetRouteConfigAtCurrentPoint(from, m_CityId));
                 from.SendGump(new ReinoExpansionGump(from, m_CityId, -1, -1, String.Empty, 0, 8));
                 return true;
             }

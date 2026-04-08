@@ -1,6 +1,7 @@
 using System;
 using Server.Gumps;
 using Server.Mobiles;
+using System.Collections.Generic;
 
 namespace Server.Custom.Reinos
 {
@@ -28,6 +29,17 @@ namespace Server.Custom.Reinos
         public ReinoExpansionGump(PlayerMobile from, int cityId, int selectedLotId, int selectedWallAreaId, string selectedBuildingId, int buildingPage, int initialPage)
             : this(from, cityId, selectedLotId, selectedWallAreaId, selectedBuildingId, buildingPage, initialPage, false)
         {
+        }
+        private class ReinoMenuSlotEntry
+        {
+            public int Page;
+            public string Label;
+
+            public ReinoMenuSlotEntry(int page, string label)
+            {
+                Page = page;
+                Label = label;
+            }
         }
 
         public ReinoExpansionGump(PlayerMobile from, int cityId, int selectedLotId, int selectedWallAreaId, string selectedBuildingId, int buildingPage, int initialPage, bool demolishConfirm)
@@ -91,22 +103,60 @@ namespace Server.Custom.Reinos
             AddLabel(250, 469, 0, @"Visual");
             AddButton(211, 463, 439, 438, 7, GumpButtonType.Reply, 0);
 
-            AddLabel(250, 508, 0, @"Militar");
-            AddButton(211, 502, 439, 438, 8, GumpButtonType.Reply, 0);
+            List<ReinoMenuSlotEntry> dynamicSlots = GetDynamicGovernmentSlots();
 
-            AddLabel(250, 548, 0, @"Detalhe");
-            AddButton(211, 542, 439, 438, 9, GumpButtonType.Reply, 0);
+            int startY = 508;
+            int spacing = 39;
 
-            AddLabel(250, 587, 0, @"Postos");
-            AddButton(211, 581, 439, 438, 10, GumpButtonType.Reply, 0);
+            for (int i = 0; i < dynamicSlots.Count && i < 5; i++)
+            {
+                ReinoMenuSlotEntry entry = dynamicSlots[i];
+                int y = startY + (i * spacing);
 
-            AddLabel(250, 627, 0, @"Slot 4");
-            AddButton(211, 621, 439, 438, 11, GumpButtonType.Reply, 0);
-
-            AddLabel(250, 666, 0, @"Slot 5");
-            AddButton(211, 660, 439, 438, 12, GumpButtonType.Reply, 0);
+                AddLabel(250, y, 0, entry.Label);
+                AddButton(211, y - 6, 439, 438, entry.Page, GumpButtonType.Reply, 0);
+            }
         }
 
+        private bool HasBuiltConstruction(string constructionId)
+        {
+            if (String.IsNullOrWhiteSpace(constructionId))
+                return false;
+
+            List<ReinoConstructionRuntimeInfo> active = ReinoMaintenanceSystem.GetActiveConstructions(m_CityId);
+
+            for (int i = 0; i < active.Count; i++)
+            {
+                ReinoConstructionRuntimeInfo info = active[i];
+
+                if (info == null || info.Definition == null)
+                    continue;
+
+                string id = info.Definition.Id ?? String.Empty;
+
+                if (String.Equals(id, constructionId, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+
+            return false;
+        }
+        private List<ReinoMenuSlotEntry> GetDynamicGovernmentSlots()
+        {
+            List<ReinoMenuSlotEntry> list = new List<ReinoMenuSlotEntry>();
+
+            // Militar sempre entra primeiro, mas só aparece se existir quartel
+            if (HasBuiltConstruction("quartel_aurora"))
+                list.Add(new ReinoMenuSlotEntry(8, "Militar"));
+
+            // Exemplo de outros sistemas futuros:
+            // if (HasBuiltConstruction("algumaoutracoisa"))
+            //     list.Add(new ReinoMenuSlotEntry(11, "Outra Aba"));
+
+            // Postos, se você quiser continuar mostrando no menu lateral:
+            list.Add(new ReinoMenuSlotEntry(10, "Postos"));
+
+            return list;
+        }
         private void BuildCurrentSection()
         {
             int page = m_InitialPage;
@@ -130,8 +180,15 @@ namespace Server.Custom.Reinos
                     BuildDiplomacyPage();
                     break;
                 case 8:
+                    if (!HasBuiltConstruction("quartel_aurora"))
+                    {
+                        BuildPlaceholderPage("Militar");
+                        break;
+                    }
+
                     if (ReinoMilitarySystem.CanManageWantedList(m_From, m_CityId))
                         ReinoMilitarySystem.GetSession(m_From).RestrictToBarracksView = false;
+
                     BuildMilitaryPage();
                     break;
                 case 1:

@@ -930,6 +930,31 @@ namespace Server.Custom.Reinos
             return true;
         }
 
+        private static void GrantRoleLinkedItems(PlayerMobile target, int cityId, ReinoCargoEntry role)
+        {
+            if (target == null || target.Deleted || role == null)
+                return;
+
+            if (!String.IsNullOrWhiteSpace(role.LinkedConstructionKey) && ReinoMilitarySystem.IsBarracksConstructionKey(cityId, role.LinkedConstructionKey))
+            {
+                if (target.Backpack != null && target.Backpack.FindItemByType(typeof(ReinoBarracksBadge)) == null)
+                    target.Backpack.DropItem(new ReinoBarracksBadge(cityId));
+            }
+        }
+
+        private static void RemoveRoleLinkedItems(PlayerMobile target, int cityId, ReinoCargoEntry role)
+        {
+            if (target == null || target.Deleted || target.Backpack == null || role == null)
+                return;
+
+            if (!String.IsNullOrWhiteSpace(role.LinkedConstructionKey) && ReinoMilitarySystem.IsBarracksConstructionKey(cityId, role.LinkedConstructionKey))
+            {
+                Item badge = target.Backpack.FindItemByType(typeof(ReinoBarracksBadge));
+                if (badge != null && !badge.Deleted)
+                    badge.Delete();
+            }
+        }
+
         public static bool AcceptInvitation(PlayerMobile target, int cityId, int roleId, string inviterName, out string message)
         {
             message = String.Empty;
@@ -974,6 +999,7 @@ namespace Server.Custom.Reinos
             role.OccupantSerial = target.Serial.Value;
             role.OccupantName = target.Name;
             SyncRoleDependentState(cityId);
+            GrantRoleLinkedItems(target, cityId, role);
 
             message = String.IsNullOrWhiteSpace(inviterName)
                 ? "Você aceitou o cargo de " + role.Title + "."
@@ -1006,6 +1032,8 @@ namespace Server.Custom.Reinos
 
             PlayerMobile removed = World.FindMobile((Serial)role.OccupantSerial) as PlayerMobile;
             string removedName = role.OccupantName;
+
+            RemoveRoleLinkedItems(removed, cityId, role);
 
             role.OccupantSerial = 0;
             role.OccupantName = String.Empty;

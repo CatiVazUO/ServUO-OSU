@@ -8,9 +8,13 @@ namespace Server.Custom.Reinos
     public class ReinoGuardPostMarker : Item
     {
         private int m_CityId;
+        private int m_PostId;
 
         [CommandProperty(AccessLevel.GameMaster)]
         public int CityId { get { return m_CityId; } set { m_CityId = value; } }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int PostId { get { return m_PostId; } set { m_PostId = value; } }
 
         [Constructable]
         public ReinoGuardPostMarker() : this(0)
@@ -20,27 +24,42 @@ namespace Server.Custom.Reinos
         public ReinoGuardPostMarker(int cityId) : base(0x0AC9)
         {
             m_CityId = cityId;
+            m_PostId = 0;
             Movable = false;
             Visible = true;
             Name = "ponto de guarda";
             Hue = 0x44E;
         }
 
+        public ReinoGuardPostMarker(Serial serial) : base(serial)
+        {
+        }
+
         public void MakeVisibleFor(TimeSpan duration)
         {
-            Visible = true;
-            Timer.DelayCall(duration, delegate
+            SetTemporaryVisible(true, duration);
+        }
+
+        public void SetTemporaryVisible(bool visible, TimeSpan? duration)
+        {
+            Visible = visible;
+
+            if (visible && duration.HasValue)
             {
-                if (!Deleted)
-                    Visible = false;
-            });
+                Timer.DelayCall(duration.Value, delegate
+                {
+                    if (!Deleted)
+                        Visible = false;
+                });
+            }
         }
 
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write(0);
+            writer.Write(1);
             writer.Write(m_CityId);
+            writer.Write(m_PostId);
         }
 
         public override void Deserialize(GenericReader reader)
@@ -48,15 +67,28 @@ namespace Server.Custom.Reinos
             base.Deserialize(reader);
             int version = reader.ReadInt();
             m_CityId = reader.ReadInt();
+            m_PostId = version >= 1 ? reader.ReadInt() : 0;
         }
     }
 
     public class ReinoMilitaryRoutePoint : WayPoint
     {
         private int m_CityId;
+        private int m_PostId;
+        private int m_RouteHue;
+        private bool m_Closed;
 
         [CommandProperty(AccessLevel.GameMaster)]
         public int CityId { get { return m_CityId; } set { m_CityId = value; } }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int PostId { get { return m_PostId; } set { m_PostId = value; } }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int RouteHue { get { return m_RouteHue; } set { m_RouteHue = value; Hue = value <= 0 ? 0x59B : value; } }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public bool ClosedRoute { get { return m_Closed; } set { m_Closed = value; } }
 
         [Constructable]
         public ReinoMilitaryRoutePoint() : this(0)
@@ -66,6 +98,9 @@ namespace Server.Custom.Reinos
         public ReinoMilitaryRoutePoint(int cityId) : base()
         {
             m_CityId = cityId;
+            m_PostId = 0;
+            m_RouteHue = 0x59B;
+            m_Closed = false;
             Visible = true;
             Movable = false;
             Name = "ponto de rota militar";
@@ -73,21 +108,37 @@ namespace Server.Custom.Reinos
             ItemID = 0x0AC9;
         }
 
+        public ReinoMilitaryRoutePoint(Serial serial) : base(serial)
+        {
+        }
+
         public void MakeVisibleFor(TimeSpan duration)
         {
-            Visible = true;
-            Timer.DelayCall(duration, delegate
+            SetTemporaryVisible(true, duration);
+        }
+
+        public void SetTemporaryVisible(bool visible, TimeSpan? duration)
+        {
+            Visible = visible;
+
+            if (visible && duration.HasValue)
             {
-                if (!Deleted)
-                    Visible = false;
-            });
+                Timer.DelayCall(duration.Value, delegate
+                {
+                    if (!Deleted)
+                        Visible = false;
+                });
+            }
         }
 
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write(0);
+            writer.Write(1);
             writer.Write(m_CityId);
+            writer.Write(m_PostId);
+            writer.Write(m_RouteHue);
+            writer.Write(m_Closed);
         }
 
         public override void Deserialize(GenericReader reader)
@@ -95,6 +146,10 @@ namespace Server.Custom.Reinos
             base.Deserialize(reader);
             int version = reader.ReadInt();
             m_CityId = reader.ReadInt();
+            m_PostId = version >= 1 ? reader.ReadInt() : 0;
+            m_RouteHue = version >= 1 ? reader.ReadInt() : 0x59B;
+            m_Closed = version >= 1 && reader.ReadBool();
+            Hue = m_RouteHue <= 0 ? 0x59B : m_RouteHue;
         }
     }
 
@@ -121,6 +176,10 @@ namespace Server.Custom.Reinos
             Movable = false;
             Name = "caixa de apreensões do quartel";
             Hue = 0x835;
+        }
+
+        public ReinoBarracksLocker(Serial serial) : base(serial)
+        {
         }
 
         public override void OnDoubleClick(Mobile from)
@@ -172,6 +231,10 @@ namespace Server.Custom.Reinos
             m_ConstructionKey = constructionKey ?? String.Empty;
             Name = "mesa do quartel";
             Movable = false;
+        }
+
+        public ReinoBarracksDesk(Serial serial) : base(serial)
+        {
         }
 
         public override void OnDoubleClick(Mobile from)
@@ -230,6 +293,10 @@ namespace Server.Custom.Reinos
             Movable = false;
         }
 
+        public ReinoPrisonDesk(Serial serial) : base(serial)
+        {
+        }
+
         public override void OnDoubleClick(Mobile from)
         {
             PlayerMobile pm = from as PlayerMobile;
@@ -259,6 +326,110 @@ namespace Server.Custom.Reinos
             int version = reader.ReadInt();
             m_CityId = reader.ReadInt();
             m_ConstructionKey = reader.ReadString();
+            Movable = false;
+        }
+    }
+
+    public class ReinoBarracksBadge : Item
+    {
+        private int m_CityId;
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int CityId { get { return m_CityId; } set { m_CityId = value; } }
+
+        [Constructable]
+        public ReinoBarracksBadge() : this(0)
+        {
+        }
+
+        public ReinoBarracksBadge(int cityId) : base(0x171B)
+        {
+            m_CityId = cityId;
+            Name = "insígnia do quartel";
+            LootType = LootType.Blessed;
+            Movable = true;
+        }
+
+        public ReinoBarracksBadge(Serial serial) : base(serial)
+        {
+        }
+
+        public override void OnDoubleClick(Mobile from)
+        {
+            PlayerMobile pm = from as PlayerMobile;
+            if (pm == null)
+                return;
+
+            if (!ReinoMilitarySystem.CanAccessBarracksSubGump(pm, m_CityId))
+            {
+                pm.SendMessage("Você não ocupa um cargo ligado ao quartel deste reino.");
+                return;
+            }
+
+            pm.SendGump(new ReinoMilitaryMiniGump(pm, m_CityId, ReinoMilitaryTab.Guards));
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write(0);
+            writer.Write(m_CityId);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            int version = reader.ReadInt();
+            m_CityId = reader.ReadInt();
+            LootType = LootType.Blessed;
+        }
+    }
+
+    [Flipable(0x1389, 0x138A)]
+    public class ReinoLawBoard : Item
+    {
+        private int m_CityId;
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int CityId { get { return m_CityId; } set { m_CityId = value; } }
+
+        [Constructable]
+        public ReinoLawBoard() : this(0)
+        {
+        }
+
+        public ReinoLawBoard(int cityId) : base(0x1389)
+        {
+            m_CityId = cityId;
+            Name = "placa de leis do reino";
+            Movable = false;
+        }
+
+        public ReinoLawBoard(Serial serial) : base(serial)
+        {
+        }
+
+        public override void OnDoubleClick(Mobile from)
+        {
+            PlayerMobile pm = from as PlayerMobile;
+            if (pm == null)
+                return;
+
+            pm.SendGump(new ReinoLawBoardGump(pm, m_CityId));
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write(0);
+            writer.Write(m_CityId);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            int version = reader.ReadInt();
+            m_CityId = reader.ReadInt();
             Movable = false;
         }
     }
@@ -303,7 +474,7 @@ namespace Server.Custom.Reinos
             m_CityId = cityId;
             string key = ReinoMaintenanceSystem.BuildLotKey(ReferenceId);
 
-            ReinoBarracksLocker locker = FindItem(m_LockerSerial) as ReinoBarracksLocker;
+            ReinoBarracksLocker locker = FindWorldItem(m_LockerSerial) as ReinoBarracksLocker;
             if (locker == null)
             {
                 locker = new ReinoBarracksLocker(cityId, key);
@@ -311,7 +482,7 @@ namespace Server.Custom.Reinos
                 m_LockerSerial = locker.Serial.Value;
             }
 
-            ReinoBarracksDesk desk = FindItem(m_DeskSerial) as ReinoBarracksDesk;
+            ReinoBarracksDesk desk = FindWorldItem(m_DeskSerial) as ReinoBarracksDesk;
             if (desk == null)
             {
                 desk = new ReinoBarracksDesk(cityId, key);
@@ -324,11 +495,11 @@ namespace Server.Custom.Reinos
 
         private void MoveAux(int dx, int dy, int dz)
         {
-            Item item = FindItem(m_LockerSerial);
+            Item item = FindWorldItem(m_LockerSerial);
             if (item != null && !item.Deleted)
                 item.MoveToWorld(new Point3D(item.X + dx, item.Y + dy, item.Z + dz), Map);
 
-            item = FindItem(m_DeskSerial);
+            item = FindWorldItem(m_DeskSerial);
             if (item != null && !item.Deleted)
                 item.MoveToWorld(new Point3D(item.X + dx, item.Y + dy, item.Z + dz), Map);
         }
@@ -339,7 +510,7 @@ namespace Server.Custom.Reinos
             return lot != null ? lot.CityId : 0;
         }
 
-        private static Item FindItem(int serial)
+        private static Item FindWorldItem(int serial)
         {
             Item item;
             if (serial != 0 && World.Items.TryGetValue(serial, out item))
@@ -350,9 +521,9 @@ namespace Server.Custom.Reinos
         public override void OnAfterDelete()
         {
             base.OnAfterDelete();
-            Item item = FindItem(m_LockerSerial);
+            Item item = FindWorldItem(m_LockerSerial);
             if (item != null) item.Delete();
-            item = FindItem(m_DeskSerial);
+            item = FindWorldItem(m_DeskSerial);
             if (item != null) item.Delete();
         }
 
@@ -404,7 +575,7 @@ namespace Server.Custom.Reinos
         {
             base.OnLocationChange(oldLocation);
             EnsureDesk();
-            Item desk = FindItem(m_DeskSerial);
+            Item desk = FindWorldItem(m_DeskSerial);
             if (desk != null)
                 desk.MoveToWorld(new Point3D(desk.X + (X - oldLocation.X), desk.Y + (Y - oldLocation.Y), desk.Z + (Z - oldLocation.Z)), Map);
         }
@@ -418,7 +589,7 @@ namespace Server.Custom.Reinos
             m_CityId = cityId;
             string key = ReinoMaintenanceSystem.BuildLotKey(ReferenceId);
 
-            ReinoPrisonDesk desk = FindItem(m_DeskSerial) as ReinoPrisonDesk;
+            ReinoPrisonDesk desk = FindWorldItem(m_DeskSerial) as ReinoPrisonDesk;
             if (desk == null)
             {
                 desk = new ReinoPrisonDesk(cityId, key);
@@ -433,7 +604,7 @@ namespace Server.Custom.Reinos
             return lot != null ? lot.CityId : 0;
         }
 
-        private static Item FindItem(int serial)
+        private static Item FindWorldItem(int serial)
         {
             Item item;
             if (serial != 0 && World.Items.TryGetValue(serial, out item))
@@ -444,7 +615,7 @@ namespace Server.Custom.Reinos
         public override void OnAfterDelete()
         {
             base.OnAfterDelete();
-            Item desk = FindItem(m_DeskSerial);
+            Item desk = FindWorldItem(m_DeskSerial);
             if (desk != null) desk.Delete();
         }
 

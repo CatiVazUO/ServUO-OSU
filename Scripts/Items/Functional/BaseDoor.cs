@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Server.Commands;
-using Server.Custom.Reinos;
+using Server.Custom.Systems.Reinos;
 using Server.Network;
 using Server.Targeting;
 

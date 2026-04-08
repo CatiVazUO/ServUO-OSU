@@ -56,6 +56,8 @@ namespace Server.Custom.Reinos
             }
 
             pm.SendMessage("Esta chave concede acesso emergencial ao governo de " + ReinoElectionsSystem.GetCityName(CityId) + ".");
+            pm.CloseGump(typeof(ReinoExpansionGump));
+            pm.SendGump(new ReinoExpansionGump(pm, CityId));
         }
 
         public override void Serialize(GenericWriter writer)

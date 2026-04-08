@@ -29,6 +29,7 @@ namespace Server.Custom.Reinos
         private static readonly Dictionary<int, ReinoMilitarySession> m_Sessions = new Dictionary<int, ReinoMilitarySession>();
         private static readonly HashSet<int> m_AutoSheathe = new HashSet<int>();
         private static readonly Dictionary<int, DateTime> m_LastPassiveCrimeNotice = new Dictionary<int, DateTime>();
+        private static readonly Dictionary<int, List<string>> m_PendingLawNoticesByPlayer = new Dictionary<int, List<string>>();
 
         private static int m_NextPostId = 1;
         private static Timer m_PulseTimer;
@@ -67,6 +68,7 @@ namespace Server.Custom.Reinos
             EventSink.AggressiveAction += OnAggressiveAction;
             EventSink.CreatureDeath += OnCreatureDeath;
             EventSink.Speech += OnSpeech;
+            EventSink.Login += OnLogin;
             Stealing.ItemStolen += OnItemStolen;
 
             if (m_PulseTimer != null)
@@ -87,6 +89,15 @@ namespace Server.Custom.Reinos
                 GetReportState(i);
                 GetPosts(i);
             }
+        }
+
+        private static void OnLogin(LoginEventArgs e)
+        {
+            PlayerMobile pm = e != null ? e.Mobile as PlayerMobile : null;
+            if (pm == null || pm.Deleted)
+                return;
+
+            ShowPendingLawNotice(pm);
         }
 
         public static ReinoMilitaryPolicy GetPolicy(int cityId)
@@ -333,10 +344,98 @@ namespace Server.Custom.Reinos
         public static void ToggleLaw(int cityId, ReinoMilitaryLaw law)
         {
             ReinoMilitaryPolicy p = GetPolicy(cityId);
+            bool enabled;
+
             if (p.EnabledLaws.Contains(law))
+            {
                 p.EnabledLaws.Remove(law);
+                enabled = false;
+            }
             else
+            {
                 p.EnabledLaws.Add(law);
+                enabled = true;
+            }
+
+            QueueLawChangeNotice(cityId, law, enabled);
+        }
+
+        public static bool HasBarracks(int cityId)
+        {
+            return !String.IsNullOrWhiteSpace(FindPrimaryBarracksKey(cityId));
+        }
+
+        public static bool HasPrison(int cityId)
+        {
+            return !String.IsNullOrWhiteSpace(FindPrimaryPrisonKey(cityId));
+        }
+
+        private static void QueueLawChangeNotice(int cityId, ReinoMilitaryLaw law, bool enabled)
+        {
+            string line = enabled
+                ? "Nova lei em vigor: " + GetLawLabel(law) + "."
+                : "Lei revogada: " + GetLawLabel(law) + ".";
+
+            foreach (Mobile mobile in World.Mobiles.Values)
+            {
+                PlayerMobile pm = mobile as PlayerMobile;
+                if (pm == null || pm.Deleted)
+                    continue;
+
+                if (!String.Equals(PlayerMobile.NormalizeOSUCityId(pm.OSUCitizenCityId), PlayerMobile.NormalizeOSUCityId(ReinoElectionsSystem.GetCityName(cityId)), StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                List<string> list;
+                if (!m_PendingLawNoticesByPlayer.TryGetValue(pm.Serial.Value, out list))
+                {
+                    list = new List<string>();
+                    m_PendingLawNoticesByPlayer[pm.Serial.Value] = list;
+                }
+
+                if (!list.Contains(line))
+                    list.Add(line);
+            }
+        }
+
+        public static void ShowPendingLawNotice(PlayerMobile pm)
+        {
+            if (pm == null || pm.Deleted)
+                return;
+
+            List<string> list;
+            if (!m_PendingLawNoticesByPlayer.TryGetValue(pm.Serial.Value, out list) || list == null || list.Count == 0)
+                return;
+
+            StringBuilder sb = new StringBuilder();
+            sb.Append("<BASEFONT COLOR=#000000><BIG><B>Leis do reino atualizadas</B></BIG><BR><BR>");
+            for (int i = 0; i < list.Count; i++)
+                sb.Append("• ").Append(list[i]).Append("<BR>");
+            sb.Append("</BASEFONT>");
+
+            pm.SendGump(new ReinoGenericNoticeGump("Aviso de leis", sb.ToString()));
+            list.Clear();
+        }
+
+        public static string GetCurrentLawsHtml(int cityId)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("<BASEFONT COLOR=#000000><BIG><B>Leis vigentes</B></BIG><BR><BR>");
+
+            bool any = false;
+            foreach (ReinoMilitaryLaw law in Enum.GetValues(typeof(ReinoMilitaryLaw)))
+            {
+                if (!IsLawEnabled(cityId, law))
+                    continue;
+
+                any = true;
+                sb.Append("• ").Append(GetLawLabel(law)).Append("<BR>");
+            }
+
+            if (!any)
+                sb.Append("Nenhuma lei militar especial está em vigor neste reino.");
+
+            sb.Append("</BASEFONT>");
+            return sb.ToString();
         }
 
         public static string AddWanted(PlayerMobile from, int cityId, string name, ReinoGuardAction action)
@@ -986,33 +1085,57 @@ namespace Server.Custom.Reinos
             {
                 default:
                 case ReinoGuardKind.Vigia:
-                    hireGold = 0; hireCloth = 40; hireIron = 40; hireWood = 40;
                     weeklyGold = 100; weeklyCloth = 10; weeklyIron = 10; weeklyWood = 10;
                     break;
                 case ReinoGuardKind.Rua:
-                    hireGold = 150; hireCloth = 60; hireIron = 60; hireWood = 50;
                     weeklyGold = 130; weeklyCloth = 12; weeklyIron = 12; weeklyWood = 10;
                     break;
                 case ReinoGuardKind.Armado:
-                    hireGold = 240; hireCloth = 70; hireIron = 100; hireWood = 60;
                     weeklyGold = 160; weeklyCloth = 14; weeklyIron = 18; weeklyWood = 12;
                     break;
                 case ReinoGuardKind.Arqueiro:
-                    hireGold = 260; hireCloth = 85; hireIron = 80; hireWood = 100;
                     weeklyGold = 170; weeklyCloth = 15; weeklyIron = 12; weeklyWood = 18;
                     break;
                 case ReinoGuardKind.CavalariaArmada:
-                    hireGold = 420; hireCloth = 100; hireIron = 150; hireWood = 80;
                     weeklyGold = 220; weeklyCloth = 18; weeklyIron = 24; weeklyWood = 14;
                     break;
                 case ReinoGuardKind.CavalariaArqueira:
-                    hireGold = 450; hireCloth = 110; hireIron = 120; hireWood = 130;
                     weeklyGold = 230; weeklyCloth = 20; weeklyIron = 18; weeklyWood = 22;
                     break;
                 case ReinoGuardKind.Oficial:
-                    hireGold = 520; hireCloth = 140; hireIron = 70; hireWood = 60;
                     weeklyGold = 180; weeklyCloth = 12; weeklyIron = 8; weeklyWood = 8;
                     break;
+            }
+
+            hireGold = weeklyGold;
+            hireCloth = weeklyCloth;
+            hireIron = weeklyIron;
+            hireWood = weeklyWood;
+        }
+
+        public static void GetTotalWeeklyGuardCost(int cityId, out int gold, out int cloth, out int iron, out int wood)
+        {
+            gold = cloth = iron = wood = 0;
+
+            List<ReinoGuardPostInfo> posts = GetPosts(cityId);
+            for (int i = 0; i < posts.Count; i++)
+            {
+                ReinoGuardPostInfo post = posts[i];
+                if (post == null || (!post.Active) || post.Training)
+                    continue;
+
+                if (post.GuardKind == ReinoGuardKind.Vigia && post.GuardSerial == 0 && FindGuard(post) == null)
+                {
+                    if (post.Level <= 0)
+                        continue;
+                }
+
+                if (post.GuardSerial == 0 && FindGuard(post) == null && !post.Training)
+                    continue;
+
+                int a,b,c,d,e,f,g,h;
+                GetGuardCosts(post.GuardKind, out a, out b, out c, out d, out e, out f, out g, out h);
+                gold += e; cloth += f; iron += g; wood += h;
             }
         }
 
@@ -1054,6 +1177,7 @@ namespace Server.Custom.Reinos
 
             ReinoGuardPostInfo post = new ReinoGuardPostInfo();
             post.Id = m_NextPostId++;
+            marker.PostId = post.Id;
             post.CityId = cityId;
             post.ConstructionKey = constructionKey;
             post.Location = from.Location;
@@ -1089,6 +1213,9 @@ namespace Server.Custom.Reinos
             if (post == null)
                 return "Fique sobre um ponto de guarda para adicionar um guarda.";
 
+            if (post.Training)
+                return "Esse ponto está reservado porque o guarda original ainda está em treinamento.";
+
             if (post.GuardSerial != 0 && FindGuard(post) != null)
                 return "Já existe um guarda nesse ponto.";
 
@@ -1102,6 +1229,7 @@ namespace Server.Custom.Reinos
             post.GuardKind = kind;
             post.Facing = (int)NormalizeFacing(dir);
             post.Level = Math.Max(1, post.Level);
+            post.Uniformized = true;
 
             OSUCityGuard guard = SpawnGuard(post);
             if (guard == null)
@@ -1197,11 +1325,11 @@ namespace Server.Custom.Reinos
                 return fail;
 
             post.Training = true;
-            post.TrainingEndsUtc = DateTime.UtcNow + TimeSpan.FromDays(3.0);
+            post.TrainingEndsUtc = DateTime.UtcNow + TimeSpan.FromMinutes(1.0);
             post.GuardSerial = 0;
 
             guard.Delete();
-            return "Treinamento iniciado. O guarda voltará ao posto em 3 dias mais forte do que antes.";
+            return "Treinamento iniciado. Durante os testes, o guarda voltará ao posto em 1 minuto.";
         }
 
         public static void Pulse()
@@ -1295,11 +1423,17 @@ namespace Server.Custom.Reinos
                         continue;
 
                     OSUCityGuard guard = FindGuard(post);
-                    if (guard == null || guard.Combatant != null || post.RouteRootSerial == 0)
+                    if (guard == null || guard.Combatant != null || post.RouteRootSerial == 0 || !post.RouteActivated)
+                        continue;
+
+                    if (guard.CurrentWayPoint != null)
                         continue;
 
                     WayPoint root = FindItem(post.RouteRootSerial) as WayPoint;
                     if (root == null || root.Deleted)
+                        continue;
+
+                    if (!guard.InRange(post.Location, 0))
                         continue;
 
                     if (!ShouldStartRoute(post))
@@ -1370,8 +1504,8 @@ namespace Server.Custom.Reinos
                     guard.Home = guard.PostLocation;
                     guard.Direction = (Direction)posts[i].Facing;
 
-                    if (!guard.InRange(guard.PostLocation, 1))
-                        guard.MoveToWorld(guard.PostLocation, guard.Map);
+                    if (guard.CurrentWayPoint == null && !guard.InRange(guard.PostLocation, 0) && guard.Map != null && guard.Map != Map.Internal)
+                        guard.Home = guard.PostLocation;
                 }
             }
         }
@@ -1411,8 +1545,9 @@ namespace Server.Custom.Reinos
             guard.PostId = post.Id;
             guard.PostLocation = post.Location;
             guard.Home = post.Location;
+            guard.RangeHome = 0;
             guard.Direction = (Direction)post.Facing;
-            guard.Uniformized = post.Uniformized;
+            guard.Uniformized = true;
             guard.GuardLevel = Math.Max(1, post.Level);
             guard.ConstructionKey = post.ConstructionKey;
             guard.ApplyLoadout();
@@ -1881,6 +2016,17 @@ namespace Server.Custom.Reinos
             if (info == null || info.Definition == null || list == null)
                 return;
 
+            if (String.Equals(info.Definition.Id, "quartel_aurora", StringComparison.OrdinalIgnoreCase))
+            {
+                int gold, cloth, iron, wood;
+                GetTotalWeeklyGuardCost(info.CityId, out gold, out cloth, out iron, out wood);
+
+                if (gold > 0) list.Add(new ReinoResourceCost(ReinoResourceType.Gold, gold));
+                if (cloth > 0) list.Add(new ReinoResourceCost(ReinoResourceType.Cloth, cloth));
+                if (iron > 0) list.Add(new ReinoResourceCost(ReinoResourceType.Iron, iron));
+                if (wood > 0) list.Add(new ReinoResourceCost(ReinoResourceType.Wood, wood));
+            }
+
             if (String.Equals(info.Definition.Id, "prisao_aurora", StringComparison.OrdinalIgnoreCase))
             {
                 int prisoners = GetActivePrisonerCount(info.CityId);
@@ -2168,6 +2314,10 @@ namespace Server.Custom.Reinos
             if (from == null || from.Deleted || from.Map == null)
                 return "Jogador inválido.";
 
+            int resolved;
+            if (!TryResolveCityIdAt(from.Location, from.Map, ReinoAreaScope.Total, out resolved) || resolved != cityId)
+                return "Pontos de rota só podem ser criados dentro da área total do reino.";
+
             ReinoMilitaryRoutePoint point = new ReinoMilitaryRoutePoint(cityId);
             point.MoveToWorld(from.Location, from.Map);
             point.MakeVisibleFor(TimeSpan.FromMinutes(5.0));
@@ -2184,6 +2334,9 @@ namespace Server.Custom.Reinos
             ReinoMilitaryRoutePoint point = FindRoutePointAt(from.Location, from.Map, cityId);
             if (point == null)
                 return "Não existe ponto de rota nesse tile.";
+
+            if (point.ClosedRoute || point.PostId > 0)
+                return "Esse ponto faz parte de uma rota fechada. Use resetar rota para desfazer a rota inteira.";
 
             point.Delete();
             return "Ponto de rota removido.";
@@ -2248,8 +2401,51 @@ namespace Server.Custom.Reinos
             if (root == null)
                 return "O primeiro ponto de rota não existe mais.";
 
+            WayPoint last = root;
+            int hops = 0;
+            while (last.NextPoint != null && hops++ < 512)
+                last = last.NextPoint;
+
+            WayPoint oldHome = FindItem(post.RouteHomeSerial) as WayPoint;
+            if (oldHome != null && !oldHome.Deleted)
+                oldHome.Delete();
+
+            WayPoint home = new WayPoint();
+            home.Movable = false;
+            home.Visible = false;
+            home.MoveToWorld(post.Location, from.Map);
+            last.NextPoint = home;
+
+            int hue = GetNextRouteHue(cityId);
+            PaintRouteChain(root, post.Id, hue);
+
+            ReinoGuardPostMarker marker = FindItem(post.MarkerSerial) as ReinoGuardPostMarker;
+            if (marker != null)
+            {
+                marker.Hue = hue;
+                marker.PostId = post.Id;
+            }
+
             post.RouteRootSerial = root.Serial.Value;
-            return "Rota ligada ao ponto de guarda.";
+            post.RouteHomeSerial = home.Serial.Value;
+            post.RouteColorHue = hue;
+            post.RouteActivated = false;
+            post.LastRouteUtc = DateTime.MinValue;
+            session.PendingRouteRootSerial = 0;
+            session.PendingRouteLinkSerial = 0;
+            return "Rota ligada ao ponto de guarda. Agora acione a rota quando quiser começar.";
+        }
+
+
+        public static string ActivateRouteAtCurrentPoint(PlayerMobile from, int cityId)
+        {
+            ReinoGuardPostInfo linkedPost = FindLinkedPostForSelectedRoute(from, cityId);
+            if (linkedPost == null)
+                return "Fique sobre o primeiro ponto de uma rota ligada para acioná-la.";
+
+            linkedPost.RouteActivated = true;
+            linkedPost.LastRouteUtc = DateTime.MinValue;
+            return "A rota foi acionada e o guarda passará a obedecer ao agendamento configurado.";
         }
 
         public static string RevealRoutePoints(PlayerMobile from, int cityId)
@@ -2257,20 +2453,35 @@ namespace Server.Custom.Reinos
             if (from == null || from.Deleted || from.Map == null)
                 return "Jogador inválido.";
 
-            int shown = 0;
+            ReinoMilitarySession session = GetSession(from);
+            bool show = !session.RoutePointsVisible;
+            session.RoutePointsVisible = show;
+
+            int changed = 0;
             IPooledEnumerable eable = from.Map.GetItemsInRange(from.Location, 15);
             foreach (Item item in eable)
             {
                 ReinoMilitaryRoutePoint point = item as ReinoMilitaryRoutePoint;
-                if (point == null || point.CityId != cityId)
+                if (point != null && point.CityId == cityId)
+                {
+                    point.SetTemporaryVisible(show, show ? (TimeSpan?)TimeSpan.FromMinutes(1.0) : null);
+                    changed++;
                     continue;
+                }
 
-                point.MakeVisibleFor(TimeSpan.FromMinutes(1.0));
-                shown++;
+                ReinoGuardPostMarker marker = item as ReinoGuardPostMarker;
+                if (marker != null && marker.CityId == cityId)
+                {
+                    marker.SetTemporaryVisible(show, show ? (TimeSpan?)TimeSpan.FromMinutes(1.0) : null);
+                    changed++;
+                }
             }
             eable.Free();
 
-            return shown > 0 ? "Os pontos de rota próximos ficaram visíveis por 1 minuto." : "Nenhum ponto de rota encontrado num raio de 15 tiles.";
+            if (changed <= 0)
+                return "Nenhum ponto de rota ou de guarda foi encontrado num raio de 15 tiles.";
+
+            return show ? "Os pontos próximos ficaram visíveis por 1 minuto." : "Os pontos próximos voltaram a ficar invisíveis.";
         }
 
         public static string SetRouteSpeedAtCurrentPoint(PlayerMobile from, int cityId, ReinoRouteSpeed speed)
@@ -2297,11 +2508,26 @@ namespace Server.Custom.Reinos
         {
             ReinoGuardPostInfo linkedPost = FindLinkedPostForSelectedRoute(from, cityId);
             if (linkedPost == null)
+                return "Fique sobre um ponto da rota que você quer desfazer.";
+
+            DeleteRouteChain(linkedPost);
+            linkedPost.RouteRootSerial = 0;
+            linkedPost.RouteHomeSerial = 0;
+            linkedPost.RouteColorHue = 0;
+            linkedPost.RouteActivated = false;
+            linkedPost.LastRouteUtc = DateTime.MinValue;
+            return "A rota inteira foi desfeita.";
+        }
+
+        public static string ResetRouteConfigAtCurrentPoint(PlayerMobile from, int cityId)
+        {
+            ReinoGuardPostInfo linkedPost = FindLinkedPostForSelectedRoute(from, cityId);
+            if (linkedPost == null)
                 return "Selecione primeiro uma rota ligada a um ponto de guarda.";
 
             linkedPost.RouteSpeed = ReinoRouteSpeed.Short;
             linkedPost.RouteSchedule = ReinoRouteSchedule.Infinite;
-            return "A rota voltou para o padrão: tempo curto e rota infinita.";
+            return "A configuração da rota voltou para o padrão: tempo curto e rota infinita.";
         }
 
         private static ReinoGuardPostInfo FindLinkedPostForSelectedRoute(PlayerMobile from, int cityId)
@@ -2313,11 +2539,88 @@ namespace Server.Custom.Reinos
             List<ReinoGuardPostInfo> list = GetPosts(cityId);
             for (int i = 0; i < list.Count; i++)
             {
-                if (list[i] != null && list[i].RouteRootSerial == point.Serial.Value)
-                    return list[i];
+                ReinoGuardPostInfo post = list[i];
+                if (post == null || post.RouteRootSerial == 0)
+                    continue;
+
+                WayPoint current = FindItem(post.RouteRootSerial) as WayPoint;
+                int guard = 0;
+                while (current != null && guard++ < 512)
+                {
+                    if (current.Serial.Value == point.Serial.Value)
+                        return post;
+
+                    current = current.NextPoint;
+                }
             }
 
             return null;
+        }
+
+
+        private static readonly int[] RouteHues = new int[] { 0x44E, 0x489, 0x4F2, 0x58C, 0x66D, 0x47E, 0x53D, 0x83F, 0x8A5, 0x90F };
+
+        private static int GetNextRouteHue(int cityId)
+        {
+            HashSet<int> used = new HashSet<int>();
+            List<ReinoGuardPostInfo> list = GetPosts(cityId);
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i] != null && list[i].RouteColorHue > 0)
+                    used.Add(list[i].RouteColorHue);
+            }
+
+            for (int i = 0; i < RouteHues.Length; i++)
+                if (!used.Contains(RouteHues[i]))
+                    return RouteHues[i];
+
+            return RouteHues[Utility.Random(RouteHues.Length)];
+        }
+
+        private static void PaintRouteChain(WayPoint root, int postId, int hue)
+        {
+            WayPoint current = root;
+            int guard = 0;
+            while (current != null && guard++ < 512)
+            {
+                ReinoMilitaryRoutePoint point = current as ReinoMilitaryRoutePoint;
+                if (point != null)
+                {
+                    point.PostId = postId;
+                    point.RouteHue = hue;
+                    point.ClosedRoute = true;
+                }
+
+                current = current.NextPoint;
+            }
+        }
+
+        private static void DeleteRouteChain(ReinoGuardPostInfo post)
+        {
+            if (post == null || post.RouteRootSerial == 0)
+                return;
+
+            HashSet<int> visited = new HashSet<int>();
+            WayPoint current = FindItem(post.RouteRootSerial) as WayPoint;
+
+            while (current != null && !visited.Contains(current.Serial.Value))
+            {
+                visited.Add(current.Serial.Value);
+                WayPoint next = current.NextPoint;
+                current.Delete();
+                current = next;
+            }
+
+            if (post.RouteHomeSerial != 0)
+            {
+                Item home = FindItem(post.RouteHomeSerial);
+                if (home != null && !home.Deleted)
+                    home.Delete();
+            }
+
+            ReinoGuardPostMarker marker = FindItem(post.MarkerSerial) as ReinoGuardPostMarker;
+            if (marker != null)
+                marker.Hue = 0x44E;
         }
 
         public static void Save()
@@ -2327,7 +2630,7 @@ namespace Server.Custom.Reinos
             using (FileStream fs = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.None))
             using (BinaryWriter bw = new BinaryWriter(fs))
             {
-                bw.Write(1);
+                bw.Write(2);
 
                 bw.Write(m_Policies.Count);
                 foreach (KeyValuePair<int, ReinoMilitaryPolicy> kv in m_Policies)
@@ -2434,6 +2737,9 @@ namespace Server.Custom.Reinos
                         bw.Write(p.Facing);
                         bw.Write(p.Uniformized);
                         bw.Write(p.RouteRootSerial);
+                        bw.Write(p.RouteHomeSerial);
+                        bw.Write(p.RouteColorHue);
+                        bw.Write(p.RouteActivated);
                         bw.Write((int)p.RouteSchedule);
                         bw.Write((int)p.RouteSpeed);
                         bw.Write(p.LastRouteUtc.ToBinary());
@@ -2446,6 +2752,16 @@ namespace Server.Custom.Reinos
                 bw.Write(m_AutoSheathe.Count);
                 foreach (int serial in m_AutoSheathe)
                     bw.Write(serial);
+
+                bw.Write(m_PendingLawNoticesByPlayer.Count);
+                foreach (KeyValuePair<int, List<string>> kv in m_PendingLawNoticesByPlayer)
+                {
+                    bw.Write(kv.Key);
+                    bw.Write(kv.Value != null ? kv.Value.Count : 0);
+                    if (kv.Value != null)
+                        for (int i = 0; i < kv.Value.Count; i++)
+                            bw.Write(kv.Value[i] ?? String.Empty);
+                }
 
                 bw.Write(m_NextPostId);
             }
@@ -2460,6 +2776,7 @@ namespace Server.Custom.Reinos
             m_ReportStates.Clear();
             m_PostsByCity.Clear();
             m_AutoSheathe.Clear();
+            m_PendingLawNoticesByPlayer.Clear();
             m_NextPostId = 1;
 
             if (!File.Exists(FilePath))
@@ -2596,6 +2913,9 @@ namespace Server.Custom.Reinos
                         p.Facing = br.ReadInt32();
                         p.Uniformized = br.ReadBoolean();
                         p.RouteRootSerial = br.ReadInt32();
+                        p.RouteHomeSerial = version >= 2 ? br.ReadInt32() : 0;
+                        p.RouteColorHue = version >= 2 ? br.ReadInt32() : 0;
+                        p.RouteActivated = version >= 2 && br.ReadBoolean();
                         p.RouteSchedule = (ReinoRouteSchedule)br.ReadInt32();
                         p.RouteSpeed = (ReinoRouteSpeed)br.ReadInt32();
                         p.LastRouteUtc = DateTime.FromBinary(br.ReadInt64());
@@ -2610,6 +2930,20 @@ namespace Server.Custom.Reinos
                 count = br.ReadInt32();
                 for (int i = 0; i < count; i++)
                     m_AutoSheathe.Add(br.ReadInt32());
+
+                if (version >= 2 && fs.Position < fs.Length)
+                {
+                    count = br.ReadInt32();
+                    for (int i = 0; i < count; i++)
+                    {
+                        int serial = br.ReadInt32();
+                        int lines = br.ReadInt32();
+                        List<string> list = new List<string>();
+                        for (int x = 0; x < lines; x++)
+                            list.Add(br.ReadString());
+                        m_PendingLawNoticesByPlayer[serial] = list;
+                    }
+                }
 
                 if (fs.Position < fs.Length)
                     m_NextPostId = br.ReadInt32();

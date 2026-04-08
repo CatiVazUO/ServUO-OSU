@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Server;
+using Server.Custom.Reinos;
 using Server.Items;
 using Server.Mobiles;
 using Server.Network;
 
-namespace Server.Custom.Reinos
+namespace Server.Custom.Systems.Reinos
 {
     public enum ReinoDoorLockMaterial
     {
@@ -97,7 +97,7 @@ namespace Server.Custom.Reinos
 
         public static bool TryInstallLock(Mobile from, BaseDoor door, ReinoDoorLockKit kit, out string message)
         {
-            message = String.Empty;
+            message = string.Empty;
 
             if (from == null || door == null || kit == null || kit.Deleted)
             {
@@ -171,7 +171,7 @@ namespace Server.Custom.Reinos
             if (data == null || data.MaxUses <= 0)
                 return "sem dados";
 
-            double pct = (double)data.RemainingUses / (double)data.MaxUses;
+            double pct = data.RemainingUses / (double)data.MaxUses;
             if (pct <= 0.20)
                 return "enferrujada";
             if (pct <= 0.60)

@@ -1,7 +1,7 @@
 using Server;
 using Server.Targeting;
 using Server.Network;
-using Server.Custom.Reinos;
+using Server.Custom.Systems.Reinos;
 
 namespace Server.Items
 {
@@ -127,55 +127,159 @@ namespace Server.Items
     {
         [Constructable]
         public IronDoorLockKit() : base(0x14F0, ReinoDoorLockMaterial.Iron) { }
+
         public IronDoorLockKit(Serial serial) : base(serial) { }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write(0);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            int version = reader.ReadInt();
+        }
     }
 
     public class DullCopperDoorLockKit : ReinoDoorLockKit
     {
         [Constructable]
-        public DullCopperDoorLockKit() : base(0x14F0, ReinoDoorLockMaterial.DullCopper) { }
+        public DullCopperDoorLockKit() : base(0x14F0, ReinoDoorLockMaterial.Iron) { }
+
         public DullCopperDoorLockKit(Serial serial) : base(serial) { }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write(0);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            int version = reader.ReadInt();
+        }
     }
 
     public class CopperDoorLockKit : ReinoDoorLockKit
     {
         [Constructable]
-        public CopperDoorLockKit() : base(0x14F0, ReinoDoorLockMaterial.Copper) { }
-        public CopperDoorLockKit(Serial serial) : base(serial) { }
+        public DullCopperDoorLockKit() : base(0x14F0, ReinoDoorLockMaterial.Iron) { }
+
+        public DullCopperDoorLockKit(Serial serial) : base(serial) { }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write(0);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            int version = reader.ReadInt();
+        }
     }
 
     public class BronzeDoorLockKit : ReinoDoorLockKit
     {
         [Constructable]
-        public BronzeDoorLockKit() : base(0x14F0, ReinoDoorLockMaterial.Bronze) { }
+        public BronzeDoorLockKit() : base(0x14F0, ReinoDoorLockMaterial.Iron) { }
+
         public BronzeDoorLockKit(Serial serial) : base(serial) { }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write(0);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            int version = reader.ReadInt();
+        }
     }
 
     public class GoldDoorLockKit : ReinoDoorLockKit
     {
         [Constructable]
-        public GoldDoorLockKit() : base(0x14F0, ReinoDoorLockMaterial.Gold) { }
+        public GoldDoorLockKit() : base(0x14F0, ReinoDoorLockMaterial.Iron) { }
+
         public GoldDoorLockKit(Serial serial) : base(serial) { }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write(0);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            int version = reader.ReadInt();
+        }
     }
 
     public class AgapiteDoorLockKit : ReinoDoorLockKit
     {
         [Constructable]
-        public AgapiteDoorLockKit() : base(0x14F0, ReinoDoorLockMaterial.Agapite) { }
+        public AgapiteDoorLockKit() : base(0x14F0, ReinoDoorLockMaterial.Iron) { }
+
         public AgapiteDoorLockKit(Serial serial) : base(serial) { }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write(0);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            int version = reader.ReadInt();
+        }
     }
 
     public class VeriteDoorLockKit : ReinoDoorLockKit
     {
         [Constructable]
-        public VeriteDoorLockKit() : base(0x14F0, ReinoDoorLockMaterial.Verite) { }
+        public VeriteDoorLockKit() : base(0x14F0, ReinoDoorLockMaterial.Iron) { }
+
         public VeriteDoorLockKit(Serial serial) : base(serial) { }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write(0);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            int version = reader.ReadInt();
+        }
     }
 
     public class ValoriteDoorLockKit : ReinoDoorLockKit
     {
         [Constructable]
-        public ValoriteDoorLockKit() : base(0x14F0, ReinoDoorLockMaterial.Valorite) { }
+        public ValoriteDoorLockKit() : base(0x14F0, ReinoDoorLockMaterial.Iron) { }
+
         public ValoriteDoorLockKit(Serial serial) : base(serial) { }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write(0);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            int version = reader.ReadInt();
+        }
     }
 }

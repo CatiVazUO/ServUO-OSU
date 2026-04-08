@@ -17,7 +17,7 @@ namespace Server.Items
             Movable = false;
         }
 
-        protected DrugPlantBase(Serial serial)
+        public DrugPlantBase(Serial serial)
             : base(serial)
         {
         }

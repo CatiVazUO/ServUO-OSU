@@ -16,9 +16,10 @@ namespace Server.Custom.Reinos
             Name = "carta";
         }
 
-        protected ReinoCargoLetterBase(Serial serial) : base(serial)
+        public ReinoCargoLetterBase(Serial serial) : base(serial)
         {
         }
+
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);

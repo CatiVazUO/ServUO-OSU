@@ -136,7 +136,7 @@ namespace Server.Custom.Reinos
         public ReinoGuardAction SelectedWantedAction;
         public ReinoGuardKind SelectedGuardKind;
         public int FacingIndex;
-        public bool UniformConfirm;
+        public bool RoutePointsVisible;
         public int DetailMode;
         public int DetailIndex;
         public int PendingRouteLinkSerial;
@@ -152,7 +152,7 @@ namespace Server.Custom.Reinos
             SelectedWantedAction = ReinoGuardAction.Kill;
             SelectedGuardKind = ReinoGuardKind.Vigia;
             FacingIndex = 0;
-            UniformConfirm = false;
+            RoutePointsVisible = false;
             DetailMode = 0;
             DetailIndex = 0;
             PendingRouteLinkSerial = 0;
@@ -178,6 +178,9 @@ namespace Server.Custom.Reinos
         public int Facing;
         public bool Uniformized;
         public int RouteRootSerial;
+        public int RouteHomeSerial;
+        public int RouteColorHue;
+        public bool RouteActivated;
         public ReinoRouteSchedule RouteSchedule;
         public ReinoRouteSpeed RouteSpeed;
         public DateTime LastRouteUtc;
@@ -191,6 +194,8 @@ namespace Server.Custom.Reinos
             Level = 1;
             RouteSchedule = ReinoRouteSchedule.Infinite;
             RouteSpeed = ReinoRouteSpeed.Short;
+            RouteColorHue = 0;
+            RouteActivated = false;
             LastRouteUtc = DateTime.MinValue;
             Active = true;
         }

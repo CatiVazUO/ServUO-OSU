@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Server;
 using Server.Items;
 using Server.Items.Resource;
+using Server.Custom.Items_Misc;
 using Server.Mobiles;
 using Server.Network;
 
@@ -56,6 +57,7 @@ namespace Server.Custom.Reinos
             m_GuardKind = kind;
             m_GuardLevel = 1;
             m_ConstructionKey = String.Empty;
+            m_Uniformized = true;
 
             Female = Utility.RandomBool();
             Body = Female ? 0x191 : 0x190;
@@ -70,6 +72,7 @@ namespace Server.Custom.Reinos
             Blessed = false;
             CantWalk = false;
 
+            EnsureSupplyBackpack();
             ApplyLoadout();
         }
 
@@ -144,8 +147,6 @@ namespace Server.Custom.Reinos
 
         public override void OnThink()
         {
-            base.OnThink();
-
             if (Deleted || Map == null || Map == Map.Internal)
                 return;
 
@@ -153,6 +154,10 @@ namespace Server.Custom.Reinos
             {
                 Combatant = null;
                 Warmode = false;
+                CurrentWayPoint = null;
+                Direction = (Direction)(FindPostFacing());
+                if (!InRange(m_PostLocation, 0))
+                    MoveToWorld(m_PostLocation, Map);
                 return;
             }
 
@@ -164,22 +169,41 @@ namespace Server.Custom.Reinos
                     HandleTargetDown(pm);
                     return;
                 }
+
+                base.OnThink();
+                return;
             }
 
-            if (Combatant == null)
+            if (CurrentWayPoint != null)
             {
-                if (Hits < HitsMax && DateTime.UtcNow >= m_NextBandage)
+                base.OnThink();
+                return;
+            }
+
+            Warmode = false;
+            Combatant = null;
+            Home = m_PostLocation;
+            RangeHome = 0;
+            Direction = (Direction)(FindPostFacing());
+
+            if (!InRange(m_PostLocation, 0))
+                MoveToWorld(m_PostLocation, Map);
+
+            if (Hits < HitsMax && DateTime.UtcNow >= m_NextBandage)
+            {
+                if (Backpack == null)
+                    EnsureSupplyBackpack();
+
+                if (ConsumeGuardBandage())
                 {
                     PublicOverheadMessage(MessageType.Emote, 0x3B2, false, "*se curando de ferimentos*");
                     Hits = Math.Min(HitsMax, Hits + Utility.RandomMinMax(8, 14));
                     m_NextBandage = DateTime.UtcNow + TimeSpan.FromSeconds(8.0);
                 }
-
-                if (CurrentWayPoint == null && !InRange(m_PostLocation, 1))
-                    MoveToWorld(m_PostLocation, Map);
-
-                if (CurrentWayPoint == null)
-                    Direction = ReinoMilitarySystem.NormalizeFacing(Direction);
+                else
+                {
+                    EnsureSupplyBackpack();
+                }
             }
         }
 
@@ -193,6 +217,7 @@ namespace Server.Custom.Reinos
             Combatant = target;
             Warmode = true;
             CurrentWayPoint = null;
+            RangeHome = 0;
         }
 
         private void HandleTargetDown(PlayerMobile pm)
@@ -201,13 +226,16 @@ namespace Server.Custom.Reinos
                 return;
 
             bool permanentDeath = pm.OSUPermaDead;
-            bool storedLoot = LootKnockoutCorpse(pm);
+            bool storedLoot = false;
             bool prisoned = false;
 
+            // Só recolhe os itens se NÃO for a última vida
+            if (!permanentDeath)
+                storedLoot = LootKnockoutCorpse(pm);
+
+            // Se o modo for prender, depois do desmaio ele vai para a prisão
             if (!permanentDeath && m_ArrestMode)
-            {
                 prisoned = ReinoMilitarySystem.TrySendToPrison(pm, m_CityId, this, m_CurrentLaw);
-            }
 
             ReinoMilitarySystem.RegisterGuardOutcome(this, pm, m_CurrentLaw, !permanentDeath, permanentDeath, storedLoot, prisoned);
 
@@ -219,12 +247,17 @@ namespace Server.Custom.Reinos
             MoveToWorld(m_PostLocation, Map);
         }
 
+        private int FindPostFacing()
+        {
+            ReinoGuardPostInfo post = ReinoMilitarySystem.FindPostById(m_CityId, m_PostId);
+            return post != null ? post.Facing : (int)Direction;
+        }
+
         private bool LootKnockoutCorpse(PlayerMobile pm)
         {
             if (pm == null || pm.Corpse == null)
                 return false;
 
-            bool movedAny = false;
             Corpse corpse = pm.Corpse as Corpse;
             if (corpse == null)
                 return false;
@@ -237,13 +270,33 @@ namespace Server.Custom.Reinos
                     items.Add(item);
             }
 
+            if (items.Count == 0)
+                return false;
+
+            Bag lootBag = new Bag();
+            lootBag.Name = "pertences de " + pm.Name;
+            lootBag.Movable = true;
+
             for (int i = 0; i < items.Count; i++)
             {
-                if (ReinoMilitarySystem.StoreLootInBarracks(m_CityId, items[i]))
-                    movedAny = true;
+                Item item = items[i];
+                if (item != null && !item.Deleted)
+                    lootBag.DropItem(item);
             }
 
-            return movedAny;
+            if (lootBag.Items.Count == 0)
+            {
+                lootBag.Delete();
+                return false;
+            }
+
+            if (!ReinoMilitarySystem.StoreLootInBarracks(m_CityId, lootBag))
+            {
+                lootBag.Delete();
+                return false;
+            }
+
+            return true;
         }
 
         public void ConfigureRouteSpeed(ReinoRouteSpeed speed)
@@ -291,33 +344,39 @@ namespace Server.Custom.Reinos
         public void ApplyLoadout()
         {
             DeleteEquipment();
+            EnsureSupplyBackpack();
             InitStatsForKind();
             EquipBaseClothes();
             EquipRoleItems();
             ApplyUniform();
+            EnsureSupplyBackpack();
         }
 
         public void ApplyUniform()
         {
-            Item tunic = FindItemOnLayer(Layer.InnerTorso);
-            if (tunic == null)
-                return;
+            Item torso = FindItemOnLayer(Layer.MiddleTorso);
+            if (torso != null)
+                torso.Delete();
 
-            if (!m_Uniformized)
-            {
-                tunic.ItemID = 0x1FA1;
-                return;
-            }
+            Item uniform = CreateUniformForCity();
+            if (uniform == null)
+                uniform = new Tunic();
 
-            string culture = ReinoEmploymentSystem.GetGovernmentCultureId(m_CityId);
-            switch ((culture ?? String.Empty).Trim().ToLowerInvariant())
+            uniform.Movable = false;
+            AddItem(uniform);
+        }
+
+        private Item CreateUniformForCity()
+        {
+            string culture = (ReinoEmploymentSystem.GetGovernmentCultureId(m_CityId) ?? String.Empty).Trim().ToLowerInvariant();
+            switch (culture)
             {
-                case "sarangs": tunic.ItemID = 0x227E; break;
-                case "kamay": tunic.ItemID = 0x2281; break;
+                case "sarangs": return new Uniforme1();
+                case "kamay": return new Uniforme4();
                 case "zorteros":
-                case "zosteros": tunic.ItemID = 0x228A; break;
-                case "matalun": tunic.ItemID = 0x229C; break;
-                default: tunic.ItemID = 0x1FA1; break;
+                case "zosteros": return new Uniforme13();
+                case "matalun": return new Uniforme31();
+                default: return new Tunic();
             }
         }
 
@@ -336,10 +395,6 @@ namespace Server.Custom.Reinos
 
         private void EquipBaseClothes()
         {
-            Tunic tunic = new Tunic();
-            tunic.Movable = false;
-            AddItem(tunic);
-
             Item boots = new Boots();
             boots.Movable = false;
             AddItem(boots);
@@ -384,7 +439,6 @@ namespace Server.Custom.Reinos
                     break;
                 case ReinoGuardKind.Oficial:
                     AddItem(new StuddedGloves() { Movable = false });
-                    CantWalk = false;
                     break;
             }
         }
@@ -410,6 +464,43 @@ namespace Server.Custom.Reinos
                     AddItem(armors[i]);
                 }
             }
+        }
+
+        private void EnsureSupplyBackpack()
+        {
+            if (Backpack == null)
+            {
+                Backpack pack = new Backpack();
+                pack.Movable = false;
+                AddItem(pack);
+            }
+
+            Bandage bandage = Backpack.FindItemByType(typeof(Bandage)) as Bandage;
+
+            if (bandage == null)
+            {
+                bandage = new Bandage(50);
+                bandage.Movable = false;
+                Backpack.DropItem(bandage);
+            }
+            else if (bandage.Amount < 20)
+            {
+                bandage.Amount = 50;
+            }
+        }
+
+        private bool ConsumeGuardBandage()
+        {
+            if (Backpack == null)
+                return false;
+
+            Bandage bandage = Backpack.FindItemByType(typeof(Bandage)) as Bandage;
+
+            if (bandage == null || bandage.Amount <= 0)
+                return false;
+
+            bandage.Consume(1);
+            return true;
         }
 
         private void AddHeld(Item weapon)
@@ -550,6 +641,11 @@ namespace Server.Custom.Reinos
             Stam = StamMax;
         }
 
+        public OSUCityGuard(Serial serial)
+    : base(serial)
+        {
+        }
+
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
@@ -580,6 +676,11 @@ namespace Server.Custom.Reinos
             m_CurrentLaw = (ReinoMilitaryLaw)reader.ReadInt();
             m_ArrestMode = reader.ReadBool();
             m_NextBandage = reader.ReadDateTime();
+
+            EnsureSupplyBackpack();
+            ApplyUniform();
+            Home = m_PostLocation;
+            RangeHome = 0;
         }
     }
 }
