@@ -58,7 +58,7 @@ namespace Server.Custom.Reinos
 
             ReinoMilitarySession session = ReinoMilitarySystem.GetSession(m_From);
 
-            AddLabel(774, 173, 0, @"Militar");
+            AddLabel(774, 173, 1152, @"Militar");
             AddImageTiled(407, 261, 825, 5, 367);
 
             if (session.RestrictToBarracksView && session.Tab == ReinoMilitaryTab.Laws)

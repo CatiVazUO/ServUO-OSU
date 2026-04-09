@@ -2,7 +2,7 @@ using Server.Items;
 using System;
 using Server.Engines.Craft;
 
-namespace Server.Custom.Items_Misc
+namespace Server.Items
 {
     public class Uniforme1 : BaseMiddleTorso
     {

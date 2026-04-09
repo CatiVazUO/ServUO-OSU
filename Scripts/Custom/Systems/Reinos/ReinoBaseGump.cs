@@ -80,7 +80,7 @@ namespace Server.Custom.Reinos
             AddImageTiled(203, 193, 178, 21, 469);
             AddImageTiled(255, 193, 870, 21, 471);
             AddImageTiled(380, 170, 6, 524, 365);
-            AddLabel(253, 170, 0, @"Governo");
+            AddLabel(253, 170, 1152, @"Governo");
 
             AddLabel(250, 231, 1152, @"Visão Geral");
             AddButton(211, 225, 439, 438, 1, GumpButtonType.Reply, 0);

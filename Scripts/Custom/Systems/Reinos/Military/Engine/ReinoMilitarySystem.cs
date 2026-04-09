@@ -33,6 +33,7 @@ namespace Server.Custom.Reinos
         private static readonly Dictionary<int, DateTime> m_LastPassiveCrimeNotice = new Dictionary<int, DateTime>();
         private static readonly Dictionary<int, List<string>> m_PendingLawNoticesByPlayer = new Dictionary<int, List<string>>();
         private static readonly HashSet<int> m_QueuedOnlineLawNotice = new HashSet<int>();
+        private static readonly Dictionary<int, DateTime> m_LastWantedNotice = new Dictionary<int, DateTime>();
 
         private static int m_NextPostId = 1;
         private static Timer m_PulseTimer;
@@ -939,21 +940,24 @@ namespace Server.Custom.Reinos
 
         private static void AddCrimeNote(int cityId, string note)
         {
-            ReinoMilitaryReportState st = GetReportState(cityId);
-
-            if (st == null)
-                return;
-
-            if (st.Summary == null)
-                st.Summary = String.Empty;
-
-            if (!String.IsNullOrWhiteSpace(note))
+            List<ReinoCrimeRecord> list = GetCrimeList(cityId);
+            list.Add(new ReinoCrimeRecord
             {
-                if (!String.IsNullOrWhiteSpace(st.Summary))
-                    st.Summary += "<BR>";
+                CityId = cityId,
+                CriminalSerial = 0,
+                CriminalName = "Registro do Reino",
+                Law = ReinoMilitaryLaw.Fighting,
+                Utc = DateTime.UtcNow,
+                WitnessGuardSerial = 0,
+                WitnessGuardName = "Ofício Militar",
+                Result = ReinoGuardAction.Report,
+                Notes = note
+            });
+        }
 
-                st.Summary += note;
-            }
+        private static bool IsAdministrativeCrimeRecord(ReinoCrimeRecord r)
+        {
+            return r != null && r.CriminalSerial == 0 && r.WitnessGuardSerial == 0;
         }
 
         public static void AddCrimeRecord(int cityId, Mobile actor, ReinoMilitaryLaw law, OSUCityGuard witness, ReinoGuardAction result, string notes)
@@ -1329,6 +1333,45 @@ namespace Server.Custom.Reinos
             return list;
         }
 
+        private static void WantedPulse()
+        {
+            foreach (Mobile m in World.Mobiles.Values)
+            {
+                PlayerMobile pm = m as PlayerMobile;
+                if (pm == null || pm.Deleted || pm.Map == null || pm.Map == Map.Internal)
+                    continue;
+
+                int cityId;
+                if (!TryResolveCityIdAt(pm.Location, pm.Map, ReinoAreaScope.Total, out cityId))
+                    continue;
+
+                ReinoWantedEntry wanted = FindWanted(cityId, pm);
+                if (wanted == null)
+                    continue;
+
+                List<OSUCityGuard> witnesses = GetWitnessGuards(cityId, pm.Location, pm.Map, 18, true);
+                if (witnesses.Count <= 0)
+                    continue;
+
+                int key = (pm.Serial.Value * 1000) + cityId;
+                DateTime next;
+                if (m_LastWantedNotice.TryGetValue(key, out next) && next > DateTime.UtcNow)
+                    continue;
+
+                m_LastWantedNotice[key] = DateTime.UtcNow + TimeSpan.FromSeconds(10.0);
+
+                AddCrimeNote(cityId, pm.Name + " foi avistado por guardas na lista de procurados.");
+
+                if (wanted.Action == ReinoGuardAction.Report || wanted.Action == ReinoGuardAction.None)
+                    continue;
+
+                bool arrest = wanted.Action == ReinoGuardAction.Arrest;
+
+                for (int i = 0; i < witnesses.Count; i++)
+                    witnesses[i].BeginAttack(pm, ReinoMilitaryLaw.Fighting, arrest);
+            }
+        }
+
         public static string StartGuardTraining(PlayerMobile from, int cityId, int postId)
         {
             ReinoGuardPostInfo post = FindPostById(cityId, postId);
@@ -1358,6 +1401,7 @@ namespace Server.Custom.Reinos
         {
             UpdateHoodedNames();
             AutoSheathePulse();
+            WantedPulse();
             RoutePulse();
             TrainingPulse();
             FaceHomePulse();
@@ -2212,15 +2256,23 @@ namespace Server.Custom.Reinos
             int since = 0;
             for (int i = 0; i < crimes.Count; i++)
             {
-                if (crimes[i] != null && crimes[i].Utc > st.LastDeliveredUtc)
+                ReinoCrimeRecord r = crimes[i];
+
+                if (r == null)
+                    continue;
+
+                if (IsAdministrativeCrimeRecord(r))
+                    continue;
+
+                if (r.Utc > st.LastDeliveredUtc)
                     since++;
             }
 
             StringBuilder sb = new StringBuilder();
             sb.Append("<BASEFONT COLOR=#000000>");
-            sb.Append("Crimes desde o último relatório: ").Append(since).Append(".<BR>");
-            sb.Append("Último Relatório:").Append(st.LastDeliveredUtc == DateTime.MinValue ? "nunca" : st.LastDeliveredUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")).Append(".<BR>");
-            sb.Append("Entregue a: ").Append(String.IsNullOrWhiteSpace(st.LastDeliveredTo) ? "ninguém" : st.LastDeliveredTo).Append(".");
+            sb.Append("<B>Relatório</B> ").Append(since).Append(".<BR><BR>");
+            sb.Append("<B>Último Relatório:</B><BR>").Append(st.LastDeliveredUtc == DateTime.MinValue ? "nunca" : st.LastDeliveredUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")).Append(".<BR>");
+            sb.Append("<B>Entregue a:</B><BR> ").Append(String.IsNullOrWhiteSpace(st.LastDeliveredTo) ? "ninguém" : st.LastDeliveredTo).Append(".");
             if (!String.IsNullOrWhiteSpace(st.Summary))
             {
                 sb.Append("<BR><BR><B>Anotações do ofício:</B><BR>");
@@ -2247,18 +2299,31 @@ namespace Server.Custom.Reinos
                     if (index < 0) index = 0;
                     if (index >= list.Count) index = list.Count - 1;
                     ReinoCrimeRecord r = list[index];
-                    sb.Append("<B>Crime</B> ").Append(index + 1).Append(" de ").Append(list.Count).Append("</B><BR><BR>");
-                    sb.Append("<B>Quem:</B> ").Append(r.CriminalName).Append("<BR>");
-                    sb.Append("<B>Crime:</B> ").Append(GetLawLabel(r.Law)).Append("<BR>");
-                    sb.Append("<B>Guarda:</B> ").Append(r.WitnessGuardName).Append("<BR>");
-                    sb.Append("<B>Quando:</B> ").Append(r.Utc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")).Append("<BR>");
-                    sb.Append("<B>Resultado:</B> ").Append(GetActionLabel(r.Result)).Append("<BR>");
-                    sb.Append("<B>Guarda morto:</B> ").Append(r.GuardDied ? "sim" : "não").Append("<BR>");
-                    sb.Append("<B>Personagem morto:</B> ").Append(r.CriminalDied ? "sim" : "não").Append("<BR>");
-                    sb.Append("<B>Itens no quartel:</B> ").Append(r.LootStoredInBarracks ? "sim" : "não").Append("<BR>");
-                    sb.Append("<B>Preso:</B> ").Append(r.SentToPrison ? "sim" : "não").Append("<BR>");
-                    if (!String.IsNullOrWhiteSpace(r.Notes))
-                        sb.Append("<B>Observação:</B> ").Append(r.Notes);
+                    sb.Append("<B>Registro ").Append(index + 1).Append(" de ").Append(list.Count).Append("</B><BR><BR>");
+
+                    if (IsAdministrativeCrimeRecord(r))
+                    {
+                        sb.Append("<B>Tipo:</B> Registro administrativo<BR>");
+                        sb.Append("<B>Origem:</B> ").Append(r.WitnessGuardName).Append("<BR>");
+                        sb.Append("<B>Quando:</B> ").Append(r.Utc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")).Append("<BR>");
+                        if (!String.IsNullOrWhiteSpace(r.Notes))
+                            sb.Append("<B>Detalhes:</B> ").Append(r.Notes);
+                    }
+                    else
+                    {
+                        sb.Append("<B>Quem:</B> ").Append(r.CriminalName).Append("<BR>");
+                        sb.Append("<B>Crime:</B> ").Append(GetLawLabel(r.Law)).Append("<BR>");
+                        sb.Append("<B>Guarda:</B> ").Append(r.WitnessGuardName).Append("<BR>");
+                        sb.Append("<B>Quando:</B> ").Append(r.Utc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")).Append("<BR>");
+                        sb.Append("<B>Resultado:</B> ").Append(GetActionLabel(r.Result)).Append("<BR>");
+                        sb.Append("<B>Guarda morto:</B> ").Append(r.GuardDied ? "sim" : "não").Append("<BR>");
+                        sb.Append("<B>Personagem morto:</B> ").Append(r.CriminalDied ? "sim" : "não").Append("<BR>");
+                        sb.Append("<B>Desmaiado:</B> ").Append(r.CriminalKnockedOut ? "sim" : "não").Append("<BR>");
+                        sb.Append("<B>Itens no quartel:</B> ").Append(r.LootStoredInBarracks ? "sim" : "não").Append("<BR>");
+                        sb.Append("<B>Preso:</B> ").Append(r.SentToPrison ? "sim" : "não").Append("<BR>");
+                        if (!String.IsNullOrWhiteSpace(r.Notes))
+                            sb.Append("<B>Observação:</B> ").Append(r.Notes);
+                    }
                 }
             }
             else if (mode == 2)
@@ -3029,7 +3094,7 @@ namespace Server.Custom.Reinos
                     st.LastDeliveredUtc = DateTime.FromBinary(br.ReadInt64());
                     st.LastDeliveredTo = br.ReadString();
                     st.LastDeliveredToSerial = br.ReadInt32();
-                    st.Summary = version >= 2 ? br.ReadString() : String.Empty;
+                    st.Summary = version >= 3 ? br.ReadString() : String.Empty;
                     m_ReportStates[cityId] = st;
                 }
 
