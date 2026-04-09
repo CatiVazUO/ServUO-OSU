@@ -773,6 +773,13 @@ namespace Server.Custom.Reinos
             if (actor == null || actor.Deleted || actor.Map == null)
                 return;
 
+            PlayerMobile trialPlayer = actor as PlayerMobile;
+            if (trialPlayer != null && ReinoTrialsSystem.IsInsideTribunal(cityId, actor.Location, actor.Map))
+            {
+                ReinoTrialsSystem.HandleCourtCrime(trialPlayer, cityId, GetLawLabel(law), false);
+                return;
+            }
+
             List<OSUCityGuard> witnesses = GetWitnessGuards(cityId, actor.Location, actor.Map, 18, true);
             if (witnesses.Count <= 0)
                 return;

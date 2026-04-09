@@ -940,6 +940,12 @@ namespace Server.Custom.Reinos
                 if (target.Backpack != null && target.Backpack.FindItemByType(typeof(ReinoBarracksBadge)) == null)
                     target.Backpack.DropItem(new ReinoBarracksBadge(cityId));
             }
+
+            if (!String.IsNullOrWhiteSpace(role.LinkedConstructionKey) && ReinoTrialsSystem.IsTribunalConstructionKey(cityId, role.LinkedConstructionKey))
+            {
+                if (target.Backpack != null && target.Backpack.FindItemByType(typeof(ReinoTribunalHammer)) == null)
+                    target.Backpack.DropItem(new ReinoTribunalHammer(cityId, role.Title));
+            }
         }
 
         private static void RemoveRoleLinkedItems(PlayerMobile target, int cityId, ReinoCargoEntry role)
@@ -952,6 +958,11 @@ namespace Server.Custom.Reinos
                 Item badge = target.Backpack.FindItemByType(typeof(ReinoBarracksBadge));
                 if (badge != null && !badge.Deleted)
                     badge.Delete();
+            }
+
+            if (!String.IsNullOrWhiteSpace(role.LinkedConstructionKey) && ReinoTrialsSystem.IsTribunalConstructionKey(cityId, role.LinkedConstructionKey))
+            {
+                ReinoTrialsSystem.DeleteTribunalItems(target, cityId);
             }
         }
 
