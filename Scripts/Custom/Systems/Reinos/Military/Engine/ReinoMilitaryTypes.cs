@@ -137,6 +137,27 @@ namespace Server.Custom.Reinos
         }
     }
 
+    public sealed class ReinoArchivedReport
+    {
+        public DateTime ClosedUtc;
+        public string ClosedBy;
+        public string SummaryHtml;
+        public List<string> CrimeDetails;
+        public List<string> PrisonDetails;
+        public List<string> WantedDetails;
+        public List<string> RecurringDetails;
+
+        public ReinoArchivedReport()
+        {
+            ClosedBy = String.Empty;
+            SummaryHtml = String.Empty;
+            CrimeDetails = new List<string>();
+            PrisonDetails = new List<string>();
+            WantedDetails = new List<string>();
+            RecurringDetails = new List<string>();
+        }
+    }
+
     public sealed class ReinoMilitarySession
     {
         public ReinoMilitaryTab Tab;
