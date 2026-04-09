@@ -92,7 +92,7 @@ namespace Server.Custom.Reinos
 
         private static FightMode GetFightMode(ReinoGuardKind kind)
         {
-            return kind == ReinoGuardKind.Oficial ? FightMode.None : FightMode.Closest;
+            return FightMode.None;
         }
 
         public override bool ClickTitle { get { return true; } }
@@ -182,6 +182,7 @@ namespace Server.Custom.Reinos
 
             Warmode = false;
             Combatant = null;
+            FightMode = FightMode.None;
             Home = m_PostLocation;
             RangeHome = 0;
             Direction = (Direction)(FindPostFacing());
@@ -214,10 +215,18 @@ namespace Server.Custom.Reinos
 
             m_CurrentLaw = law;
             m_ArrestMode = arrestMode;
+            FightMode = FightMode.Closest;
             Combatant = target;
             Warmode = true;
             CurrentWayPoint = null;
             RangeHome = 0;
+
+            PlayerMobile pm = target as PlayerMobile;
+            if (pm != null && arrestMode && ReinoMilitarySystem.HasPrison(m_CityId))
+            {
+                pm.CloseGump(typeof(ReinoGuardSurrenderGump));
+                pm.SendGump(new ReinoGuardSurrenderGump(pm, m_CityId, this.Serial.Value, law));
+            }
         }
 
         private void HandleTargetDown(PlayerMobile pm)
@@ -241,6 +250,7 @@ namespace Server.Custom.Reinos
 
             Combatant = null;
             Warmode = false;
+            FightMode = FightMode.None;
             Hits = HitsMax;
             Stam = StamMax;
             Mana = ManaMax;
@@ -266,8 +276,13 @@ namespace Server.Custom.Reinos
             for (int i = 0; i < corpse.Items.Count; i++)
             {
                 Item item = corpse.Items[i];
-                if (item != null && !item.Deleted)
-                    items.Add(item);
+                if (item == null || item.Deleted)
+                    continue;
+
+                if (item is BaseClothing)
+                    continue;
+
+                items.Add(item);
             }
 
             if (items.Count == 0)
@@ -681,6 +696,9 @@ namespace Server.Custom.Reinos
             ApplyUniform();
             Home = m_PostLocation;
             RangeHome = 0;
+            FightMode = FightMode.None;
+            Combatant = null;
+            Warmode = false;
         }
     }
 }

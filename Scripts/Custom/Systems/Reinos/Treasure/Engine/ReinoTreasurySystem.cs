@@ -445,6 +445,9 @@ namespace Server.Custom.Reinos
             ReinoTreasuryWeekRecord closed = state.CurrentWeek != null ? state.CurrentWeek.Clone() : new ReinoTreasuryWeekRecord();
             closed.ConstructionIncome = GetConstructionIncomeLast7Days(cityId);
             closed.MaintenanceExpense = GetMaintenanceBaseline(cityId);
+            int guardGold, guardCloth, guardIron, guardWood;
+            ReinoMilitarySystem.GetTotalWeeklyGuardCost(cityId, out guardGold, out guardCloth, out guardIron, out guardWood);
+            closed.GuardExpense = new ReinoTreasuryResourceBundle(guardGold, guardCloth, guardIron, guardWood);
 
             ReinoTreasuryResourceBundle postoNow = GetCurrentPostoResources(cityId);
             int cloth = Math.Max(0, postoNow.Cloth - state.PostoWeekStartSnapshot.Cloth);

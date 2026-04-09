@@ -92,6 +92,8 @@ namespace Server.Custom.Reinos
             ReinoTreasuryResourceBundle current = ReinoTreasurySystem.GetCombinedTreasuryResources(m_CityId);
             ReinoTreasuryResourceBundle snapshot = ReinoTreasurySystem.GetLastWeekSnapshot(m_CityId);
             ReinoTreasuryWeekRecord week = ReinoTreasurySystem.GetLastClosedWeek(m_CityId);
+            int guardGold, guardCloth, guardIron, guardWood;
+            ReinoMilitarySystem.GetTotalWeeklyGuardCost(m_CityId, out guardGold, out guardCloth, out guardIron, out guardWood);
 
             AddLabel(510, 538, 0, current.Gold.ToString());
             AddLabel(510, 566, 0, current.Cloth.ToString());
@@ -124,7 +126,7 @@ namespace Server.Custom.Reinos
             AddLabel(1162, 312, 0, week.MaintenanceExpense.Iron.ToString());
             AddLabel(1162, 337, 0, week.MaintenanceExpense.Wood.ToString());
             AddLabel(1162, 364, 0, week.SalaryExpense.Gold.ToString() + @" moedas");
-            AddLabel(1162, 395, 0, week.GuardExpense.Gold.ToString() + @" moedas");
+            AddLabel(1162, 395, 0, guardGold.ToString() + @" moedas");
             AddLabel(1162, 426, 0, week.DiplomacyExpense.Gold.ToString() + @" moedas");
             AddLabel(1162, 456, 0, week.DiplomacyExpense.Cloth.ToString());
             AddLabel(1162, 480, 0, week.DiplomacyExpense.Iron.ToString());

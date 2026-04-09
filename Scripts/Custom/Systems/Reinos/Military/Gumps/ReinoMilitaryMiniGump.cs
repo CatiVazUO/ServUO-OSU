@@ -130,28 +130,28 @@ namespace Server.Custom.Reinos
 
         private void BuildRoutes(ReinoMilitarySession session)
         {
-            AddLabel(406, 282, 0, @"Criar Ponto de Rota");
-            AddLabel(406, 309, 0, @"Ligar a Um Ponto de Guarda");
-            AddLabel(406, 340, 0, @"Mostrar Pontos de Rota");
-            AddLabel(406, 370, 0, @"Remover Ponto de Rota");
+            AddLabel(406, 282, 1152, @"Criar Ponto de Rota");
+            AddLabel(406, 309, 1152, @"Ligar a Um Ponto de Guarda");
+            AddLabel(406, 340, 1152, @"Mostrar Pontos de Rota");
+            AddLabel(406, 370, 1152, @"Remover Ponto de Rota");
             AddButton(376, 281, 531, 248, ButtonCreateRoutePoint, GumpButtonType.Reply, 0);
             AddButton(376, 311, 531, 248, ButtonLinkRouteToGuard, GumpButtonType.Reply, 0);
             AddButton(376, 341, 531, 248, ButtonRevealRoutePoints, GumpButtonType.Reply, 0);
             AddButton(376, 371, 531, 248, ButtonRemoveRoutePoint, GumpButtonType.Reply, 0);
-            AddLabel(406, 401, 0, @"Acionar Rota");
+            AddLabel(406, 401, 1152, @"Acionar Rota");
             AddButton(376, 402, 531, 248, ButtonActivateRoute, GumpButtonType.Reply, 0);
-            AddLabel(406, 455, 0, @"Tempo de Rota Curto");
-            AddLabel(406, 482, 0, @"Tempo de Rota Médio");
-            AddLabel(406, 513, 0, @"Tempo de Rota Longo");
+            AddLabel(406, 455, 1152, @"Tempo de Rota Curto");
+            AddLabel(406, 482, 1152, @"Tempo de Rota Médio");
+            AddLabel(406, 513, 1152, @"Tempo de Rota Longo");
             AddButton(376, 454, session.SelectedRouteSpeed == ReinoRouteSpeed.Short ? 530 : 531, 248, ButtonSpeedShort, GumpButtonType.Reply, 0);
             AddButton(376, 484, session.SelectedRouteSpeed == ReinoRouteSpeed.Medium ? 530 : 531, 248, ButtonSpeedMedium, GumpButtonType.Reply, 0);
             AddButton(376, 514, session.SelectedRouteSpeed == ReinoRouteSpeed.Long ? 530 : 531, 248, ButtonSpeedLong, GumpButtonType.Reply, 0);
-            AddLabel(407, 574, 0, @"Resetar Rota");
+            AddLabel(407, 574, 1152, @"Resetar Rota");
             AddButton(376, 576, 531, 248, ButtonResetRoute, GumpButtonType.Reply, 0);
-            AddLabel(407, 636, 0, @"Rota por Tempo");
+            AddLabel(407, 636, 1152, @"Rota por Tempo");
             AddLabel(520, 636, 0, ReinoMilitarySystem.GetRouteScheduleLabel(session.SelectedRouteSchedule));
             AddButton(377, 637, 531, 248, ButtonRouteSchedule, GumpButtonType.Reply, 0);
-            AddLabel(407, 667, 0, @"Resetar Config de Rota");
+            AddLabel(407, 667, 1152, @"Resetar Config de Rota");
             AddButton(377, 668, 531, 248, ButtonResetRouteConfig, GumpButtonType.Reply, 0);
             AddImageTiled(365, 434, 311, 5, 367);
             AddImageTiled(366, 552, 311, 5, 367);
@@ -275,23 +275,7 @@ namespace Server.Custom.Reinos
 
             AddPage(0);
             AddImage(280, 100, 3547);
-            AddHtml(363, 168, 211, 393, ReinoMilitarySystem.GetCurrentLawsHtml(cityId), true, true);
-        }
-    }
-
-    public class ReinoGenericNoticeGump : Gump
-    {
-        public ReinoGenericNoticeGump(string title, string html) : base(100, 100)
-        {
-            Closable = true;
-            Disposable = true;
-            Dragable = true;
-            Resizable = false;
-
-            AddPage(0);
-            AddBackground(0, 0, 420, 260, 5054);
-            AddLabel(20, 20, 0, title ?? "Aviso");
-            AddHtml(20, 50, 380, 180, html ?? String.Empty, true, true);
+            AddHtml(363, 168, 211, 393, ReinoMilitarySystem.GetCurrentLawsHtml(cityId), false, false);
         }
     }
 }

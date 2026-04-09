@@ -128,6 +128,13 @@ namespace Server.Custom.Reinos
         public DateTime LastDeliveredUtc;
         public string LastDeliveredTo;
         public int LastDeliveredToSerial;
+        public string Summary;
+
+        public ReinoMilitaryReportState()
+        {
+            LastDeliveredTo = String.Empty;
+            Summary = String.Empty;
+        }
     }
 
     public sealed class ReinoMilitarySession

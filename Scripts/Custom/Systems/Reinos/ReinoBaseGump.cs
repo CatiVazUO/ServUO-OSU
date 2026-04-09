@@ -82,25 +82,25 @@ namespace Server.Custom.Reinos
             AddImageTiled(380, 170, 6, 524, 365);
             AddLabel(253, 170, 0, @"Governo");
 
-            AddLabel(250, 231, 0, @"Visão Geral");
+            AddLabel(250, 231, 1152, @"Visão Geral");
             AddButton(211, 225, 439, 438, 1, GumpButtonType.Reply, 0);
 
-            AddLabel(250, 270, 0, @"Tesouro");
+            AddLabel(250, 270, 1152, @"Tesouro");
             AddButton(211, 264, 439, 438, 2, GumpButtonType.Reply, 0);
 
-            AddLabel(250, 310, 0, @"Manutenção");
+            AddLabel(250, 310, 1152, @"Manutenção");
             AddButton(211, 304, 439, 438, 3, GumpButtonType.Reply, 0);
 
-            AddLabel(250, 349, 0, @"Expansão");
+            AddLabel(250, 349, 1152, @"Expansão");
             AddButton(211, 343, 439, 438, 4, GumpButtonType.Reply, 0);
 
-            AddLabel(250, 390, 0, @"Cargos");
+            AddLabel(250, 390, 1152, @"Cargos");
             AddButton(211, 384, 439, 438, 5, GumpButtonType.Reply, 0);
 
-            AddLabel(250, 429, 0, @"Diplomacia");
+            AddLabel(250, 429, 1152, @"Diplomacia");
             AddButton(211, 423, 439, 438, 6, GumpButtonType.Reply, 0);
 
-            AddLabel(250, 469, 0, @"Visual");
+            AddLabel(250, 469, 1152, @"Visual");
             AddButton(211, 463, 439, 438, 7, GumpButtonType.Reply, 0);
 
             List<ReinoMenuSlotEntry> dynamicSlots = GetDynamicGovernmentSlots();

@@ -166,9 +166,9 @@ namespace Server.Items
     public class CopperDoorLockKit : ReinoDoorLockKit
     {
         [Constructable]
-        public DullCopperDoorLockKit() : base(0x14F0, ReinoDoorLockMaterial.Iron) { }
+        public CopperDoorLockKit() : base(0x14F0, ReinoDoorLockMaterial.Iron) { }
 
-        public DullCopperDoorLockKit(Serial serial) : base(serial) { }
+        public CopperDoorLockKit(Serial serial) : base(serial) { }
 
         public override void Serialize(GenericWriter writer)
         {

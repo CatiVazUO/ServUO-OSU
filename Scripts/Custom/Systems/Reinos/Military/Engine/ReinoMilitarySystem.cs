@@ -13,6 +13,8 @@ using Server.Network;
 using Server.SkillHandlers;
 using Server.Targeting;
 using Server.Custom.Systems.HtmlBooks.Html.Readable;
+using Server.Custom;
+using Server.Custom.Systems.HtmlBooks.Engine;
 
 namespace Server.Custom.Reinos
 {
@@ -30,6 +32,7 @@ namespace Server.Custom.Reinos
         private static readonly HashSet<int> m_AutoSheathe = new HashSet<int>();
         private static readonly Dictionary<int, DateTime> m_LastPassiveCrimeNotice = new Dictionary<int, DateTime>();
         private static readonly Dictionary<int, List<string>> m_PendingLawNoticesByPlayer = new Dictionary<int, List<string>>();
+        private static readonly HashSet<int> m_QueuedOnlineLawNotice = new HashSet<int>();
 
         private static int m_NextPostId = 1;
         private static Timer m_PulseTimer;
@@ -394,6 +397,20 @@ namespace Server.Custom.Reinos
 
                 if (!list.Contains(line))
                     list.Add(line);
+
+                if (pm.NetState != null && m_QueuedOnlineLawNotice.Add(pm.Serial.Value))
+                {
+                    int serial = pm.Serial.Value;
+
+                    Timer.DelayCall(TimeSpan.FromSeconds(1.0), delegate
+                    {
+                        m_QueuedOnlineLawNotice.Remove(serial);
+
+                        Mobile found;
+                        if (World.Mobiles.TryGetValue(serial, out found))
+                            ShowPendingLawNotice(found as PlayerMobile);
+                    });
+                }
             }
         }
 
@@ -407,12 +424,15 @@ namespace Server.Custom.Reinos
                 return;
 
             StringBuilder sb = new StringBuilder();
-            sb.Append("<BASEFONT COLOR=#000000><BIG><B>Leis do reino atualizadas</B></BIG><BR><BR>");
+            sb.Append("<BASEFONT COLOR=#000000>");
+            sb.Append("Foi registrada uma alteração nas leis vigentes do reino.<BR><BR>");
+
             for (int i = 0; i < list.Count; i++)
                 sb.Append("• ").Append(list[i]).Append("<BR>");
+
             sb.Append("</BASEFONT>");
 
-            pm.SendGump(new ReinoGenericNoticeGump("Aviso de leis", sb.ToString()));
+            pm.SendGump(new ReinoCargoDismissalNoticeGump("Aviso de leis", sb.ToString(), 0));
             list.Clear();
         }
 
@@ -919,19 +939,21 @@ namespace Server.Custom.Reinos
 
         private static void AddCrimeNote(int cityId, string note)
         {
-            List<ReinoCrimeRecord> list = GetCrimeList(cityId);
-            list.Add(new ReinoCrimeRecord
+            ReinoMilitaryReportState st = GetReportState(cityId);
+
+            if (st == null)
+                return;
+
+            if (st.Summary == null)
+                st.Summary = String.Empty;
+
+            if (!String.IsNullOrWhiteSpace(note))
             {
-                CityId = cityId,
-                CriminalSerial = 0,
-                CriminalName = "Registro do Reino",
-                Law = ReinoMilitaryLaw.HoodedWalk,
-                Utc = DateTime.UtcNow,
-                WitnessGuardSerial = 0,
-                WitnessGuardName = "Ofício Militar",
-                Result = ReinoGuardAction.Report,
-                Notes = note
-            });
+                if (!String.IsNullOrWhiteSpace(st.Summary))
+                    st.Summary += "<BR>";
+
+                st.Summary += note;
+            }
         }
 
         public static void AddCrimeRecord(int cityId, Mobile actor, ReinoMilitaryLaw law, OSUCityGuard witness, ReinoGuardAction result, string notes)
@@ -1806,6 +1828,111 @@ namespace Server.Custom.Reinos
             return list;
         }
 
+        public static bool AcceptSurrender(PlayerMobile pm, int cityId, int guardSerial, ReinoMilitaryLaw law)
+        {
+            if (pm == null || pm.Deleted)
+                return false;
+
+            Mobile mob;
+            if (!World.Mobiles.TryGetValue(guardSerial, out mob))
+                return false;
+
+            OSUCityGuard guard = mob as OSUCityGuard;
+            if (guard == null || guard.Deleted)
+                return false;
+
+            bool lootStored = ConfiscateLivingPrisonerItems(pm, cityId);
+            bool prisoned = TrySendToPrison(pm, cityId, guard, law);
+
+            if (!prisoned)
+                return false;
+
+            guard.Combatant = null;
+            guard.Warmode = false;
+            guard.FightMode = FightMode.None;
+            guard.CurrentWayPoint = null;
+
+            RegisterGuardOutcome(guard, pm, law, false, false, lootStored, true);
+            return true;
+        }
+
+        private static bool IsConfiscableItem(Item item)
+        {
+            if (item == null || item.Deleted)
+                return false;
+
+            if (item is BaseClothing)
+                return false;
+
+            if (!item.Movable)
+                return false;
+
+            return true;
+        }
+
+        public static bool ConfiscateLivingPrisonerItems(PlayerMobile pm, int cityId)
+        {
+            if (pm == null || pm.Deleted)
+                return false;
+
+            Bag lootBag = new Bag();
+            lootBag.Name = "pertences de " + pm.Name;
+            lootBag.Movable = true;
+
+            List<Item> toMove = new List<Item>();
+
+            if (pm.Backpack != null)
+            {
+                for (int i = 0; i < pm.Backpack.Items.Count; i++)
+                {
+                    Item item = pm.Backpack.Items[i];
+                    if (IsConfiscableItem(item))
+                        toMove.Add(item);
+                }
+            }
+
+            Layer[] layers =
+            {
+        Layer.OneHanded, Layer.TwoHanded,
+        Layer.Gloves, Layer.Helm, Layer.Neck,
+        Layer.Ring, Layer.Bracelet, Layer.Earrings,
+        Layer.Waist, Layer.Cloak, Layer.OuterTorso,
+        Layer.MiddleTorso, Layer.Arms, Layer.InnerLegs,
+        Layer.OuterLegs, Layer.Shoes, Layer.Pants,
+        Layer.Shirt, Layer.InnerTorso
+    };
+
+            for (int i = 0; i < layers.Length; i++)
+            {
+                Item item = pm.FindItemOnLayer(layers[i]);
+                if (IsConfiscableItem(item))
+                    toMove.Add(item);
+            }
+
+            for (int i = 0; i < toMove.Count; i++)
+            {
+                Item item = toMove[i];
+                if (item == null || item.Deleted)
+                    continue;
+
+                lootBag.DropItem(item);
+            }
+
+            if (lootBag.Items.Count == 0)
+            {
+                lootBag.Delete();
+                return false;
+            }
+
+            if (!StoreLootInBarracks(cityId, lootBag))
+            {
+                lootBag.Delete();
+                return false;
+            }
+
+            return true;
+        }
+
         public static void AlertNearbyGuards(int cityId, Mobile attacker, Point3D around, int range)
         {
             List<OSUCityGuard> guards = GetWitnessGuards(cityId, around, attacker != null ? attacker.Map : Map.Internal, range, true);
@@ -2091,9 +2218,14 @@ namespace Server.Custom.Reinos
 
             StringBuilder sb = new StringBuilder();
             sb.Append("<BASEFONT COLOR=#000000>");
-            sb.Append("<B>Crimes desde o último relatório:</B> ").Append(since).Append(".<BR>");
-            sb.Append("<B>Última entrega:</B> ").Append(st.LastDeliveredUtc == DateTime.MinValue ? "nunca" : st.LastDeliveredUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")).Append(".<BR>");
-            sb.Append("<B>Entregue a:</B> ").Append(String.IsNullOrWhiteSpace(st.LastDeliveredTo) ? "ninguém" : st.LastDeliveredTo).Append(".");
+            sb.Append("Crimes desde o último relatório: ").Append(since).Append(".<BR>");
+            sb.Append("Último Relatório:").Append(st.LastDeliveredUtc == DateTime.MinValue ? "nunca" : st.LastDeliveredUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")).Append(".<BR>");
+            sb.Append("Entregue a: ").Append(String.IsNullOrWhiteSpace(st.LastDeliveredTo) ? "ninguém" : st.LastDeliveredTo).Append(".");
+            if (!String.IsNullOrWhiteSpace(st.Summary))
+            {
+                sb.Append("<BR><BR><B>Anotações do ofício:</B><BR>");
+                sb.Append(st.Summary);
+            }
             sb.Append("</BASEFONT>");
             return sb.ToString();
         }
@@ -2115,7 +2247,7 @@ namespace Server.Custom.Reinos
                     if (index < 0) index = 0;
                     if (index >= list.Count) index = list.Count - 1;
                     ReinoCrimeRecord r = list[index];
-                    sb.Append("<B>Crime ").Append(index + 1).Append(" de ").Append(list.Count).Append("</B><BR><BR>");
+                    sb.Append("<B>Crime</B> ").Append(index + 1).Append(" de ").Append(list.Count).Append("</B><BR><BR>");
                     sb.Append("<B>Quem:</B> ").Append(r.CriminalName).Append("<BR>");
                     sb.Append("<B>Crime:</B> ").Append(GetLawLabel(r.Law)).Append("<BR>");
                     sb.Append("<B>Guarda:</B> ").Append(r.WitnessGuardName).Append("<BR>");
@@ -2123,7 +2255,6 @@ namespace Server.Custom.Reinos
                     sb.Append("<B>Resultado:</B> ").Append(GetActionLabel(r.Result)).Append("<BR>");
                     sb.Append("<B>Guarda morto:</B> ").Append(r.GuardDied ? "sim" : "não").Append("<BR>");
                     sb.Append("<B>Personagem morto:</B> ").Append(r.CriminalDied ? "sim" : "não").Append("<BR>");
-                    sb.Append("<B>Desmaiado:</B> ").Append(r.CriminalKnockedOut ? "sim" : "não").Append("<BR>");
                     sb.Append("<B>Itens no quartel:</B> ").Append(r.LootStoredInBarracks ? "sim" : "não").Append("<BR>");
                     sb.Append("<B>Preso:</B> ").Append(r.SentToPrison ? "sim" : "não").Append("<BR>");
                     if (!String.IsNullOrWhiteSpace(r.Notes))
@@ -2210,6 +2341,9 @@ namespace Server.Custom.Reinos
                 if (r == null || !String.Equals(r.CriminalName, name, StringComparison.OrdinalIgnoreCase))
                     continue;
 
+                if (r.CriminalSerial == 0)
+                    continue;
+
                 labels.Add(GetLawLabel(r.Law));
             }
 
@@ -2236,6 +2370,9 @@ namespace Server.Custom.Reinos
             if (from == null || from.Deleted || from.Backpack == null)
                 return "Jogador inválido.";
 
+            if (!LanguageKnowledge.Understands(from, OSULanguage.Common))
+                return "Você precisa falar a língua comum para copiar esse relatório para um livro.";
+
             HtmlBook30 book = from.Backpack.FindItemByType(typeof(HtmlBook30)) as HtmlBook30;
             if (book == null)
                 return "Você precisa ter um livro HTML de 30 páginas em branco na mochila.";
@@ -2247,21 +2384,23 @@ namespace Server.Custom.Reinos
                     from.Frozen = false;
             });
 
-            book.Name = "relatórios de " + DateTime.UtcNow.ToLocalTime().ToString("dd-MM-yyyy");
+            string title = "relatórios de " + DateTime.UtcNow.ToLocalTime().ToString("dd-MM-yyyy");
+
+            book.Name = title;
+            book.DocumentTitle = title;
+            book.Language = OSULanguage.Common;
             book.SetPageHtml(0, GetReportsSummaryHtml(cityId));
 
             int page = 1;
             List<ReinoCrimeRecord> crimes = GetCrimeList(cityId);
             for (int i = 0; i < crimes.Count && page < 30; i++, page++)
-            {
                 book.SetPageHtml(page, GetReportsDetailHtml(cityId, 1, i));
-            }
 
             List<ReinoPrisonRecord> prisons = GetPrisonList(cityId);
             for (int i = 0; i < prisons.Count && page < 30; i++, page++)
-            {
                 book.SetPageHtml(page, GetReportsDetailHtml(cityId, 2, i));
-            }
+
+            book.ForceSealAsCopy("Ofício Militar", 0);
 
             ReinoMilitaryReportState st = GetReportState(cityId);
             st.LastDeliveredUtc = DateTime.UtcNow;
@@ -2630,7 +2769,7 @@ namespace Server.Custom.Reinos
             using (FileStream fs = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.None))
             using (BinaryWriter bw = new BinaryWriter(fs))
             {
-                bw.Write(2);
+                bw.Write(3);
 
                 bw.Write(m_Policies.Count);
                 foreach (KeyValuePair<int, ReinoMilitaryPolicy> kv in m_Policies)
@@ -2713,6 +2852,7 @@ namespace Server.Custom.Reinos
                     bw.Write(kv.Value.LastDeliveredUtc.ToBinary());
                     bw.Write(kv.Value.LastDeliveredTo ?? String.Empty);
                     bw.Write(kv.Value.LastDeliveredToSerial);
+                    bw.Write(kv.Value.Summary ?? String.Empty);
                 }
 
                 bw.Write(m_PostsByCity.Count);
@@ -2889,6 +3029,7 @@ namespace Server.Custom.Reinos
                     st.LastDeliveredUtc = DateTime.FromBinary(br.ReadInt64());
                     st.LastDeliveredTo = br.ReadString();
                     st.LastDeliveredToSerial = br.ReadInt32();
+                    st.Summary = version >= 2 ? br.ReadString() : String.Empty;
                     m_ReportStates[cityId] = st;
                 }
 

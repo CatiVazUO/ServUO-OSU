@@ -83,12 +83,21 @@ namespace Server.Custom.Systems.HtmlBooks.Gumps
 
             if (isSealed)
             {
-                if (sealId < 0) sealId = 0;
+                if (_doc != null && !string.IsNullOrWhiteSpace(_doc.DocumentTitle) &&
+                    _doc.DocumentTitle.StartsWith("relatórios de ", StringComparison.OrdinalIgnoreCase) &&
+                    sealId <= 0)
+                {
+                    AddImage(L.SealX, L.SealY, 2923);
+                }
+                else
+                {
+                    if (sealId < 0) sealId = 0;
 
-                if (sealId > 100) sealId = 100;
+                    if (sealId > 100) sealId = 100;
 
-                if (sealId >= 1)
-                    AddImage(L.SealX, L.SealY, 2821 + sealId - 1);
+                    if (sealId >= 1)
+                        AddImage(L.SealX, L.SealY, 2821 + sealId - 1);
+                }
             }
 
             // Spread pages (sempre mostra esquerda como par)
