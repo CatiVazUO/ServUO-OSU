@@ -243,7 +243,7 @@ namespace Server.Custom.Reinos
 
             // Se o modo for prender, depois do desmaio ele vai para a prisão
             if (!permanentDeath && m_ArrestMode)
-                prisoned = ReinoPrisionSystem.TrySendToPrison(pm, m_CityId, this, m_CurrentLaw);
+                prisoned = ReinoMilitarySystem.TrySendToPrison(pm, m_CityId, this, m_CurrentLaw);
 
             ReinoMilitarySystem.RegisterGuardOutcome(this, pm, m_CurrentLaw, !permanentDeath, permanentDeath, storedLoot, prisoned);
 

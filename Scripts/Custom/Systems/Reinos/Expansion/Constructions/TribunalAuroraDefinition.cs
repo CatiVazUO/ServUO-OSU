@@ -14,7 +14,6 @@ namespace Server.Custom.Reinos
         public static readonly Point3D DESK_OFFSET = new Point3D(1, 1, 0);
         public static readonly Point3D OFFICER_OFFSET = new Point3D(8, 5, 0);
         public const int OFFICER_Z_OFFSET = 0;
-        private static readonly Point3D ACCUSED_OFFSET = new Point3D(10, 6, 0);
 
         private static readonly ReinoResourceCost[] BUILD_COSTS = new ReinoResourceCost[]
         {
@@ -43,11 +42,6 @@ namespace Server.Custom.Reinos
 
         private const int FINISHED_MULTI_ID = 0xA7;
         private const int ABANDONED_MULTI_ID = 0xA8;
-
-        public static Point3D GetAccusedOffset()
-        {
-            return ACCUSED_OFFSET;
-        }
 
         public static ReinoConstructionDefinition Create()
         {

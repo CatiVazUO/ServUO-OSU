@@ -1130,9 +1130,6 @@ namespace Server.Custom.Reinos
             if (info == null || info.Definition == null)
                 return;
 
-            if (String.Equals(info.Definition.Id, "prisao_aurora", StringComparison.OrdinalIgnoreCase))
-                ReinoPrisionSystem.ConsumeDynamicWeeklyGold(info.CityId);
-
             int npcGold = GetNpcCount(info) * Math.Max(0, info.Definition.NpcWeeklySalaryGold);
             int commissionGold = GetCommissionCount(info) * Math.Max(0, GetCommissionWeeklySalaryGold(info));
 

@@ -18,12 +18,10 @@ namespace Server.Custom.Reinos
         public string AccusedName;
         public int PendingSentenceDays;
         public int PendingFineGold;
-        public DateTime SessionStartedUtc;
 
         public ReinoTrialSession()
         {
             AccusedName = String.Empty;
-            SessionStartedUtc = DateTime.MinValue;
         }
     }
 

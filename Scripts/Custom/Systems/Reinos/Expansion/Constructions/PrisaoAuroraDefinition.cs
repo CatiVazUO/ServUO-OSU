@@ -21,22 +21,6 @@ namespace Server.Custom.Reinos
 
         private static readonly ReinoResourceCost[] MAINTENANCE_COSTS = new ReinoResourceCost[0];
 
-        private static readonly Point3D[] CELL_OFFSETS = new Point3D[]
-        {
-            new Point3D(5, 6, 0),
-            new Point3D(7, 6, 0),
-            new Point3D(9, 6, 0),
-            new Point3D(11, 6, 0),
-            new Point3D(13, 6, 0)
-        };
-
-        private static readonly Point3D INTERROGATION_OFFSET = new Point3D(15, 10, 0);
-        private static readonly Point3D DESK_OFFSET = new Point3D(1, 1, 0);
-        private static readonly Point3D LOCKER_OFFSET = new Point3D(2, 1, 0);
-        private static readonly Point3D JAILER_OFFSET = new Point3D(3, 2, 0);
-        private static readonly Point3D GUARD_OFFSET = new Point3D(5, 2, 0);
-        private static readonly Point3D RELEASE_OFFSET = new Point3D(1, 0, 0);
-
         private static readonly int[] STAGE_MULTI_IDS = new int[]
         {
             0xA3,
@@ -56,45 +40,6 @@ namespace Server.Custom.Reinos
         private const int FINISHED_MULTI_ID = 0xA7;
         private const int ABANDONED_MULTI_ID = 0xA8;
 
-
-        public static Point3D GetCellOffset(int index)
-        {
-            if (index < 0 || index >= CELL_OFFSETS.Length)
-                index = 0;
-
-            return CELL_OFFSETS[index];
-        }
-
-        public static Point3D GetInterrogationOffset()
-        {
-            return INTERROGATION_OFFSET;
-        }
-
-        public static Point3D GetDeskOffset()
-        {
-            return DESK_OFFSET;
-        }
-
-        public static Point3D GetLockerOffset()
-        {
-            return LOCKER_OFFSET;
-        }
-
-        public static Point3D GetJailerOffset()
-        {
-            return JAILER_OFFSET;
-        }
-
-        public static Point3D GetPrisonGuardOffset()
-        {
-            return GUARD_OFFSET;
-        }
-
-        public static Point3D GetReleaseOffset()
-        {
-            return RELEASE_OFFSET;
-        }
-
         public static ReinoConstructionDefinition Create()
         {
             StringBuilder sb = new StringBuilder();
@@ -102,9 +47,9 @@ namespace Server.Custom.Reinos
             sb.Append("<B>Prisão</B><BR><BR>");
             sb.Append("<B>Tamanho mínimo do lote:</B> 30x30.<BR>");
             sb.Append("<B>Construção:</B> 800 moedas, 200 tecidos, 200 ferro e 200 madeira.<BR>");
-            sb.Append("<B>Manutenção semanal:</B> variável conforme presos, refeições e multas ativas.<BR><BR>");
-            sb.Append("A definition da prisão agora guarda offsets configuráveis para: 5 celas, sala de interrogatório, mesa, baú e npcs.<BR><BR>");
-            sb.Append("Nesta primeira versão ela continua usando o multi placeholder dos correios, como você pediu.");
+            sb.Append("<B>Manutenção semanal:</B> 20 moedas por preso e 10 de cada recurso por preso.<BR><BR>");
+            sb.Append("As 5 celas desta primeira versão ficam configuradas por offsets internos para facilitar o teste. Os offsets usados são: (5,6,0), (7,6,0), (9,6,0), (11,6,0) e (13,6,0), sempre a partir do canto noroeste do lote.<BR><BR>");
+            sb.Append("Nesta primeira versão ela também usa o multi placeholder dos correios. O item interno da prisão já fica pronto para o futuro gump do diretor da prisão.");
             sb.Append("</BASEFONT>");
 
             ReinoConstructionDefinition def = new ReinoConstructionDefinition();
@@ -129,7 +74,7 @@ namespace Server.Custom.Reinos
             def.MaintenancePriority = 2;
             def.AllowManualActivationToggle = true;
             def.AllowPriorityChange = true;
-            def.NpcWeeklySalaryGold = 50;
+            def.NpcWeeklySalaryGold = 0;
             return def;
         }
     }

@@ -773,6 +773,13 @@ namespace Server.Custom.Reinos
             if (actor == null || actor.Deleted || actor.Map == null)
                 return;
 
+            PlayerMobile trialPlayer = actor as PlayerMobile;
+            if (trialPlayer != null && ReinoTrialsSystem.IsInsideTribunal(cityId, actor.Location, actor.Map))
+            {
+                ReinoTrialsSystem.HandleCourtCrime(trialPlayer, cityId, GetLawLabel(law), false);
+                return;
+            }
+
             List<OSUCityGuard> witnesses = GetWitnessGuards(cityId, actor.Location, actor.Map, 18, true);
             if (witnesses.Count <= 0)
                 return;
@@ -1737,7 +1744,23 @@ namespace Server.Custom.Reinos
 
         public static bool TrySendToPrison(Mobile prisoner, int cityId, OSUCityGuard guard, ReinoMilitaryLaw law)
         {
-            return ReinoPrisionSystem.TrySendToPrison(prisoner, cityId, guard, law);
+            if (prisoner == null || prisoner.Deleted || prisoner.Map == null)
+                return false;
+
+            string prisonKey = FindPrimaryPrisonKey(cityId);
+            if (String.IsNullOrWhiteSpace(prisonKey))
+                return false;
+
+            Point3D cell;
+            if (!FindFirstEmptyPrisonCell(cityId, out cell))
+                return false;
+
+            prisoner.Combatant = null;
+            prisoner.Warmode = false;
+            prisoner.MoveToWorld(cell, prisoner.Map);
+            AddPrisonRecord(cityId, prisoner, guard, law, 48, "Pena padrão de 48 horas.");
+            prisoner.SendMessage("Você foi levado para uma cela do reino.");
+            return true;
         }
 
         public static bool FindFirstEmptyPrisonCell(int cityId, out Point3D cell)
@@ -1883,7 +1906,9 @@ namespace Server.Custom.Reinos
             if (guard == null || guard.Deleted)
                 return false;
 
+            bool lootStored = ConfiscateLivingPrisonerItems(pm, cityId);
             bool prisoned = TrySendToPrison(pm, cityId, guard, law);
+
             if (!prisoned)
                 return false;
 
@@ -1892,7 +1917,7 @@ namespace Server.Custom.Reinos
             guard.FightMode = FightMode.None;
             guard.CurrentWayPoint = null;
 
-            RegisterGuardOutcome(guard, pm, law, false, false, true, true);
+            RegisterGuardOutcome(guard, pm, law, false, false, lootStored, true);
             return true;
         }
 
