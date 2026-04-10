@@ -1,4 +1,5 @@
 using System;
+using System.CodeDom;
 using Server.Gumps;
 using Server.Mobiles;
 using Server.Network;
@@ -14,22 +15,36 @@ namespace Server.Custom.Reinos
         private const int ButtonWanted = 59004;
         private const int ButtonRecurring = 59005;
         private const int ButtonPrint = 59006;
+        private const int ButtonOldReports = 59007;
+        private const int ButtonBackToCurrent = 59008;
+        private const int ButtonArchiveBase = 59100;
+    
 
-        private readonly PlayerMobile m_From;
+
         private readonly int m_CityId;
+        private readonly bool m_ShowArchiveList;
+        private readonly int m_ArchiveIndex;
+        private readonly int m_DetailMode;
+        private readonly int m_DetailIndex;
 
         public ReinoMilitaryReportsGump(PlayerMobile from, int cityId)
+            : this(from, cityId, false, -1, 0, 0)
+        {
+        }
+
+        public ReinoMilitaryReportsGump(PlayerMobile from, int cityId, bool showArchiveList, int archiveIndex, int detailMode, int detailIndex)
             : base(0, 0)
         {
-            m_From = from;
             m_CityId = cityId;
+            m_ShowArchiveList = showArchiveList;
+            m_ArchiveIndex = archiveIndex;
+            m_DetailMode = detailMode;
+            m_DetailIndex = detailIndex;
 
             Closable = true;
             Disposable = true;
             Dragable = true;
             Resizable = false;
-
-            ReinoMilitarySession session = ReinoMilitarySystem.GetSession(from);
 
             AddPage(0);
             AddImageTiled(338, 159, 524, 565, 377);
@@ -44,15 +59,39 @@ namespace Server.Custom.Reinos
             AddImageTiled(652, 201, 184, 21, 470);
             AddImageTiled(367, 201, 178, 21, 469);
             AddImageTiled(419, 201, 316, 21, 471);
-            AddLabel(538, 180, 0, @"Relatório do Reino");
 
-            AddHtml(381, 244, 444, 123, ReinoMilitarySystem.GetReportsSummaryHtml(cityId), false, false);
-            AddHtml(419, 462, 368, 196, ReinoMilitarySystem.GetReportsDetailHtml(cityId, session.DetailMode, session.DetailIndex), false, true);
+            if (m_ShowArchiveList)
+                BuildArchiveListView();
+            else
+                BuildMainReportView();
+        }
 
-            int count = ReinoMilitarySystem.GetDetailCount(cityId, session.DetailMode);
-            if (count > 1 && session.DetailIndex > 0)
+        private void BuildMainReportView()
+        {
+            string title = m_ArchiveIndex >= 0
+                ? ReinoMilitarySystem.GetArchivedReportTitle(m_CityId, m_ArchiveIndex)
+                : "Relatório do Reino";
+
+            AddLabel(538, 180, 0, title);
+
+            string summaryHtml = m_ArchiveIndex >= 0
+                ? ReinoMilitarySystem.GetArchivedReportsSummaryHtml(m_CityId, m_ArchiveIndex)
+                : ReinoMilitarySystem.GetReportsSummaryHtml(m_CityId);
+
+            string detailHtml = m_ArchiveIndex >= 0
+                ? ReinoMilitarySystem.GetArchivedReportDetailHtml(m_CityId, m_ArchiveIndex, m_DetailMode, m_DetailIndex)
+                : ReinoMilitarySystem.GetReportsDetailHtml(m_CityId, m_DetailMode, m_DetailIndex);
+
+            int count = m_ArchiveIndex >= 0
+                ? ReinoMilitarySystem.GetArchivedDetailCount(m_CityId, m_ArchiveIndex, m_DetailMode)
+                : ReinoMilitarySystem.GetDetailCount(m_CityId, m_DetailMode);
+
+            AddHtml(381, 244, 444, 123, summaryHtml, false, false);
+            AddHtml(419, 462, 368, 196, detailHtml, false, true);
+
+            if (count > 1 && m_DetailIndex > 0)
                 AddButton(372, 554, 580, 580, ButtonPrev, GumpButtonType.Reply, 0);
-            if (count > 1 && session.DetailIndex < count - 1)
+            if (count > 1 && m_DetailIndex < count - 1)
                 AddButton(806, 556, 581, 581, ButtonNext, GumpButtonType.Reply, 0);
 
             AddLabel(419, 391, 0, @"Ver Crimes Detalhados");
@@ -60,13 +99,48 @@ namespace Server.Custom.Reinos
             AddLabel(644, 391, 0, @"Ver Procurados Detalhados");
             AddLabel(644, 418, 0, @"Ver Criminosos Recorrentes");
 
-            AddButton(391, 389, session.DetailMode == 1 ? 530 : 531, session.DetailMode == 1 ? 530 : 531, ButtonCrimes, GumpButtonType.Reply, 0);
-            AddButton(391, 419, session.DetailMode == 2 ? 530 : 531, session.DetailMode == 2 ? 530 : 531, ButtonPrisons, GumpButtonType.Reply, 0);
-            AddButton(614, 390, session.DetailMode == 3 ? 530 : 531, session.DetailMode == 3 ? 530 : 531, ButtonWanted, GumpButtonType.Reply, 0);
-            AddButton(614, 420, session.DetailMode == 4 ? 530 : 531, session.DetailMode == 4 ? 530 : 531, ButtonRecurring, GumpButtonType.Reply, 0);
+            AddButton(391, 389, m_DetailMode == 1 ? 530 : 531, m_DetailMode == 1 ? 530 : 531, ButtonCrimes, GumpButtonType.Reply, 0);
+            AddButton(391, 419, m_DetailMode == 2 ? 530 : 531, m_DetailMode == 2 ? 530 : 531, ButtonPrisons, GumpButtonType.Reply, 0);
+            AddButton(614, 390, m_DetailMode == 3 ? 530 : 531, m_DetailMode == 3 ? 530 : 531, ButtonWanted, GumpButtonType.Reply, 0);
+            AddButton(614, 420, m_DetailMode == 4 ? 530 : 531, m_DetailMode == 4 ? 530 : 531, ButtonRecurring, GumpButtonType.Reply, 0);
 
             AddLabel(537, 676, 0, @"Pegar Relatório Impresso");
             AddButton(507, 675, 531, 531, ButtonPrint, GumpButtonType.Reply, 0);
+
+            if (m_ArchiveIndex < 0)
+            {
+                AddLabel(769, 294, 0, @"Antigos");
+                AddButton(739, 293, 531, 531, ButtonOldReports, GumpButtonType.Reply, 0);
+            }
+            else
+            {
+                AddLabel(769, 294, 0, @"Atual");
+                AddButton(739, 293, 531, 531, ButtonBackToCurrent, GumpButtonType.Reply, 0);
+            }
+        }
+
+        private void BuildArchiveListView()
+        {
+            AddLabel(541, 228, 0, @"Relatórios Antigos");
+
+            int count = Math.Min(10, ReinoMilitarySystem.GetArchivedReportCount(m_CityId));
+            if (count <= 0)
+            {
+                AddHtml(410, 279, 350, 40, "<BASEFONT COLOR=#000000>Nenhum relatório antigo encontrado.</BASEFONT>", false, false);
+                AddLabel(769, 294, 0, @"Atual");
+                AddButton(739, 293, 531, 531, ButtonBackToCurrent, GumpButtonType.Reply, 0);
+                return;
+            }
+
+            int y = 279;
+            for (int i = 0; i < count; i++, y += 28)
+            {
+                AddLabel(410, y, 0, ReinoMilitarySystem.GetArchivedReportListLabel(m_CityId, i));
+                AddButton(382, y - 2, 531, 531, ButtonArchiveBase + i, GumpButtonType.Reply, 0);
+            }
+
+            AddLabel(769, 294, 0, @"Atual");
+            AddButton(739, 293, 531, 531, ButtonBackToCurrent, GumpButtonType.Reply, 0);
         }
 
         public override void OnResponse(NetState sender, RelayInfo info)
@@ -75,46 +149,76 @@ namespace Server.Custom.Reinos
             if (from == null || from.Deleted)
                 return;
 
-            ReinoMilitarySession session = ReinoMilitarySystem.GetSession(from);
+            if (info.ButtonID == 0)
+            {
+                if (!m_ShowArchiveList && m_ArchiveIndex < 0)
+                    ReinoMilitarySystem.ArchiveAndClearCurrentReport(m_CityId, from);
+
+                return;
+            }
+
+            int detailMode = m_DetailMode;
+            int detailIndex = m_DetailIndex;
 
             switch (info.ButtonID)
             {
                 case ButtonPrev:
-                    if (session.DetailIndex > 0)
-                        session.DetailIndex--;
-                    from.SendGump(new ReinoMilitaryReportsGump(from, m_CityId));
-                    break;
+                    if (detailIndex > 0)
+                        detailIndex--;
+                    from.SendGump(new ReinoMilitaryReportsGump(from, m_CityId, false, m_ArchiveIndex, detailMode, detailIndex));
+                    return;
+
                 case ButtonNext:
-                    if (session.DetailIndex < Math.Max(0, ReinoMilitarySystem.GetDetailCount(m_CityId, session.DetailMode) - 1))
-                        session.DetailIndex++;
-                    from.SendGump(new ReinoMilitaryReportsGump(from, m_CityId));
-                    break;
+                    int max = m_ArchiveIndex >= 0
+                        ? ReinoMilitarySystem.GetArchivedDetailCount(m_CityId, m_ArchiveIndex, detailMode)
+                        : ReinoMilitarySystem.GetDetailCount(m_CityId, detailMode);
+
+                    if (detailIndex < Math.Max(0, max - 1))
+                        detailIndex++;
+
+                    from.SendGump(new ReinoMilitaryReportsGump(from, m_CityId, false, m_ArchiveIndex, detailMode, detailIndex));
+                    return;
+
                 case ButtonCrimes:
-                    session.DetailMode = 1;
-                    session.DetailIndex = 0;
-                    from.SendGump(new ReinoMilitaryReportsGump(from, m_CityId));
-                    break;
+                    from.SendGump(new ReinoMilitaryReportsGump(from, m_CityId, false, m_ArchiveIndex, 1, 0));
+                    return;
+
                 case ButtonPrisons:
-                    session.DetailMode = 2;
-                    session.DetailIndex = 0;
-                    from.SendGump(new ReinoMilitaryReportsGump(from, m_CityId));
-                    break;
+                    from.SendGump(new ReinoMilitaryReportsGump(from, m_CityId, false, m_ArchiveIndex, 2, 0));
+                    return;
+
                 case ButtonWanted:
-                    session.DetailMode = 3;
-                    session.DetailIndex = 0;
-                    from.SendGump(new ReinoMilitaryReportsGump(from, m_CityId));
-                    break;
+                    from.SendGump(new ReinoMilitaryReportsGump(from, m_CityId, false, m_ArchiveIndex, 3, 0));
+                    return;
+
                 case ButtonRecurring:
-                    session.DetailMode = 4;
-                    session.DetailIndex = 0;
-                    from.SendGump(new ReinoMilitaryReportsGump(from, m_CityId));
-                    break;
+                    from.SendGump(new ReinoMilitaryReportsGump(from, m_CityId, false, m_ArchiveIndex, 4, 0));
+                    return;
+
                 case ButtonPrint:
-                    from.SendMessage(ReinoMilitarySystem.PrintReportBook(from, m_CityId));
+                    if (m_ArchiveIndex >= 0)
+                        ReinoMilitarySystem.BeginPrintArchivedReportBook(from, m_CityId, m_ArchiveIndex);
+                    else
+                        ReinoMilitarySystem.BeginPrintReportBook(from, m_CityId);
+
+                    from.SendGump(new ReinoMilitaryReportsGump(from, m_CityId, false, m_ArchiveIndex, detailMode, detailIndex));
+                    return;
+
+                case ButtonOldReports:
+                    from.SendGump(new ReinoMilitaryReportsGump(from, m_CityId, true, -1, 0, 0));
+                    return;
+
+                case ButtonBackToCurrent:
                     from.SendGump(new ReinoMilitaryReportsGump(from, m_CityId));
-                    break;
+                    return;
+            }
+
+            if (info.ButtonID >= ButtonArchiveBase && info.ButtonID < ButtonArchiveBase + 10)
+            {
+                int archiveIndex = info.ButtonID - ButtonArchiveBase;
+                from.SendGump(new ReinoMilitaryReportsGump(from, m_CityId, false, archiveIndex, 1, 0));
             }
         }
     }
-    
+
 }

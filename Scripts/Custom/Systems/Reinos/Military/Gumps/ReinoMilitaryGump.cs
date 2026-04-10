@@ -251,9 +251,9 @@ namespace Server.Custom.Reinos
 
             StringBuilder html = new StringBuilder();
             html.Append("<BASEFONT COLOR=#000000>");
-            html.Append("Crie um ponto de guarda primeiro. Depois vá passando pelos locais onde o guarda deve andar e crie pontos de rota. ");
-            html.Append("Use <B>ligar pontos de rota</B> em um ponto, depois em outro, para formar a sequência. Em seguida fique sobre o ponto de guarda e clique em <B>ligar a um ponto de guarda</B>.<BR><BR>");
-            html.Append("<B>Selecionar rota</B> torna pontos próximos visíveis por 1 minuto. <B>Resetar rota</B> devolve o padrão: tempo curto e rota infinita.<BR><BR>");
+            html.Append("Crie o ponto de guarda e depois os pontos de rota nos lugares por onde o guarda deve passar. ");
+            html.Append("Ao usar <B>ligar pontos de rota</B>, o sistema abre um target: selecione o primeiro ponto, depois os seguintes, e termine clicando no <B>ponto de guarda</B> para fechar a rota.<BR><BR>");
+            html.Append("<B>Mostrar pontos</B> revela pontos de rota e de guarda num raio de 15 tiles. <B>Resetar rota</B> apaga a rota inteira do ponto de guarda ligado.<BR><BR>");
             html.Append("<B>Velocidade atual:</B> ").Append(ReinoMilitarySystem.GetRouteSpeedLabel(session.SelectedRouteSpeed));
             html.Append("<BR><B>Agendamento atual:</B> ").Append(ReinoMilitarySystem.GetRouteScheduleLabel(session.SelectedRouteSchedule));
             html.Append("</BASEFONT>");
@@ -262,7 +262,7 @@ namespace Server.Custom.Reinos
 
             AddLabel(479, 540, 0, @"Criar Ponto de Rota");
             AddLabel(479, 567, 0, @"Ligar Pontos de Rota");
-            AddLabel(479, 598, 0, @"Ligar a Um Ponto de Guarda");
+            AddLabel(479, 598, 0, @"Cancelar Ligação Atual");
             AddLabel(479, 628, 0, @"Remover Ponto de Rota");
             AddButton(449, 539, 531, 531, ButtonCreateRoutePoint, GumpButtonType.Reply, 0);
             AddButton(449, 569, 531, 531, ButtonLinkRoutePoints, GumpButtonType.Reply, 0);
@@ -283,7 +283,7 @@ namespace Server.Custom.Reinos
             AddButton(1046, 545, 531, 531, ButtonRouteSchedule, GumpButtonType.Reply, 0);
             AddLabel(1076, 575, 0, @"Resetar Rota");
             AddButton(1046, 576, 531, 531, ButtonResetRoute, GumpButtonType.Reply, 0);
-            AddLabel(766, 658, 0, @"Mostrar/Ocultar Pontos");
+            AddLabel(766, 658, 0, @"Mostrar Pontos de Rota");
             AddButton(736, 659, 531, 531, ButtonRevealRoutes, GumpButtonType.Reply, 0);
             AddLabel(1076, 606, 0, @"Resetar Config de Rota");
             AddButton(1046, 607, 531, 531, ButtonResetRouteConfig, GumpButtonType.Reply, 0);
@@ -318,6 +318,13 @@ namespace Server.Custom.Reinos
             int start = session.PendingTrainingPage * 5;
             int[] rowY = new int[] { 370, 407, 446, 486, 527 };
 
+            if (entries.Count <= 0)
+            {
+                AddHtml(416, 370, 808, 50,
+                    "<BASEFONT COLOR=#000000>Nenhum guarda ativo ou em treinamento foi encontrado para essa página.</BASEFONT>",
+                    false, false);
+            }
+
             for (int i = 0; i < 5; i++)
             {
                 int real = start + i;
@@ -351,7 +358,7 @@ namespace Server.Custom.Reinos
             AddButton(837, 673, 499, 499, ButtonTrainingNext, GumpButtonType.Reply, 0);
 
             AddHtml(416, 580, 808, 75,
-                "<BASEFONT COLOR=#000000>Durante os testes, quando um guarda começa o treinamento ele some do posto por <B>1 minuto</B>. Ao voltar, ganha atributos e skills melhores, mas não muda de tipo. O nível máximo é <B>5</B>.</BASEFONT>",
+                "<BASEFONT COLOR=#000000>Durante os testes, quando um guarda começa o treinamento ele some do posto por <B>1 minuto</B>. Ao voltar, ganha <B>+1 a +3 STR</B>, <B>+1 a +3 DEX</B>, <B>+8 a +12 de vida máxima</B>, <B>+3 a +6 de stamina máxima</B> e melhora <B>uma skill compatível do guarda em +4 a +5</B>. O nível máximo é <B>5</B>.</BASEFONT>",
                 false, false);
         }
 
@@ -509,7 +516,7 @@ namespace Server.Custom.Reinos
             if (button == ButtonLinkRouteToGuard)
             {
                 session.Tab = ReinoMilitaryTab.Routes;
-                from.SendMessage(ReinoMilitarySystem.LinkRouteToGuardPost(from, m_CityId));
+                from.SendMessage(ReinoMilitarySystem.CancelPendingRouteLink(from));
                 from.SendGump(new ReinoExpansionGump(from, m_CityId, -1, -1, String.Empty, 0, 8));
                 return true;
             }
@@ -590,7 +597,10 @@ namespace Server.Custom.Reinos
             if (button == ButtonTrainingNext)
             {
                 session.Tab = ReinoMilitaryTab.Training;
-                session.PendingTrainingPage++;
+                int count = ReinoMilitarySystem.GetTrainingEntries(m_CityId).Count;
+                int maxPage = Math.Max(0, ((count + 4) / 5) - 1);
+                if (session.PendingTrainingPage < maxPage)
+                    session.PendingTrainingPage++;
                 from.SendGump(new ReinoExpansionGump(from, m_CityId, -1, -1, String.Empty, 0, 8));
                 return true;
             }

@@ -1542,5 +1542,132 @@ namespace Server.Items
 
             int version = reader.ReadInt();
         }
+
+        public class UniformePrisaoShirt : BaseShirt
+        {
+            [Constructable]
+            public UniformePrisaoShirt()
+                : this(0)
+            {
+            }
+
+            [Constructable]
+            public UniformePrisaoShirt(int hue)
+                : base(0x1533, hue)
+            {
+                this.Weight = 7.0;
+            }
+
+            public override void OnRemoved(object parent)
+            {
+                base.OnRemoved(parent);
+
+                if (Deleted)
+                    return;
+
+                if (parent is Mobile)
+                    Timer.DelayCall(TimeSpan.Zero, Delete);
+            }
+
+            public UniformePrisaoShirt(Serial serial)
+                : base(serial)
+            {
+            }
+
+            public override void Serialize(GenericWriter writer)
+            {
+                base.Serialize(writer);
+
+                writer.Write((int)0);
+            }
+
+            public override void Deserialize(GenericReader reader)
+            {
+                base.Deserialize(reader);
+
+                int version = reader.ReadInt();
+            }
+        }
+
+        public class UniformePrisaoPants : BasePants
+        {
+            [Constructable]
+            public UniformePrisaoPants()
+                : this(0)
+            {
+            }
+
+            [Constructable]
+            public UniformePrisaoPants(int hue)
+                : base(0x1534, hue)
+            {
+                this.Weight = 7.0;
+            }
+
+            public override void OnRemoved(object parent)
+            {
+                base.OnRemoved(parent);
+
+                if (Deleted)
+                    return;
+
+                if (parent is Mobile)
+                    Timer.DelayCall(TimeSpan.Zero, Delete);
+            }
+
+            public UniformePrisaoPants(Serial serial)
+                : base(serial)
+            {
+            }
+
+            public override void Serialize(GenericWriter writer)
+            {
+                base.Serialize(writer);
+
+                writer.Write((int)0);
+            }
+
+            public override void Deserialize(GenericReader reader)
+            {
+                base.Deserialize(reader);
+
+                int version = reader.ReadInt();
+            }
+        }
+
+        public class UniformeUnderShirt : BaseShirt
+        {
+            [Constructable]
+            public UniformeUnderShirt()
+                : this(0)
+            {
+            }
+
+            [Constructable]
+            public UniformeUnderShirt(int hue)
+                : base(0x1532, hue)
+            {
+                this.Weight = 7.0;
+            }
+
+            public UniformeUnderShirt(Serial serial)
+                : base(serial)
+            {
+            }
+
+            public override void Serialize(GenericWriter writer)
+            {
+                base.Serialize(writer);
+
+                writer.Write((int)0);
+            }
+
+            public override void Deserialize(GenericReader reader)
+            {
+                base.Deserialize(reader);
+
+                int version = reader.ReadInt();
+            }
+        }
     }
 }

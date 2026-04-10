@@ -1,10 +1,11 @@
-using System;
-using System.Collections.Generic;
 using Server;
 using Server.Items;
 using Server.Items.Resource;
 using Server.Mobiles;
 using Server.Network;
+using System;
+using System.Collections.Generic;
+using static Server.Items.Uniforme44;
 
 namespace Server.Custom.Reinos
 {
@@ -66,7 +67,10 @@ namespace Server.Custom.Reinos
             HairItemID = Race.RandomHair(Female);
             HairHue = Race.RandomHairHue();
             if (!Female)
+            {
                 FacialHairItemID = Race.RandomFacialHair(Female);
+                FacialHairHue = Race.RandomHairHue();
+            }
 
             Blessed = false;
             CantWalk = false;
@@ -409,12 +413,16 @@ namespace Server.Custom.Reinos
 
         private void EquipBaseClothes()
         {
+            Item shirt = new UniformeUnderShirt();
+            shirt.Movable = true;
+            AddItem(shirt);
+
             Item boots = new Boots();
-            boots.Movable = false;
+            boots.Movable = true;
             AddItem(boots);
 
             Item pants = new LongPants();
-            pants.Movable = false;
+            pants.Movable = true;
             AddItem(pants);
         }
 

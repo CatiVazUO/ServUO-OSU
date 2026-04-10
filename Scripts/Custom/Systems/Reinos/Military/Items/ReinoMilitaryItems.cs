@@ -303,13 +303,13 @@ namespace Server.Custom.Reinos
             if (pm == null)
                 return;
 
-            if (!ReinoMilitarySystem.CanAccessMilitaryGovernmentPage(pm, m_CityId))
+            if (!ReinoPrisionSystem.CanAccessPrisonControl(pm, m_CityId))
             {
                 from.SendMessage("Você não tem acesso à administração da prisão.");
                 return;
             }
 
-            from.SendMessage("Placeholder: aqui depois entra o item do diretor da prisão para definir pena, soltar presos, criar chaves e refeições.");
+            pm.SendGump(new ReinoPrisionGump(pm, m_CityId));
         }
 
         public override void Serialize(GenericWriter writer)
@@ -553,6 +553,9 @@ namespace Server.Custom.Reinos
     {
         private int m_CityId;
         private int m_DeskSerial;
+        private int m_LockerSerial;
+        private int m_JailerSerial;
+        private int m_GuardSerial;
 
         public ReinoPrisaoMulti(int referenceId, string constructionId, int stageIndex)
             : base(0xA7, referenceId, constructionId, stageIndex)
@@ -568,19 +571,17 @@ namespace Server.Custom.Reinos
         public override void OnMapChange()
         {
             base.OnMapChange();
-            EnsureDesk();
+            EnsureAuxiliary();
         }
 
         public override void OnLocationChange(Point3D oldLocation)
         {
             base.OnLocationChange(oldLocation);
-            EnsureDesk();
-            Item desk = FindWorldItem(m_DeskSerial);
-            if (desk != null)
-                desk.MoveToWorld(new Point3D(desk.X + (X - oldLocation.X), desk.Y + (Y - oldLocation.Y), desk.Z + (Z - oldLocation.Z)), Map);
+            EnsureAuxiliary();
+            MoveAux(X - oldLocation.X, Y - oldLocation.Y, Z - oldLocation.Z);
         }
 
-        private void EnsureDesk()
+        private void EnsureAuxiliary()
         {
             if (Deleted || Map == null || Map == Map.Internal)
                 return;
@@ -593,9 +594,76 @@ namespace Server.Custom.Reinos
             if (desk == null)
             {
                 desk = new ReinoPrisonDesk(cityId, key);
-                desk.MoveToWorld(new Point3D(X + 1, Y + 1, Z), Map);
+                Point3D deskOffset = PrisaoAuroraDefinition.GetDeskOffset();
+                desk.MoveToWorld(new Point3D(X + deskOffset.X, Y + deskOffset.Y, Z + deskOffset.Z), Map);
                 m_DeskSerial = desk.Serial.Value;
             }
+
+            ReinoPrisonLocker locker = FindWorldItem(m_LockerSerial) as ReinoPrisonLocker;
+            if (locker == null)
+            {
+                locker = new ReinoPrisonLocker(cityId, key);
+                Point3D lockerOffset = PrisaoAuroraDefinition.GetLockerOffset();
+                locker.MoveToWorld(new Point3D(X + lockerOffset.X, Y + lockerOffset.Y, Z + lockerOffset.Z), Map);
+                m_LockerSerial = locker.Serial.Value;
+            }
+
+            OSUCarcereiro jailer = FindWorldMobile(m_JailerSerial) as OSUCarcereiro;
+            if (jailer == null)
+            {
+                jailer = new OSUCarcereiro(cityId);
+                Point3D jailerOffset = PrisaoAuroraDefinition.GetJailerOffset();
+                jailer.MoveToWorld(new Point3D(X + jailerOffset.X, Y + jailerOffset.Y, Z + jailerOffset.Z), Map);
+                m_JailerSerial = jailer.Serial.Value;
+            }
+
+            OSUGuardaDePrisao guard = FindWorldMobile(m_GuardSerial) as OSUGuardaDePrisao;
+            if (guard == null)
+            {
+                guard = new OSUGuardaDePrisao(cityId);
+                Point3D guardOffset = PrisaoAuroraDefinition.GetPrisonGuardOffset();
+                guard.MoveToWorld(new Point3D(X + guardOffset.X, Y + guardOffset.Y, Z + guardOffset.Z), Map);
+                m_GuardSerial = guard.Serial.Value;
+            }
+
+            SyncNpcSerials();
+        }
+
+        private void MoveAux(int dx, int dy, int dz)
+        {
+            Item item = FindWorldItem(m_DeskSerial);
+            if (item != null && !item.Deleted)
+                item.MoveToWorld(new Point3D(item.X + dx, item.Y + dy, item.Z + dz), Map);
+
+            item = FindWorldItem(m_LockerSerial);
+            if (item != null && !item.Deleted)
+                item.MoveToWorld(new Point3D(item.X + dx, item.Y + dy, item.Z + dz), Map);
+
+            Mobile mob = FindWorldMobile(m_JailerSerial);
+            if (mob != null && !mob.Deleted)
+                mob.MoveToWorld(new Point3D(mob.X + dx, mob.Y + dy, mob.Z + dz), Map);
+
+            mob = FindWorldMobile(m_GuardSerial);
+            if (mob != null && !mob.Deleted)
+                mob.MoveToWorld(new Point3D(mob.X + dx, mob.Y + dy, mob.Z + dz), Map);
+        }
+
+        private void SyncNpcSerials()
+        {
+            ReinoLotState state = ReinoExpansionSystem.GetLotState(ReferenceId);
+            if (state == null)
+                return;
+
+            if (state.NpcSerials == null)
+                state.NpcSerials = new System.Collections.Generic.List<int>();
+
+            state.NpcSerials.Clear();
+
+            if (m_JailerSerial > 0)
+                state.NpcSerials.Add(m_JailerSerial);
+
+            if (m_GuardSerial > 0)
+                state.NpcSerials.Add(m_GuardSerial);
         }
 
         private int ResolveCityId()
@@ -612,19 +680,40 @@ namespace Server.Custom.Reinos
             return null;
         }
 
+        private static Mobile FindWorldMobile(int serial)
+        {
+            Mobile mob;
+            if (serial != 0 && World.Mobiles.TryGetValue(serial, out mob))
+                return mob;
+            return null;
+        }
+
         public override void OnAfterDelete()
         {
             base.OnAfterDelete();
-            Item desk = FindWorldItem(m_DeskSerial);
-            if (desk != null) desk.Delete();
+
+            Item item = FindWorldItem(m_DeskSerial);
+            if (item != null) item.Delete();
+
+            item = FindWorldItem(m_LockerSerial);
+            if (item != null) item.Delete();
+
+            Mobile mob = FindWorldMobile(m_JailerSerial);
+            if (mob != null) mob.Delete();
+
+            mob = FindWorldMobile(m_GuardSerial);
+            if (mob != null) mob.Delete();
         }
 
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write(0);
+            writer.Write(1);
             writer.Write(m_CityId);
             writer.Write(m_DeskSerial);
+            writer.Write(m_LockerSerial);
+            writer.Write(m_JailerSerial);
+            writer.Write(m_GuardSerial);
         }
 
         public override void Deserialize(GenericReader reader)
@@ -633,7 +722,10 @@ namespace Server.Custom.Reinos
             int version = reader.ReadInt();
             m_CityId = reader.ReadInt();
             m_DeskSerial = reader.ReadInt();
-            Timer.DelayCall(TimeSpan.FromSeconds(2.0), EnsureDesk);
+            m_LockerSerial = version >= 1 ? reader.ReadInt() : 0;
+            m_JailerSerial = version >= 1 ? reader.ReadInt() : 0;
+            m_GuardSerial = version >= 1 ? reader.ReadInt() : 0;
+            Timer.DelayCall(TimeSpan.FromSeconds(2.0), EnsureAuxiliary);
         }
     }
 }

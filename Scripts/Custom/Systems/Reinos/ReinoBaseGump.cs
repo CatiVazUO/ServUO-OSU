@@ -113,7 +113,7 @@ namespace Server.Custom.Reinos
                 ReinoMenuSlotEntry entry = dynamicSlots[i];
                 int y = startY + (i * spacing);
 
-                AddLabel(250, y, 0, entry.Label);
+                AddLabel(250, y, 1152, entry.Label);
                 AddButton(211, y - 6, 439, 438, entry.Page, GumpButtonType.Reply, 0);
             }
         }
@@ -153,7 +153,7 @@ namespace Server.Custom.Reinos
             //     list.Add(new ReinoMenuSlotEntry(11, "Outra Aba"));
 
             // Postos, se você quiser continuar mostrando no menu lateral:
-            list.Add(new ReinoMenuSlotEntry(10, "Postos"));
+           // list.Add(new ReinoMenuSlotEntry(10, "Postos"));
 
             return list;
         }
@@ -232,7 +232,7 @@ namespace Server.Custom.Reinos
         {
             AddPage(1);
 
-            AddLabel(430, 185, 0, titulo);
+            AddLabel(430, 185, 1152, titulo);
             AddHtml(430, 220, 720, 420,
                 "<BASEFONT COLOR=#D7C89A>Esta página ainda não foi implementada.</BASEFONT>",
                 true, true);

@@ -53,10 +53,10 @@ namespace Server.Custom.Reinos
             AddImageTiled(384, 138, 270, 31, 368);
             AddImageTiled(492, 201, 184, 21, 470);
             AddImageTiled(367, 201, 178, 21, 469);
-            AddLabel(471, 179, 0, @"Guard Setup");
+            AddLabel(471, 179, 1152, @"Config Guardas");
             AddImageTiled(419, 201, 165, 21, 471);
-            AddLabel(407, 228, 0, @"Guardas");
-            AddLabel(618, 231, 0, @"Rotas");
+            AddLabel(407, 228, 1152, @"Guardas");
+            AddLabel(618, 231, 1152, @"Rotas");
             AddButton(379, 228, m_Tab == ReinoMilitaryTab.Guards ? 534 : 531, m_Tab == ReinoMilitaryTab.Guards ? 248 : 248, ButtonTabGuards, GumpButtonType.Reply, 0);
             AddButton(590, 231, m_Tab == ReinoMilitaryTab.Routes ? 534 : 531, m_Tab == ReinoMilitaryTab.Routes ? 248 : 248, ButtonTabRoutes, GumpButtonType.Reply, 0);
             AddImageTiled(369, 259, 311, 5, 367);
@@ -69,7 +69,7 @@ namespace Server.Custom.Reinos
 
         private void BuildGuards(ReinoMilitarySession session)
         {
-            AddLabel(366, 272, 0, @"Tipos de Guarda");
+            AddLabel(366, 272, 1152, @"Tipos de Guarda");
 
             ReinoGuardKind[] kinds = new ReinoGuardKind[]
             {
@@ -96,7 +96,7 @@ namespace Server.Custom.Reinos
             {
                 bool selected = session.SelectedGuardKind == kinds[i];
                 AddButton(366, ys[i], selected ? 530 : 531, 248, ButtonGuardKindBase + (int)kinds[i], GumpButtonType.Reply, 0);
-                AddLabel(396, ys[i] + 1, 0, labels[i]);
+                AddLabel(396, ys[i] + 1, 1152, labels[i]);
             }
 
             int hg, hc, hi, hw, wg, wc, wi, ww;
@@ -104,23 +104,23 @@ namespace Server.Custom.Reinos
             int tg, tc, ti, tw;
             ReinoMilitarySystem.GetTotalWeeklyGuardCost(m_CityId, out tg, out tc, out ti, out tw);
 
-            AddLabel(600, 276, 0, @"Por Semana");
-            AddLabel(560, 313, 0, @"Moedas:"); AddLabel(630, 313, 0, wg.ToString());
-            AddLabel(560, 341, 0, @"Tecidos:"); AddLabel(630, 341, 0, wc.ToString());
-            AddLabel(560, 371, 0, @"Ferro:"); AddLabel(630, 371, 0, wi.ToString());
-            AddLabel(560, 402, 0, @"Madeira:"); AddLabel(630, 402, 0, ww.ToString());
+            AddLabel(600, 276, 1152, @"Por Semana");
+            AddLabel(560, 313, 1152, @"Moedas:"); AddLabel(630, 313, 0, wg.ToString());
+            AddLabel(560, 341, 1152, @"Tecidos:"); AddLabel(630, 341, 0, wc.ToString());
+            AddLabel(560, 371, 1152, @"Ferro:"); AddLabel(630, 371, 0, wi.ToString());
+            AddLabel(560, 402, 1152, @"Madeira:"); AddLabel(630, 402, 0, ww.ToString());
 
-            AddLabel(574, 499, 0, @"Total Semanal");
-            AddLabel(564, 536, 0, @"Moedas:"); AddLabel(630, 536, 0, tg + " (+" + wg + ")");
-            AddLabel(564, 564, 0, @"Tecidos:"); AddLabel(630, 564, 0, tc + " (+" + wc + ")");
-            AddLabel(564, 594, 0, @"Ferro:"); AddLabel(630, 594, 0, ti + " (+" + wi + ")");
-            AddLabel(564, 625, 0, @"Madeira:"); AddLabel(630, 625, 0, tw + " (+" + ww + ")");
+            AddLabel(574, 499, 1152, @"Total Semanal");
+            AddLabel(564, 536, 1152, @"Moedas:"); AddLabel(630, 536, 1152, tg + " (+" + wg + ")");
+            AddLabel(564, 564, 1152, @"Tecidos:"); AddLabel(630, 564, 1152, tc + " (+" + wc + ")");
+            AddLabel(564, 594, 1152, @"Ferro:"); AddLabel(630, 594, 1152, ti + " (+" + wi + ")");
+            AddLabel(564, 625, 1152, @"Madeira:"); AddLabel(630, 625, 1152, tw + " (+" + ww + ")");
 
-            AddLabel(398, 574, 0, @"Add Ponto de Guarda");
-            AddLabel(398, 601, 0, @"Del Ponto de Guarda");
-            AddLabel(398, 632, 0, @"Direção");
-            AddLabel(470, 632, 0, ReinoMilitarySystem.GetFacingLabel(session.FacingIndex));
-            AddLabel(398, 662, 0, @"Adicionar Guarda");
+            AddLabel(398, 574, 1152, @"Add Ponto de Guarda");
+            AddLabel(398, 601, 1152, @"Del Ponto de Guarda");
+            AddLabel(398, 632, 1152, @"Direção");
+            AddLabel(440, 632, 1152, ReinoMilitarySystem.GetFacingLabel(session.FacingIndex));
+            AddLabel(398, 662, 1152, @"Adicionar Guarda");
             AddButton(368, 573, 531, 248, ButtonAddGuardPoint, GumpButtonType.Reply, 0);
             AddButton(368, 603, 531, 248, ButtonRemoveGuardPoint, GumpButtonType.Reply, 0);
             AddButton(368, 633, 531, 248, ButtonFacing, GumpButtonType.Reply, 0);
@@ -149,7 +149,7 @@ namespace Server.Custom.Reinos
             AddLabel(407, 574, 1152, @"Resetar Rota");
             AddButton(376, 576, 531, 248, ButtonResetRoute, GumpButtonType.Reply, 0);
             AddLabel(407, 636, 1152, @"Rota por Tempo");
-            AddLabel(520, 636, 0, ReinoMilitarySystem.GetRouteScheduleLabel(session.SelectedRouteSchedule));
+            AddLabel(520, 636, 1152, ReinoMilitarySystem.GetRouteScheduleLabel(session.SelectedRouteSchedule));
             AddButton(377, 637, 531, 248, ButtonRouteSchedule, GumpButtonType.Reply, 0);
             AddLabel(407, 667, 1152, @"Resetar Config de Rota");
             AddButton(377, 668, 531, 248, ButtonResetRouteConfig, GumpButtonType.Reply, 0);
