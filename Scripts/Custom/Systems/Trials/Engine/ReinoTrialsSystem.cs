@@ -28,6 +28,81 @@ namespace Server.Custom.Reinos
             m_PulseTimer = Timer.DelayCall(TimeSpan.FromSeconds(3.0), TimeSpan.FromSeconds(2.0), Pulse);
         }
 
+        public static bool HasTribunal(int cityId)
+        {
+            return FindPrimaryTribunalRuntime(cityId) != null;
+        }
+
+        public static bool HasActiveSession(int cityId)
+        {
+            foreach (KeyValuePair<int, ReinoTrialSession> kv in m_SessionsByPlayer)
+            {
+                ReinoTrialSession st = kv.Value;
+                if (st != null && st.CityId == cityId && st.SessionActive)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static ReinoTrialSession FindActiveSession(int cityId)
+        {
+            foreach (KeyValuePair<int, ReinoTrialSession> kv in m_SessionsByPlayer)
+            {
+                ReinoTrialSession st = kv.Value;
+                if (st != null && st.CityId == cityId && st.SessionActive)
+                    return st;
+            }
+
+            return null;
+        }
+
+        public static void SetActiveAccused(int cityId, int serial, string name)
+        {
+            ReinoTrialSession st = FindActiveSession(cityId);
+            if (st == null)
+                return;
+
+            st.AccusedSerial = serial;
+            st.AccusedName = name ?? String.Empty;
+        }
+
+        public static ReinoTrialVerdict GetLatestVerdict(int cityId, int prisonerSerial)
+        {
+            List<ReinoTrialVerdict> list = GetVerdicts(cityId);
+            ReinoTrialVerdict found = null;
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                ReinoTrialVerdict v = list[i];
+                if (v == null || v.PrisonerSerial != prisonerSerial)
+                    continue;
+
+                if (found == null || v.DeclaredUtc > found.DeclaredUtc)
+                    found = v;
+            }
+
+            return found;
+        }
+
+        public static bool TryGetAccusedLocation(int cityId, out Point3D point, out Map map)
+        {
+            point = Point3D.Zero;
+            map = Map.Internal;
+
+            ReinoConstructionRuntimeInfo info = FindPrimaryTribunalRuntime(cityId);
+            if (info == null || info.Lot == null)
+                return false;
+
+            Point3D off = TribunalAuroraDefinition.GetAccusedOffset();
+            point = new Point3D(
+                info.Lot.NorthWest.X + off.X,
+                info.Lot.NorthWest.Y + off.Y,
+                info.Lot.NorthWest.Z + off.Z);
+            map = info.Lot.Map;
+            return true;
+        }
+
         public static ReinoTrialSession GetSession(PlayerMobile pm, int cityId)
         {
             if (pm == null)
@@ -233,6 +308,7 @@ namespace Server.Custom.Reinos
             st.AccusedName = accused.Name;
             st.PendingSentenceDays = 0;
             st.PendingFineGold = 0;
+            st.SessionStartedUtc = DateTime.UtcNow;
 
             LockTribunalDoors(cityId, true);
 
@@ -245,13 +321,47 @@ namespace Server.Custom.Reinos
         public static string EndSession(PlayerMobile judge, int cityId)
         {
             ReinoTrialSession st = GetSession(judge, cityId);
+
+            int accusedSerial = st.AccusedSerial;
+            string accusedName = st.AccusedName;
+            DateTime startedUtc = st.SessionStartedUtc;
+
+            LockTribunalDoors(cityId, false);
+            SayByOfficerOrJudge(cityId, judge, "sessão encerrada");
+
+            if (accusedSerial != 0)
+            {
+                ReinoTrialVerdict verdict = GetLatestVerdict(cityId, accusedSerial);
+                string msg;
+
+                if (verdict != null && verdict.DeclaredUtc >= startedUtc)
+                {
+                    ReinoPrisionSystem.ReturnInmateFromTribunal(
+                        cityId,
+                        accusedSerial,
+                        verdict.DurationHours,
+                        verdict.FineGold,
+                        verdict.JudgeName,
+                        verdict.DeclaredUtc,
+                        out msg);
+                }
+                else
+                {
+                    ReinoPrisionSystem.ReleaseInmateToBankFromTribunal(
+                        cityId,
+                        accusedSerial,
+                        judge != null ? judge.Name : "Tribunal",
+                        out msg);
+                }
+            }
+
             st.SessionActive = false;
             st.AccusedSerial = 0;
             st.AccusedName = String.Empty;
             st.PendingSentenceDays = 0;
             st.PendingFineGold = 0;
-            LockTribunalDoors(cityId, false);
-            SayByOfficerOrJudge(cityId, judge, "sessão encerrada");
+            st.SessionStartedUtc = DateTime.MinValue;
+
             return "Sessão encerrada.";
         }
 

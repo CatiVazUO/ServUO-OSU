@@ -46,6 +46,26 @@ namespace Server.Custom.Reinos
         private const int FINISHED_MULTI_ID = 0xA7;
         private const int ABANDONED_MULTI_ID = 0xA8;
 
+        private static readonly Point3D DESK_OFFSET = new Point3D(2, 1, 0);
+        private static readonly Point3D LOCKER_OFFSET = new Point3D(1, 1, 0);
+        private static readonly Point3D LAW_BOARD_OFFSET = new Point3D(3, 1, 0);
+
+
+        public static Point3D GetDeskOffset()
+        {
+            return DESK_OFFSET;
+        }
+
+        public static Point3D GetLockerOffset()
+        {
+            return LOCKER_OFFSET;
+        }
+
+        public static Point3D GetLawBoardOffset()
+        {
+            return LAW_BOARD_OFFSET;
+        }
+
         public static ReinoConstructionDefinition Create()
         {
             StringBuilder sb = new StringBuilder();
