@@ -23,7 +23,6 @@ namespace Server.Custom.Reinos
             Register(ResidencialAuroraTesteDefinition.Create());
             Register(QuartelAuroraDefinition.Create());
             Register(PrisaoAuroraDefinition.Create());
-            Register(TribunalAuroraDefinition.Create());
             // Adicione novas construções aqui conforme for criando novos arquivos.
         }
 
