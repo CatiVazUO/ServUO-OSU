@@ -817,14 +817,16 @@ namespace Server.Custom.Systems.Rent
                     c_House.Sign.Location = new Point3D(c_SignLoc.X , c_SignLoc.Y, c_SignLoc.Z - 5);
                     c_House.Sign.Visible = false;
                 }
-                //  c_House.Sign.OriginalName = m.Name;
-                //  c_House.Sign.TownHouseSign = this;
+                // c_House.Sign.OriginalName = m.Name;
+                // c_House.Sign.TownHouseSign = this;
                 //c_House.Hanger = new Item(0xB98);
                 //c_House.Hanger.Location = c_SignLoc;
                 //c_House.Hanger.Map = Map;
                 //c_House.Hanger.Movable = false;
 
-                if (c_ForcePublic)
+                if (c_ForcePrivate)
+                    c_House.Public = false;
+                else
                     c_House.Public = true;
 
                 c_House.Price = RentByTime == TimeSpan.FromDays(0) ? c_Price : 1;
@@ -844,6 +846,7 @@ namespace Server.Custom.Systems.Rent
                 c_DecoreItemInfos = new ArrayList();
 
                 ConvertItems(sellitems);
+                ApplyDefaultDoorSecurity();
 
                 if (IsTomb)
                 {
@@ -1040,14 +1043,36 @@ namespace Server.Custom.Systems.Rent
             }
         }
 
-		protected void ConvertDoor( BaseDoor door )
-		{
-			if ( !Owned )
-				return;
+        private void ApplyDefaultDoorSecurity()
+        {
+            if (c_House == null || c_House.Deleted || c_House.Doors == null)
+                return;
+
+            foreach (BaseDoor door in new ArrayList(c_House.Doors))
+            {
+                if (door == null || door.Deleted)
+                    continue;
+
+                door.Locked = true;
+
+                ISecurable sec = door as ISecurable;
+                if (sec != null)
+                    sec.Level = SecureLevel.Owner;
+            }
+        }
+
+        protected void ConvertDoor(BaseDoor door)
+        {
+            if (!Owned)
+                return;
 
             if (door is ISecurable)
             {
-                door.Locked = false;
+                door.Locked = true;
+
+                ISecurable sec = door as ISecurable;
+                if (sec != null)
+                    sec.Level = SecureLevel.Owner;
 
                 if (!c_House.Doors.Contains(door))
                     c_House.Doors.Add(door);
@@ -1057,21 +1082,26 @@ namespace Server.Custom.Systems.Rent
 
             door.Open = false;
 
-			GenericHouseDoor newdoor = new GenericHouseDoor( 0, door.ClosedID, door.OpenedSound, door.ClosedSound );
-			newdoor.Offset = door.Offset;
-			newdoor.ClosedID = door.ClosedID;
-			newdoor.OpenedID = door.OpenedID;
-			newdoor.Location = door.Location;
-			newdoor.Map = door.Map;
+            GenericHouseDoor newdoor = new GenericHouseDoor(0, door.ClosedID, door.OpenedSound, door.ClosedSound);
+            newdoor.Offset = door.Offset;
+            newdoor.ClosedID = door.ClosedID;
+            newdoor.OpenedID = door.OpenedID;
+            newdoor.Location = door.Location;
+            newdoor.Map = door.Map;
+            newdoor.Locked = true;
 
-			door.Delete();
+            ISecurable newSec = newdoor as ISecurable;
+            if (newSec != null)
+                newSec.Level = SecureLevel.Owner;
 
-			foreach( Item inneritem in newdoor.GetItemsInRange( 1 ) )
-				if ( inneritem is BaseDoor && inneritem != newdoor && inneritem.Z == newdoor.Z )
-				{
-					((BaseDoor)inneritem).Link = newdoor;
-					newdoor.Link = (BaseDoor)inneritem;
-				}
+            door.Delete();
+
+            foreach (Item inneritem in newdoor.GetItemsInRange(1))
+                if (inneritem is BaseDoor && inneritem != newdoor && inneritem.Z == newdoor.Z)
+                {
+                    ((BaseDoor)inneritem).Link = newdoor;
+                    newdoor.Link = (BaseDoor)inneritem;
+                }
 
             if (!c_House.Doors.Contains(newdoor))
                 c_House.Doors.Add(newdoor);
@@ -1985,6 +2015,19 @@ namespace Server.Custom.Systems.Rent
                 return;
             }
 
+            if (Owned && c_House != null)
+            {
+                if (c_House.IsOwner(m))
+                {
+                    m.CloseGump(typeof(HouseGumpAOS));
+                    m.SendGump(new HouseGumpAOS(HouseGumpPageAOS.Information, m, c_House));
+                    return;
+                }
+
+                if (c_House.IsFriend(m))
+                    return;
+            }
+
             if (!IsCultureAllowed(m))
                 new TownHouseConfirmGump(m, this);
             else if (CanBuyHouse(m) && CanOwnThisProperty(m))
@@ -2049,12 +2092,30 @@ namespace Server.Custom.Systems.Rent
                     }
                 }
             }
+
+            else if (Owned && c_House != null && !c_House.Deleted)
+            {
+                string areaName = Name ?? "-";
+                string playerHouseName = String.Empty;
+                string ownerName = c_House.Owner != null ? (c_House.Owner.Name ?? "-") : "-";
+
+                if (c_House.Sign != null && !c_House.Sign.Deleted && !String.IsNullOrWhiteSpace(c_House.Sign.Name))
+                    playerHouseName = c_House.Sign.Name;
+
+                list.Add("Área: " + areaName);
+
+                if (!String.IsNullOrWhiteSpace(playerHouseName) && !String.Equals(playerHouseName, areaName, StringComparison.OrdinalIgnoreCase))
+                    list.Add("Casa: " + playerHouseName);
+
+                list.Add("Dono: " + ownerName);
+            }
+
             else if (c_RentByTime == TimeSpan.Zero)
                 list.Add(1060658, "Price\t{0}{1}", c_Price, "");
             else if (c_RecurRent)
                 list.Add(1060658, "{0}\t{1}\r{2}", PriceType + (c_RentToOwn ? " Rent-to-Own" : " Tax"), c_Price, "");
-            else
-                list.Add(1060658, "One {0}\t{1}{2}", PriceTypeShort, c_Price, "");
+           // else
+           //     list.Add(1060658, "One {0}\t{1}{2}", PriceTypeShort, c_Price, "");
         }
 
 		public TownHouseSign( Serial serial ) : base( serial )

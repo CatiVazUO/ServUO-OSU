@@ -369,13 +369,13 @@ namespace Server.Custom.Systems.Rent
 
             if (c_Sign.PropertyType == OSUPropertyType.House)
             {
-                c_Sign.ForcePrivate = true;
-                c_Sign.ForcePublic = false;
+                c_Sign.ForcePrivate = false;
+                c_Sign.ForcePublic = true;
             }
             else
             {
-                c_Sign.ForcePrivate = false;
-                c_Sign.ForcePublic = true;
+                c_Sign.ForcePrivate = true;
+                c_Sign.ForcePublic = false;
             }
 
             if (!c_Sign.Owned)

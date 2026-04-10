@@ -836,11 +836,19 @@ namespace Server.Custom.Reinos
                 return false;
             }
 
-            int sentenceHours = 48;
-            int fineGold = 0;
+            ReinoWantedEntry wantedEntry = ReinoMilitarySystem.FindWanted(cityId, pm);
 
-            if (GetSettings(cityId).AllowFinePayment && !HasTribunal(cityId))
-                fineGold = 5000;
+            int sentenceHours = 48;
+            int fineGold = 5000;
+
+            if (wantedEntry == null && ReinoTrialsSystem.HasTribunal(cityId))
+            {
+                sentenceHours = ReinoTrialsSystem.GetLawDefaultHours(cityId, law);
+                fineGold = ReinoTrialsSystem.GetLawDefaultFine(cityId, law);
+            }
+
+            if (!GetSettings(cityId).AllowFinePayment)
+                fineGold = 0;
 
             int belongingsBagSerial = 0;
 
@@ -867,8 +875,8 @@ namespace Server.Custom.Reinos
             inmate.CityId = cityId;
             inmate.PrisonerSerial = pm.Serial.Value;
             inmate.PrisonerName = pm.Name;
-            ReinoWantedEntry wantedEntry = ReinoMilitarySystem.FindWanted(cityId, pm);
             inmate.CrimeLabel = wantedEntry != null ? "Pessoa procurada" : ReinoMilitarySystem.GetLawLabel(law);
+            inmate.SourceLawId = wantedEntry != null ? -1 : (int)law;
             inmate.ArrestUtc = DateTime.UtcNow;
             inmate.ReleaseUtc = DateTime.UtcNow + TimeSpan.FromHours(sentenceHours);
             inmate.SentenceHours = sentenceHours;
@@ -970,6 +978,7 @@ namespace Server.Custom.Reinos
             inmate.CrimeLabel = "Prisão administrativa";
             inmate.ArrestUtc = DateTime.UtcNow;
             inmate.ReleaseUtc = DateTime.UtcNow + TimeSpan.FromHours(sentenceHours);
+            inmate.SourceLawId = -1;
             inmate.SentenceHours = sentenceHours;
             inmate.CellIndex = cellIndex;
             inmate.InInterrogation = false;
@@ -1017,7 +1026,9 @@ namespace Server.Custom.Reinos
                 return false;
             }
 
-            int fine = inmate.Judged ? inmate.FineGold : 5000;
+            int fine = inmate.Judged
+             ? inmate.FineGold
+             : ResolveDefaultFineForInmate(inmate);
 
             if (!GetSettings(cityId).AllowFinePayment)
             {
@@ -1031,6 +1042,17 @@ namespace Server.Custom.Reinos
 
             message = "O gump da multa foi enviado novamente para o preso.";
             return true;
+        }
+
+        private static int ResolveDefaultFineForInmate(ReinoPrisionerState inmate)
+        {
+            if (inmate == null)
+                return 5000;
+
+            if (inmate.SourceLawId >= 0 && ReinoTrialsSystem.HasTribunal(inmate.CityId))
+                return ReinoTrialsSystem.GetLawDefaultFine(inmate.CityId, (ReinoMilitaryLaw)inmate.SourceLawId);
+
+            return 5000;
         }
 
         public static bool ApplyJudgement(int cityId, int prisonerSerial, int days, int fineGold, string judgeName)
@@ -1557,6 +1579,7 @@ namespace Server.Custom.Reinos
                         bw.Write(inmate.FineGumpShown);
                         bw.Write(inmate.BelongingsBagSerial);
                         bw.Write(inmate.Notes ?? String.Empty);
+                        bw.Write(inmate.SourceLawId);
                         bw.Write(inmate.ReleasePending);
                         bw.Write(inmate.ReleasePendingToBank);
                     }
@@ -1623,6 +1646,7 @@ namespace Server.Custom.Reinos
                         inmate.FineGumpShown = br.ReadBoolean();
                         inmate.BelongingsBagSerial = br.ReadInt32();
                         inmate.Notes = br.ReadString();
+                        inmate.SourceLawId = version >= 3 ? br.ReadInt32() : -1;
                         inmate.ReleasePending = version >= 3 ? br.ReadBoolean() : false;
                         inmate.ReleasePendingToBank = version >= 3 ? br.ReadBoolean() : false;
                         list.Add(inmate);

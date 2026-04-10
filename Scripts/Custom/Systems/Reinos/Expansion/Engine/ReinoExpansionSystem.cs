@@ -21,6 +21,7 @@ namespace Server.Custom.Reinos
         private static readonly Dictionary<int, ReinoAreaDefinition> m_AreaDefinitions = new Dictionary<int, ReinoAreaDefinition>();
         private static readonly Dictionary<int, ReinoAreaState> m_AreaStates = new Dictionary<int, ReinoAreaState>();
         private static readonly Dictionary<int, List<int>> m_PreviewSerials = new Dictionary<int, List<int>>();
+        private static readonly Dictionary<int, int> m_PreviewVersions = new Dictionary<int, int>();
         private static readonly HashSet<int> m_InternalLotSignDeletes = new HashSet<int>();
 
         private static int m_NextLotId = 1;
@@ -2394,6 +2395,36 @@ namespace Server.Custom.Reinos
             serials.Clear();
         }
 
+        private static void SchedulePreviewAutoClear(Mobile from)
+        {
+            if (from == null || from.Deleted)
+                return;
+
+            int ownerSerial = from.Serial.Value;
+            int version = 1;
+
+            if (m_PreviewVersions.ContainsKey(ownerSerial))
+                version = m_PreviewVersions[ownerSerial] + 1;
+
+            m_PreviewVersions[ownerSerial] = version;
+
+            Timer.DelayCall(TimeSpan.FromSeconds(30.0), delegate
+            {
+                Mobile mob = World.FindMobile((Serial)ownerSerial);
+                if (mob == null || mob.Deleted)
+                    return;
+
+                int currentVersion;
+                if (!m_PreviewVersions.TryGetValue(ownerSerial, out currentVersion))
+                    return;
+
+                if (currentVersion != version)
+                    return;
+
+                ClearPreview(mob);
+            });
+        }
+
         public static void ShowKingdomAreas(Mobile from, int cityId)
         {
             ShowCityOverlay(from, cityId);
@@ -2450,6 +2481,7 @@ namespace Server.Custom.Reinos
             }
 
             RenderOverlay(from, cellsByMap);
+            SchedulePreviewAutoClear(from);
         }
 
         public static void ShowMapOverlay(Mobile from, Map map)
@@ -2484,6 +2516,7 @@ namespace Server.Custom.Reinos
             }
 
             RenderOverlay(from, cellsByMap);
+            SchedulePreviewAutoClear(from);
         }
 
         private static void AddRectToOverlay(Dictionary<int, Dictionary<long, ReinoPreviewKind>> cellsByMap, Map map, Rectangle2D rect, ReinoPreviewKind kind)

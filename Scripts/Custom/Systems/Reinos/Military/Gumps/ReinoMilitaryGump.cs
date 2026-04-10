@@ -98,6 +98,8 @@ namespace Server.Custom.Reinos
 
         private void BuildMilitaryLawsPage(ReinoMilitarySession session)
         {
+            ReinoMilitarySystem.EnsureLawDraft(m_From, m_CityId);
+
             AddLabel(412, 302, 0, @"Ação Para Procurados:");
             AddButton(577, 302, session.SelectedWantedAction == ReinoGuardAction.Kill ? 530 : 531, session.SelectedWantedAction == ReinoGuardAction.Kill ? 530 : 531, ButtonWantedKill, GumpButtonType.Reply, 0);
             AddLabel(603, 303, 0, @"Matar");
@@ -135,8 +137,8 @@ namespace Server.Custom.Reinos
             AddImageTiled(405, 525, 825, 5, 367);
 
             AddLabel(429, 493, 0, @"Considerar Atos Criminais");
-            AddLabel(700, 493, 0, @"Colocar Em Vigor Leis Selecionadas");
-            AddButton(800, 493, 492, 492, ButtonConfirmLaws, GumpButtonType.Reply, 0)
+            AddLabel(893, 493, 0, @"Colocar Em Vigor Leis Selecionadas");
+            AddButton(1124, 490, 492, 492, ButtonConfirmLaws, GumpButtonType.Reply, 0);
 
             AddHtml(420, 270, 360, 22, "<BASEFONT COLOR=#000000>" + ReinoMilitarySystem.GetLawSummaryHtml(m_CityId) + "</BASEFONT>", false, false);
 
@@ -170,19 +172,22 @@ namespace Server.Custom.Reinos
             int[] y = new int[] { 553, 581, 611, 641, 671 };
             for (int i = 0; i < left.Length; i++)
             {
-                AddButton(415, y[i], ReinoMilitarySystem.IsLawEnabled(m_CityId, left[i]) ? 530 : 531, ReinoMilitarySystem.IsLawEnabled(m_CityId, left[i]) ? 530 : 531, ButtonLawBase + (int)left[i], GumpButtonType.Reply, 0);
+                bool selected = ReinoMilitarySystem.IsPendingLawEnabled(m_From, m_CityId, left[i]);
+                AddButton(415, y[i], selected ? 530 : 531, selected ? 530 : 531, ButtonLawBase + (int)left[i], GumpButtonType.Reply, 0);
                 AddLabel(443, y[i] + 2, 0, ReinoMilitarySystem.GetLawLabel(left[i]));
             }
 
             for (int i = 0; i < middle.Length; i++)
             {
-                AddButton(704, y[i], ReinoMilitarySystem.IsLawEnabled(m_CityId, middle[i]) ? 530 : 531, ReinoMilitarySystem.IsLawEnabled(m_CityId, middle[i]) ? 530 : 531, ButtonLawBase + (int)middle[i], GumpButtonType.Reply, 0);
+                bool selected = ReinoMilitarySystem.IsPendingLawEnabled(m_From, m_CityId, middle[i]);
+                AddButton(704, y[i], selected ? 530 : 531, selected ? 530 : 531, ButtonLawBase + (int)middle[i], GumpButtonType.Reply, 0);
                 AddLabel(734, y[i] + 2, 0, ReinoMilitarySystem.GetLawLabel(middle[i]));
             }
 
             for (int i = 0; i < right.Length; i++)
             {
-                AddButton(1042, y[i], ReinoMilitarySystem.IsLawEnabled(m_CityId, right[i]) ? 530 : 531, ReinoMilitarySystem.IsLawEnabled(m_CityId, right[i]) ? 530 : 531, ButtonLawBase + (int)right[i], GumpButtonType.Reply, 0);
+                bool selected = ReinoMilitarySystem.IsPendingLawEnabled(m_From, m_CityId, right[i]);
+                AddButton(1042, y[i], selected ? 530 : 531, selected ? 530 : 531, ButtonLawBase + (int)right[i], GumpButtonType.Reply, 0);
                 AddLabel(1071, y[i] + 2, 0, ReinoMilitarySystem.GetLawLabel(right[i]));
             }
         }
@@ -443,13 +448,44 @@ namespace Server.Custom.Reinos
                 return true;
             }
 
+            if (button == ButtonConfirmLaws)
+            {
+                if (!ReinoMilitarySystem.CanManageLawChanges(from, m_CityId))
+                {
+                    from.SendMessage("Você não pode colocar leis em vigor neste reino.");
+                }
+                else
+                {
+                    string msg;
+                    ReinoMilitarySystem.CommitPendingLaws(from, m_CityId, out msg);
+                    from.SendMessage(msg);
+                }
+
+                from.SendGump(new ReinoExpansionGump(from, m_CityId, -1, -1, String.Empty, 0, 8));
+                return true;
+            }
+
+
             if (button >= ButtonLawBase && button < ButtonLawBase + 100)
             {
                 ReinoMilitaryLaw law = (ReinoMilitaryLaw)(button - ButtonLawBase);
-                if (!ReinoMilitarySystem.CanManageWantedList(from, m_CityId))
+
+                if (!ReinoMilitarySystem.CanManageLawChanges(from, m_CityId))
+                {
                     from.SendMessage("Você não pode mudar as leis militares do reino.");
-                else
-                    ReinoMilitarySystem.ToggleLaw(m_CityId, law);
+                    from.SendGump(new ReinoExpansionGump(from, m_CityId, -1, -1, String.Empty, 0, 8));
+                    return true;
+                }
+
+                bool nowEnabled = ReinoMilitarySystem.TogglePendingLaw(from, m_CityId, law);
+
+                if (ReinoTrialsSystem.HasTribunal(m_CityId)
+                    && nowEnabled
+                    && ReinoTrialsSystem.CanAccessLawSettings(from, m_CityId))
+                {
+                    from.SendGump(new ReinoTribunalLawConfigGump(from, m_CityId, law));
+                    return true;
+                }
 
                 from.SendGump(new ReinoExpansionGump(from, m_CityId, -1, -1, String.Empty, 0, 8));
                 return true;

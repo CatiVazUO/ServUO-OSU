@@ -1,11 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using Server;
 using Server.Items;
 using Server.Mobiles;
 using Server.Multis;
 using Server.Targeting;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using static Server.Custom.Reinos.ReinoTrialVerdict;
 
 namespace Server.Custom.Reinos
 {
@@ -15,6 +17,8 @@ namespace Server.Custom.Reinos
         private static readonly Dictionary<int, ReinoTrialSession> m_SessionsByPlayer = new Dictionary<int, ReinoTrialSession>();
         private static readonly Dictionary<int, List<ReinoTrialVerdict>> m_VerdictsByCity = new Dictionary<int, List<ReinoTrialVerdict>>();
         private static readonly Dictionary<int, DateTime> m_LastCourtWeaponAction = new Dictionary<int, DateTime>();
+        private static readonly Dictionary<int, Dictionary<ReinoMilitaryLaw, ReinoTrialLawRule>> m_LawRulesByCity =
+            new Dictionary<int, Dictionary<ReinoMilitaryLaw, ReinoTrialLawRule>>();
         private static Timer m_PulseTimer;
 
         public static void Initialize()
@@ -79,6 +83,24 @@ namespace Server.Custom.Reinos
             return false;
         }
 
+        public static bool HasTribunal(int cityId)
+        {
+            List<ReinoConstructionRuntimeInfo> list = ReinoMaintenanceSystem.GetCityConstructions(cityId);
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                ReinoConstructionRuntimeInfo info = list[i];
+                if (info == null || info.Definition == null)
+                    continue;
+
+                if (String.Equals(info.Definition.Id, TribunalAuroraDefinition.BUILDING_ID, StringComparison.OrdinalIgnoreCase)
+                    && info.Status == ReinoLotStatus.Active)
+                    return true;
+            }
+
+            return false;
+        }
+
         public static bool CanAccessTribunalControl(PlayerMobile pm, int cityId)
         {
             if (pm == null || pm.Deleted)
@@ -95,6 +117,185 @@ namespace Server.Custom.Reinos
                 return false;
 
             return IsTribunalConstructionKey(cityId, role.LinkedConstructionKey);
+        }
+
+        public static bool CanAccessLawSettings(PlayerMobile pm, int cityId)
+        {
+            if (pm == null || pm.Deleted)
+                return false;
+
+            if (!HasTribunal(cityId))
+                return false;
+
+            if (pm.AccessLevel >= AccessLevel.GameMaster)
+                return true;
+
+            if (ReinoAccessHelper.HasGovernmentAccess(pm, cityId))
+                return true;
+
+            ReinoCargoEntry role = ReinoEmploymentSystem.GetOccupiedRole(pm, cityId);
+            if (role == null)
+                return false;
+
+            if (!String.IsNullOrWhiteSpace(role.LinkedConstructionKey) && IsTribunalConstructionKey(cityId, role.LinkedConstructionKey))
+                return true;
+
+            string culture = ReinoEmploymentSystem.GetGovernmentCultureId(cityId);
+            if (String.Equals(culture, "kamay", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            return role.Hierarchy <= 2;
+        }
+
+
+        private static Dictionary<ReinoMilitaryLaw, ReinoTrialLawRule> GetLawRuleMap(int cityId)
+        {
+            Dictionary<ReinoMilitaryLaw, ReinoTrialLawRule> map;
+            if (!m_LawRulesByCity.TryGetValue(cityId, out map))
+            {
+                map = new Dictionary<ReinoMilitaryLaw, ReinoTrialLawRule>();
+                m_LawRulesByCity[cityId] = map;
+            }
+
+            return map;
+        }
+
+        public static ReinoTrialLawRule GetLawRule(int cityId, ReinoMilitaryLaw law)
+        {
+            Dictionary<ReinoMilitaryLaw, ReinoTrialLawRule> map = GetLawRuleMap(cityId);
+
+            ReinoTrialLawRule rule;
+            if (!map.TryGetValue(law, out rule))
+            {
+                rule = new ReinoTrialLawRule();
+                rule.CityId = cityId;
+                rule.Law = law;
+                map[law] = rule;
+            }
+
+            return rule;
+        }
+
+        public static int GetLawDefaultHours(int cityId, ReinoMilitaryLaw law)
+        {
+            if (!HasTribunal(cityId))
+                return 48;
+
+            ReinoTrialLawRule rule = GetLawRule(cityId, law);
+            if (rule == null || !rule.HasCustomValues)
+                return 48;
+
+            return Math.Max(1, rule.SentenceHours);
+        }
+
+        public static int GetLawDefaultFine(int cityId, ReinoMilitaryLaw law)
+        {
+            if (!HasTribunal(cityId))
+                return 5000;
+
+            ReinoTrialLawRule rule = GetLawRule(cityId, law);
+            if (rule == null || !rule.HasCustomValues)
+                return 5000;
+
+            return Math.Max(0, rule.FineGold);
+        }
+
+        public static string SetLawDefaultHours(PlayerMobile pm, int cityId, ReinoMilitaryLaw law, int hours)
+        {
+            if (!CanAccessLawSettings(pm, cityId))
+                return "Você não pode definir a pena padrão dessa lei.";
+
+            ReinoTrialLawRule rule = GetLawRule(cityId, law);
+            rule.HasCustomValues = true;
+            rule.SentenceHours = Math.Max(1, hours);
+            rule.LastChangedBySerial = pm != null ? pm.Serial.Value : 0;
+            rule.LastChangedByName = pm != null ? pm.Name : String.Empty;
+            rule.LastChangedUtc = DateTime.UtcNow;
+            return "Pena padrão atualizada.";
+        }
+
+        public static string SetLawDefaultFine(PlayerMobile pm, int cityId, ReinoMilitaryLaw law, int fine)
+        {
+            if (!CanAccessLawSettings(pm, cityId))
+                return "Você não pode definir a multa padrão dessa lei.";
+
+            ReinoTrialLawRule rule = GetLawRule(cityId, law);
+            rule.HasCustomValues = true;
+            rule.FineGold = Math.Max(0, fine);
+            rule.LastChangedBySerial = pm != null ? pm.Serial.Value : 0;
+            rule.LastChangedByName = pm != null ? pm.Name : String.Empty;
+            rule.LastChangedUtc = DateTime.UtcNow;
+            return "Multa padrão atualizada.";
+        }
+
+        public static string GetLawDefinitionHtml(int cityId, ReinoMilitaryLaw law)
+        {
+            ReinoTrialLawRule rule = GetLawRule(cityId, law);
+
+            StringBuilder sb = new StringBuilder();
+            sb.Append("<BASEFONT COLOR=#000000>");
+            sb.Append(GetLawDescription(law));
+            sb.Append("<BR><BR>");
+            sb.Append("<B>Pena atual:</B> ").Append(GetLawDefaultHours(cityId, law)).Append(" horas.<BR>");
+            sb.Append("<B>Multa atual:</B> ").Append(GetLawDefaultFine(cityId, law)).Append(" moedas.<BR><BR>");
+
+            if (rule != null && rule.HasCustomValues && !String.IsNullOrWhiteSpace(rule.LastChangedByName))
+            {
+                sb.Append("<B>Última definição:</B> ").Append(rule.LastChangedByName);
+
+                if (rule.LastChangedUtc > DateTime.MinValue)
+                    sb.Append(" em ").Append(rule.LastChangedUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm"));
+
+                sb.Append(".");
+            }
+            else
+            {
+                sb.Append("<B>Última definição:</B> valores padrão do reino.");
+            }
+
+            sb.Append("<BR><BR>");
+            sb.Append("Quando nada for definido, a lei usa <B>48 horas</B> e <B>5000 moedas</B>. Procurados sempre usam esse valor fixo.");
+            sb.Append("</BASEFONT>");
+            return sb.ToString();
+        }
+
+        public static string GetLawDescription(ReinoMilitaryLaw law)
+        {
+            switch (law)
+            {
+                case ReinoMilitaryLaw.HoodedWalk:
+                    return "Define a punição padrão para quem circular encapuzado em área do reino.";
+                case ReinoMilitaryLaw.Stealing:
+                    return "Define a punição padrão para roubo presenciado ou registrado no reino.";
+                case ReinoMilitaryLaw.Snooping:
+                    return "Define a punição padrão para abrir e olhar recipientes, bolsas e pertences alheios sem autorização.";
+                case ReinoMilitaryLaw.LootKnockedOut:
+                    return "Define a punição padrão para furtar alguém desmaiado.";
+                case ReinoMilitaryLaw.Lockpicking:
+                    return "Define a punição padrão para arrombar fechaduras e acessos protegidos.";
+                case ReinoMilitaryLaw.Fighting:
+                    return "Define a punição padrão para brigas e agressões vistas pelos guardas.";
+                case ReinoMilitaryLaw.AnimalTaming:
+                    return "Define a punição padrão para domar animais em situação proibida pelo reino.";
+                case ReinoMilitaryLaw.AnimalKilling:
+                    return "Define a punição padrão para matar animais protegidos ou em local proibido.";
+                case ReinoMilitaryLaw.ForeignPlanting:
+                    return "Define a punição padrão para plantar em fazendas ou áreas agrícolas alheias.";
+                case ReinoMilitaryLaw.ForeignHarvesting:
+                    return "Define a punição padrão para colher em fazendas ou áreas agrícolas alheias.";
+                case ReinoMilitaryLaw.DrugUse:
+                    return "Define a punição padrão para uso de drogas em áreas públicas o reino.";
+                case ReinoMilitaryLaw.DrunkWalk:
+                    return "Define a punição padrão para circular embriagado quando isso for tratado como infração.";
+                case ReinoMilitaryLaw.TakingFruit:
+                    return "Define a punição padrão para retirar frutos do reino sem autorização.";
+                case ReinoMilitaryLaw.FenceJumping:
+                    return "Define a punição padrão para invasão por pulo de cerca.";
+                case ReinoMilitaryLaw.ArmedWalk:
+                    return "Define a punição padrão para circular armado onde isso for proibido.";
+                default:
+                    return "Define a punição padrão dessa lei.";
+            }
         }
 
         public static void DeleteTribunalItems(PlayerMobile pm, int cityId)
@@ -596,7 +797,7 @@ namespace Server.Custom.Reinos
                 using (FileStream fs = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.None))
                 using (BinaryWriter bw = new BinaryWriter(fs))
                 {
-                    bw.Write(1);
+                    bw.Write(2);
                     bw.Write(m_VerdictsByCity.Count);
                     foreach (KeyValuePair<int, List<ReinoTrialVerdict>> kv in m_VerdictsByCity)
                     {
@@ -618,6 +819,26 @@ namespace Server.Custom.Reinos
                             bw.Write(v.Notes ?? String.Empty);
                         }
                     }
+
+                    bw.Write(m_LawRulesByCity.Count);
+                    foreach (KeyValuePair<int, Dictionary<ReinoMilitaryLaw, ReinoTrialLawRule>> kv in m_LawRulesByCity)
+                    {
+                        bw.Write(kv.Key);
+                        bw.Write(kv.Value.Count);
+
+                        foreach (KeyValuePair<ReinoMilitaryLaw, ReinoTrialLawRule> inner in kv.Value)
+                        {
+                            ReinoTrialLawRule rule = inner.Value ?? new ReinoTrialLawRule();
+
+                            bw.Write((int)inner.Key);
+                            bw.Write(rule.HasCustomValues);
+                            bw.Write(rule.SentenceHours);
+                            bw.Write(rule.FineGold);
+                            bw.Write(rule.LastChangedBySerial);
+                            bw.Write(rule.LastChangedByName ?? String.Empty);
+                            bw.Write(rule.LastChangedUtc.ToBinary());
+                        }
+                    }
                 }
             }
             catch
@@ -628,6 +849,8 @@ namespace Server.Custom.Reinos
         private static void Load()
         {
             m_VerdictsByCity.Clear();
+            m_LawRulesByCity.Clear();
+
             if (!File.Exists(FilePath))
                 return;
 
@@ -637,13 +860,16 @@ namespace Server.Custom.Reinos
                 using (BinaryReader br = new BinaryReader(fs))
                 {
                     int version = br.ReadInt32();
+
                     int cityCount = br.ReadInt32();
                     for (int i = 0; i < cityCount; i++)
                     {
                         int cityId = br.ReadInt32();
                         int count = br.ReadInt32();
+
                         List<ReinoTrialVerdict> list = GetVerdicts(cityId);
                         list.Clear();
+
                         for (int j = 0; j < count; j++)
                         {
                             ReinoTrialVerdict v = new ReinoTrialVerdict();
@@ -658,6 +884,37 @@ namespace Server.Custom.Reinos
                             v.DeclaredUtc = DateTime.FromBinary(br.ReadInt64());
                             v.Notes = br.ReadString();
                             list.Add(v);
+                        }
+                    }
+
+                    if (version >= 2 && fs.Position < fs.Length)
+                    {
+                        int cityCountRules = br.ReadInt32();
+
+                        for (int i = 0; i < cityCountRules; i++)
+                        {
+                            int cityId = br.ReadInt32();
+                            int countRules = br.ReadInt32();
+
+                            Dictionary<ReinoMilitaryLaw, ReinoTrialLawRule> map = GetLawRuleMap(cityId);
+                            map.Clear();
+
+                            for (int j = 0; j < countRules; j++)
+                            {
+                                ReinoMilitaryLaw law = (ReinoMilitaryLaw)br.ReadInt32();
+
+                                ReinoTrialLawRule rule = new ReinoTrialLawRule();
+                                rule.CityId = cityId;
+                                rule.Law = law;
+                                rule.HasCustomValues = br.ReadBoolean();
+                                rule.SentenceHours = br.ReadInt32();
+                                rule.FineGold = br.ReadInt32();
+                                rule.LastChangedBySerial = br.ReadInt32();
+                                rule.LastChangedByName = br.ReadString();
+                                rule.LastChangedUtc = DateTime.FromBinary(br.ReadInt64());
+
+                                map[law] = rule;
+                            }
                         }
                     }
                 }

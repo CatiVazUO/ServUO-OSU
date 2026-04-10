@@ -152,6 +152,9 @@ namespace Server.Custom.Reinos
         public ReinoRouteSchedule SelectedRouteSchedule;
         public ReinoRouteSpeed SelectedRouteSpeed;
         public bool RestrictToBarracksView;
+        public bool PendingLawDraftInitialized;
+        public int PendingLawDraftCityId;
+        public HashSet<ReinoMilitaryLaw> PendingEnabledLaws;
 
         public ReinoMilitarySession()
         {
@@ -168,6 +171,9 @@ namespace Server.Custom.Reinos
             SelectedRouteSchedule = ReinoRouteSchedule.Every30Minutes;
             SelectedRouteSpeed = ReinoRouteSpeed.Short;
             RestrictToBarracksView = false;
+            PendingLawDraftInitialized = false;
+            PendingLawDraftCityId = -1;
+            PendingEnabledLaws = new HashSet<ReinoMilitaryLaw>();
         }
     }
 

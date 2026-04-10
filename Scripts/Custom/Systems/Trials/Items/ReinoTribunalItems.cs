@@ -33,13 +33,17 @@ namespace Server.Custom.Reinos
             if (pm == null)
                 return;
 
-            if (!ReinoTrialsSystem.CanAccessTribunalControl(pm, m_CityId))
+            if (!ReinoTrialsSystem.CanAccessLawSettings(pm, m_CityId))
             {
-                pm.SendMessage("Somente o líder ou o cargo ligado ao tribunal pode usar essa mesa.");
+                pm.SendMessage("Somente o líder, um cargo de hierarquia 2 permitido, ou o cargo ligado ao tribunal pode usar essa mesa.");
                 return;
             }
 
-            pm.SendGump(new ReinoTribunalGump(pm, m_CityId));
+            ReinoMilitarySession session = ReinoMilitarySystem.GetSession(pm);
+            session.RestrictToBarracksView = false;
+            session.Tab = ReinoMilitaryTab.Laws;
+
+            pm.SendGump(new ReinoExpansionGump(pm, m_CityId, -1, -1, String.Empty, 0, 8));
         }
 
         public override void Serialize(GenericWriter writer)

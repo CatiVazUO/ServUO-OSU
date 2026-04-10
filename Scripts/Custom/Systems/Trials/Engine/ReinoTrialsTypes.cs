@@ -47,4 +47,24 @@ namespace Server.Custom.Reinos
             DeclaredUtc = DateTime.UtcNow;
         }
     }
+
+    public sealed class ReinoTrialLawRule
+    {
+        public int CityId;
+        public ReinoMilitaryLaw Law;
+        public bool HasCustomValues;
+        public int SentenceHours;
+        public int FineGold;
+        public int LastChangedBySerial;
+        public string LastChangedByName;
+        public DateTime LastChangedUtc;
+
+        public ReinoTrialLawRule()
+        {
+            SentenceHours = 48;
+            FineGold = 5000;
+            LastChangedByName = String.Empty;
+            LastChangedUtc = DateTime.MinValue;
+        }
+    }
 }

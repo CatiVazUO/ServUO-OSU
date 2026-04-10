@@ -226,6 +226,14 @@ namespace Server.Custom.Reinos
             return s;
         }
 
+        public static bool CanManageLawChanges(PlayerMobile pm, int cityId)
+        {
+            if (CanManageWantedList(pm, cityId))
+                return true;
+
+            return ReinoTrialsSystem.CanAccessLawSettings(pm, cityId);
+        }
+
         public static bool CanAccessMilitaryGovernmentPage(PlayerMobile pm, int cityId)
         {
             if (pm == null || pm.Deleted)
@@ -379,24 +387,97 @@ namespace Server.Custom.Reinos
         {
             return GetPolicy(cityId).EnabledLaws.Contains(law);
         }
-
-        public static void ToggleLaw(int cityId, ReinoMilitaryLaw law)
+        public static void EnsureLawDraft(PlayerMobile pm, int cityId)
         {
-            ReinoMilitaryPolicy p = GetPolicy(cityId);
-            bool enabled;
+            if (pm == null || pm.Deleted)
+                return;
 
-            if (p.EnabledLaws.Contains(law))
+            ReinoMilitarySession session = GetSession(pm);
+
+            if (!session.PendingLawDraftInitialized || session.PendingLawDraftCityId != cityId)
             {
-                p.EnabledLaws.Remove(law);
-                enabled = false;
+                session.PendingEnabledLaws.Clear();
+
+                ReinoMilitaryPolicy p = GetPolicy(cityId);
+                foreach (ReinoMilitaryLaw law in p.EnabledLaws)
+                    session.PendingEnabledLaws.Add(law);
+
+                session.PendingLawDraftInitialized = true;
+                session.PendingLawDraftCityId = cityId;
             }
+        }
+
+        public static bool IsPendingLawEnabled(PlayerMobile pm, int cityId, ReinoMilitaryLaw law)
+        {
+            EnsureLawDraft(pm, cityId);
+            return GetSession(pm).PendingEnabledLaws.Contains(law);
+        }
+
+        public static bool TogglePendingLaw(PlayerMobile pm, int cityId, ReinoMilitaryLaw law)
+        {
+            EnsureLawDraft(pm, cityId);
+
+            ReinoMilitarySession session = GetSession(pm);
+            if (session.PendingEnabledLaws.Contains(law))
+                session.PendingEnabledLaws.Remove(law);
             else
+                session.PendingEnabledLaws.Add(law);
+
+            return session.PendingEnabledLaws.Contains(law);
+        }
+
+        public static void ResetLawDraft(PlayerMobile pm, int cityId)
+        {
+            if (pm == null || pm.Deleted)
+                return;
+
+            ReinoMilitarySession session = GetSession(pm);
+            session.PendingLawDraftInitialized = false;
+            session.PendingLawDraftCityId = -1;
+            session.PendingEnabledLaws.Clear();
+
+            EnsureLawDraft(pm, cityId);
+        }
+
+        public static bool CommitPendingLaws(PlayerMobile pm, int cityId, out string message)
+        {
+            message = "Nenhuma lei foi alterada.";
+
+            if (pm == null || pm.Deleted)
+                return false;
+
+            EnsureLawDraft(pm, cityId);
+
+            ReinoMilitarySession session = GetSession(pm);
+            ReinoMilitaryPolicy policy = GetPolicy(cityId);
+            List<string> changed = new List<string>();
+
+            foreach (ReinoMilitaryLaw law in Enum.GetValues(typeof(ReinoMilitaryLaw)))
             {
-                p.EnabledLaws.Add(law);
-                enabled = true;
+                bool oldEnabled = policy.EnabledLaws.Contains(law);
+                bool newEnabled = session.PendingEnabledLaws.Contains(law);
+
+                if (oldEnabled == newEnabled)
+                    continue;
+
+                if (newEnabled)
+                    policy.EnabledLaws.Add(law);
+                else
+                    policy.EnabledLaws.Remove(law);
+
+                changed.Add(newEnabled
+                    ? "Nova lei em vigor: " + GetLawLabel(law) + "."
+                    : "Lei revogada: " + GetLawLabel(law) + ".");
             }
 
-            QueueLawChangeNotice(cityId, law, enabled);
+            ResetLawDraft(pm, cityId);
+
+            if (changed.Count <= 0)
+                return false;
+
+            QueueLawChangeNotice(cityId, changed);
+            message = "As leis selecionadas entraram em vigor.";
+            return true;
         }
 
         public static bool HasBarracks(int cityId)
@@ -411,9 +492,18 @@ namespace Server.Custom.Reinos
 
         private static void QueueLawChangeNotice(int cityId, ReinoMilitaryLaw law, bool enabled)
         {
-            string line = enabled
+            List<string> lines = new List<string>();
+            lines.Add(enabled
                 ? "Nova lei em vigor: " + GetLawLabel(law) + "."
-                : "Lei revogada: " + GetLawLabel(law) + ".";
+                : "Lei revogada: " + GetLawLabel(law) + ".");
+
+            QueueLawChangeNotice(cityId, lines);
+        }
+
+        private static void QueueLawChangeNotice(int cityId, List<string> lines)
+        {
+            if (lines == null || lines.Count <= 0)
+                return;
 
             foreach (Mobile mobile in World.Mobiles.Values)
             {
@@ -431,8 +521,11 @@ namespace Server.Custom.Reinos
                     m_PendingLawNoticesByPlayer[pm.Serial.Value] = list;
                 }
 
-                if (!list.Contains(line))
-                    list.Add(line);
+                for (int i = 0; i < lines.Count; i++)
+                {
+                    if (!list.Contains(lines[i]))
+                        list.Add(lines[i]);
+                }
 
                 if (pm.NetState != null && m_QueuedOnlineLawNotice.Add(pm.Serial.Value))
                 {

@@ -8,6 +8,7 @@ using Server.Mobiles;
 using Server.Multis;
 using Server.Network;
 using Server.Prompts;
+using Server.Gumps;
 
 namespace Server.Gumps
 {
@@ -267,8 +268,8 @@ namespace Server.Gumps
          //   }
           //  else
          //   {
-                AddButtonLabeled(10, 390, GetButtonID(0, 2), 1060676); // Grant Access
-                AddButtonLabeled(10, 410, GetButtonID(0, 3), 1060677); // Revoke Access
+         //       AddButtonLabeled(10, 390, GetButtonID(0, 2), 1060676); // Grant Access
+         //       AddButtonLabeled(10, 410, GetButtonID(0, 3), 1060677); // Revoke Access
           //  }
 
             AddPageButton(Core.TOL ? 10 : 150, 10, GetButtonID(1, 0), 1060668, HouseGumpPageAOS.Information);
@@ -281,45 +282,48 @@ namespace Server.Gumps
             {
                 case HouseGumpPageAOS.Information:
                     {
-                        AddHtmlLocalized(20, 130, 200, 20, 1011242, LabelColor, false, false); // Owned By: 
+                        AddHtml(20, 130, 200, 20, "Adiquirda Por:", false, false); // Owned By: 
                         AddLabel(210, 130, LabelHue, GetOwnerName());
 
-                        AddHtmlLocalized(20, 170, 380, 20, 1018032, SelectedColor, false, false); // This house is properly placed.
-                        AddHtmlLocalized(20, 190, 380, 20, 1018035, SelectedColor, false, false); // This house is of modern design.
-                        AddHtmlLocalized(20, 210, 380, 20, (house is HouseFoundation) ? 1060681 : 1060680, SelectedColor, false, false); // This is a (pre | custom)-built house.
-                        AddHtmlLocalized(20, 230, 380, 20, house.Public ? 1060678 : 1060679, SelectedColor, false, false); // This house is (private | open to the public).
+                        //   AddHtmlLocalized(20, 170, 380, 20, 1018032, SelectedColor, false, false); // This house is properly placed.
+                        //  AddHtmlLocalized(20, 190, 380, 20, 1018035, SelectedColor, false, false); // This house is of modern design.
+                        //   AddHtmlLocalized(20, 210, 380, 20, (house is HouseFoundation) ? 1060681 : 1060680, SelectedColor, false, false); // This is a (pre | custom)-built house.
+                        //  AddHtmlLocalized(20, 230, 380, 20, house.Public ? 1060678 : 1060679, SelectedColor, false, false); // This house is (private | open to the public).
+
+                        AddHtml(20, 170, 380, 100, "Uma casa típica da região, em ótimo estado para aluguel ou compra. O reino agradece a sua contribuição. " +
+                            "com essa moradia você agora é apto a pedir cidadania do reino. Espero que se sinta em casa!", false, false);
 
                         switch ( house.DecayType )
                         {
                             case DecayType.Ageless:
                             case DecayType.AutoRefresh:
                                 {
-                                    AddHtmlLocalized(20, 250, 380, 20, 1062209, SelectedColor, false, false); // This house is <a href = "?ForceTopic97">Automatically</a> refreshed.
+                                //    AddHtmlLocalized(20, 250, 380, 20, 1062209, SelectedColor, false, false); // This house is <a href = "?ForceTopic97">Automatically</a> refreshed.
                                     break;
                                 }
                             case DecayType.ManualRefresh:
                                 {
-                                    AddHtmlLocalized(20, 250, 380, 20, 1062208, SelectedColor, false, false); // This house is <a href = "?ForceTopic97">Grandfathered</a>.
+                                //    AddHtmlLocalized(20, 250, 380, 20, 1062208, SelectedColor, false, false); // This house is <a href = "?ForceTopic97">Grandfathered</a>.
                                     break;
                                 }
                             case DecayType.Condemned:
                                 {
-                                    AddHtmlLocalized(20, 250, 380, 20, 1062207, WarningColor, false, false); // This house is <a href = "?ForceTopic97">Condemned</a>.
+                                //    AddHtmlLocalized(20, 250, 380, 20, 1062207, WarningColor, false, false); // This house is <a href = "?ForceTopic97">Condemned</a>.
                                     break;
                                 }
                         }
 
-                        AddHtmlLocalized(20, 290, 200, 20, 1060692, SelectedColor, false, false); // Built On:
+                        AddHtml(20, 290, 200, 20, "Adiquirida", false, false); // Built On:
                         AddLabel(250, 290, LabelHue, GetDateTime(house.BuiltOn));
 
-                        AddHtmlLocalized(20, 310, 200, 20, 1060693, SelectedColor, false, false); // Last Traded:
-                        AddLabel(250, 310, LabelHue, GetDateTime(house.LastTraded));
+                     //   AddHtmlLocalized(20, 310, 200, 20, 1060693, SelectedColor, false, false); // Last Traded:
+                     //   AddLabel(250, 310, LabelHue, GetDateTime(house.LastTraded));
 
-                        AddHtmlLocalized(20, 330, 200, 20, 1061793, SelectedColor, false, false); // House Value
-                        AddLabel(250, 330, LabelHue, house.Price.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-US")));
+                     //   AddHtmlLocalized(20, 330, 200, 20, 1061793, SelectedColor, false, false); // House Value
+                     //   AddLabel(250, 330, LabelHue, house.Price.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-US")));
 
-                        AddHtmlLocalized(20, 360, 300, 20, 1011241, SelectedColor, false, false); // Number of visits this building has had: 
-                        AddLabel(350, 360, LabelHue, house.TotalVisits.ToString());
+                     //   AddHtmlLocalized(20, 360, 300, 20, 1011241, SelectedColor, false, false); // Number of visits this building has had: 
+                     //   AddLabel(350, 360, LabelHue, house.TotalVisits.ToString());
 
                         break;
                     }
@@ -349,9 +353,9 @@ namespace Server.Gumps
                             AddButtonLabeled(10, 310, GetButtonID(3, 10), 1060699); // View Access List
                             AddButtonLabeled(10, 330, GetButtonID(3, 11), 1060700); // Clear Access List
 
-                            AddHtmlLocalized(245, 130, 240, 20, 1060695, SelectedColor, false, false); // Change to Private
+                        //    AddHtmlLocalized(245, 130, 240, 20, 1060695, SelectedColor, false, false); // Change to Private
 
-                            AddButtonLabeled(210, 150, GetButtonID(3, 13), 1060694, isOwner); // Change to Public
+                        //    AddButtonLabeled(210, 150, GetButtonID(3, 13), 1060694, isOwner); // Change to Public
                         }
 
                         break;
@@ -410,37 +414,37 @@ namespace Server.Gumps
 
                         if (bonusStorage > 0)
                         {
-                            AddHtmlLocalized(10, 150, 300, 20, 1072519, LabelColor, false, false); // Increased Storage
-                            AddLabel(310, 150, LabelHue, String.Format("{0}%", bonusStorage));
+                           // AddHtmlLocalized(10, 150, 300, 20, 1072519, LabelColor, false, false); // Increased Storage
+                           // AddLabel(310, 150, LabelHue, String.Format("{0}%", bonusStorage));
                         }
 
-                        AddHtmlLocalized(10, 170, 300, 20, 1060683, LabelColor, false, false); // Maximum Secure Storage
+                        AddHtml(10, 170, 300, 20, "Número de Recipientes Seguros", false, false); // Maximum Secure Storage
                         AddLabel(310, 170, LabelHue, maxSecures.ToString());
 
-                        AddHtmlLocalized(10, 190, 300, 20, 1060685, LabelColor, false, false); // Used by Moving Crate
-                        AddLabel(310, 190, LabelHue, fromMovingCrate.ToString());
+                      //  AddHtmlLocalized(10, 190, 300, 20, 1060685, LabelColor, false, false); // Used by Moving Crate
+                      //  AddLabel(310, 190, LabelHue, fromMovingCrate.ToString());
 
-                        AddHtmlLocalized(10, 210, 300, 20, 1060686, LabelColor, false, false); // Used by Lockdowns
+                        AddHtml(10, 210, 300, 20, "Trancados Usados", false, false); // Used by Lockdowns
                         AddLabel(310, 210, LabelHue, fromLockdowns.ToString());
 
                         if (BaseHouse.NewVendorSystem)
                         {
-                            AddHtmlLocalized(10, 230, 300, 20, 1060688, LabelColor, false, false); // Used by Secure Containers
+                            AddHtml(10, 230, 300, 20, "Recipientes Seguros Usados", false, false); // Used by Secure Containers
                             AddLabel(310, 230, LabelHue, fromSecures.ToString());
 
-                            AddHtmlLocalized(10, 250, 300, 20, 1060689, LabelColor, false, false); // Available Storage
+                            AddHtml(10, 250, 300, 20, "Recipientes Seguros Disponíveis", false, false); // Available Storage
                             AddLabel(310, 250, LabelHue, Math.Max(maxSecures - curSecures, 0).ToString());
 
-                            AddHtmlLocalized(10, 290, 300, 20, 1060690, LabelColor, false, false); // Maximum Lockdowns
+                            AddHtml(10, 290, 300, 20, "Máximo de Itens Trancados", false, false); // Maximum Lockdowns
                             AddLabel(310, 290, LabelHue, maxLockdowns.ToString());
 
-                            AddHtmlLocalized(10, 310, 300, 20, 1060691, LabelColor, false, false); // Available Lockdowns
+                            AddHtml(10, 310, 300, 20, "Itens Trancados Disponíveis", false, false); // Available Lockdowns
                             AddLabel(310, 310, LabelHue, Math.Max(maxLockdowns - curLockdowns, 0).ToString());
 
                             int maxVendors = house.GetNewVendorSystemMaxVendors();
                             int vendors = house.PlayerVendors.Count + house.VendorRentalContracts.Count;
 
-                            AddHtmlLocalized(10, 350, 300, 20, 1062391, LabelColor, false, false); // Vendor Count
+                            AddHtml(10, 350, 300, 20, "Espaço Para Vendedores", false, false); // Vendor Count
                             AddLabel(310, 350, LabelHue, vendors.ToString() + " / " + maxVendors.ToString());
                         }
                         else
@@ -467,14 +471,14 @@ namespace Server.Gumps
                     {
                         bool isCustomizable = isOwner && (house is HouseFoundation);
 
-                        AddButtonLabeled(10, 120, GetButtonID(5, 0), 1060759, isOwner && !isCustomizable && (house.ConvertEntry != null)); // Convert Into Customizable House
-                        AddButtonLabeled(10, 140, GetButtonID(5, 8), 1060004, isOwner && house is BaseContestHouse || house is Castle || house is Keep);
-                        AddButtonLabeled(10, 160, GetButtonID(5, 1), 1060765, isOwner && isCustomizable); // Customize This House
-                        AddButtonLabeled(10, 180, GetButtonID(5, 2), 1060760, isOwner && house.MovingCrate != null); // Relocate Moving Crate
-                        AddButtonLabeled(10, 210, GetButtonID(5, 3), 1060761, isOwner && house.Public); // Change House Sign
-                        AddButtonLabeled(10, 230, GetButtonID(5, 4), 1060762, isOwner && isCustomizable); // Change House Sign Hanger
-                        AddButtonLabeled(10, 250, GetButtonID(5, 5), 1060763, isOwner && isCustomizable && (((HouseFoundation)house).Signpost != null)); // Change Signpost
-                        AddButtonLabeled(10, 280, GetButtonID(5, 6), 1062004, isOwner && isCustomizable); // Change Foundation Style
+                      //  AddButtonLabeled(10, 120, GetButtonID(5, 0), 1060759, isOwner && !isCustomizable && (house.ConvertEntry != null)); // Convert Into Customizable House
+                      //  AddButtonLabeled(10, 140, GetButtonID(5, 8), 1060004, isOwner && house is BaseContestHouse || house is Castle || house is Keep);
+                      //  AddButtonLabeled(10, 160, GetButtonID(5, 1), 1060765, isOwner && isCustomizable); // Customize This House
+                      //  AddButtonLabeled(10, 180, GetButtonID(5, 2), 1060760, isOwner && house.MovingCrate != null); // Relocate Moving Crate
+                      //  AddButtonLabeled(10, 210, GetButtonID(5, 3), 1060761, isOwner && house.Public); // Change House Sign
+                      //  AddButtonLabeled(10, 230, GetButtonID(5, 4), 1060762, isOwner && isCustomizable); // Change House Sign Hanger
+                     //   AddButtonLabeled(10, 250, GetButtonID(5, 5), 1060763, isOwner && isCustomizable && (((HouseFoundation)house).Signpost != null)); // Change Signpost
+                     //   AddButtonLabeled(10, 280, GetButtonID(5, 6), 1062004, isOwner && isCustomizable); // Change Foundation Style
                         AddButtonLabeled(10, 310, GetButtonID(5, 7), 1060764, isCoOwner); // Rename House
 
                         break;
@@ -482,8 +486,8 @@ namespace Server.Gumps
                 case HouseGumpPageAOS.Ownership:
                     {
                         AddButtonLabeled(10, 130, GetButtonID(6, 0), 1061794, isOwner && house.MovingCrate == null && house.InternalizedVendors.Count == 0); // Demolish House
-                        AddButtonLabeled(10, 150, GetButtonID(6, 1), 1061797, isOwner); // Trade House
-                        AddButtonLabeled(10, 190, GetButtonID(6, 2), 1061798, false); // Make Primary
+                       // AddButtonLabeled(10, 150, GetButtonID(6, 1), 1061797, isOwner); // Trade House
+                      //  AddButtonLabeled(10, 190, GetButtonID(6, 2), 1061798, false); // Make Primary
 
                         break;
                     }

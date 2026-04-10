@@ -42,6 +42,7 @@ namespace Server.Custom.Reinos
         public string Notes;
         public bool ReleasePending;
         public bool ReleasePendingToBank;
+        public int SourceLawId;
 
         public ReinoPrisionerState()
         {
@@ -51,6 +52,7 @@ namespace Server.Custom.Reinos
             Notes = String.Empty;
             CellIndex = -1;
             JudgedUtc = DateTime.MinValue;
+            SourceLawId = -1;
         }
     }
 

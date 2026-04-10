@@ -4,6 +4,8 @@ using Server.Items;
 using Server.Mobiles;
 using Server.Targeting;
 using Server.Multis;
+using Server.Custom.Reinos;
+using Server.Custom.Systems.Rent;
 
 namespace Server.Custom.Systems.PlayerMadeStatues
 {
@@ -80,7 +82,35 @@ namespace Server.Custom.Systems.PlayerMadeStatues
             if (house == null)
                 return false;
 
-            return house.IsOwner(from);
+            if (house.IsOwner(from) || house.IsFriend(from))
+                return true;
+
+            TownHouse town = house as TownHouse;
+            if (town != null)
+            {
+                RentalContract contract = town.ForSaleSign as RentalContract;
+                if (contract != null && contract.RentalClient == from)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool IsUnlockedDecorativeTile(PlayerMobile from, Point3D loc)
+        {
+            if (from == null || from.Map == null || from.Map == Map.Internal)
+                return false;
+
+            int cityId = ReinoDiplomacySystem.ResolvePlayerCitizenCityId(from);
+            if (cityId < 0)
+                return false;
+
+            return ReinoExpansionSystem.IsPointInsideUnlockedDecorativeArea(cityId, loc, from.Map);
+        }
+
+        private static bool IsValidLargeSculptTile(PlayerMobile from, Point3D loc)
+        {
+            return IsOwnedRentalTile(from, loc) || IsUnlockedDecorativeTile(from, loc);
         }
 
         private static bool CanBuildPlatformHere(PlayerMobile from)
@@ -90,10 +120,10 @@ namespace Server.Custom.Systems.PlayerMadeStatues
 
             Point3D work = GetPlatformWorkLocation(from, StatuePlatformSize.Small);
 
-            if (!IsOwnedRentalTile(from, from.Location))
+            if (!IsValidLargeSculptTile(from, from.Location))
                 return false;
 
-            if (!IsOwnedRentalTile(from, work))
+            if (!IsValidLargeSculptTile(from, work))
                 return false;
 
             return true;
@@ -130,6 +160,12 @@ namespace Server.Custom.Systems.PlayerMadeStatues
             if (!PlatformAcceptsStatue(platform.PlatformSize, requiredSize))
             {
                 message = "A estátua desse modelo não caberia nessa plataforma.";
+                return false;
+            }
+
+            if (!IsValidLargeSculptTile(from, platform.GetWorldLocation()))
+            {
+                message = "Você só pode usar plataformas em uma casa sua, alugada ou comprada, ou em uma área decorativa liberada do seu reino.";
                 return false;
             }
 
@@ -254,7 +290,7 @@ namespace Server.Custom.Systems.PlayerMadeStatues
 
             if (!CanBuildPlatformHere(from))
             {
-                from.SendMessage("Você só pode construir plataformas em uma área alugada que pertença a você.");
+                from.SendMessage("Você só pode construir plataformas em uma casa sua, alugada ou comprada, ou em uma área decorativa liberada do seu reino.");
                 return;
             }
 
