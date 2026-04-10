@@ -25,6 +25,7 @@ namespace Server.Custom.Reinos
             Load();
             EnsureDefaults();
             EventSink.WorldSave += delegate { Save(); };
+            EventSink.Login += EventSink_Login;
 
             if (m_PulseTimer != null)
                 m_PulseTimer.Stop();
@@ -37,6 +38,72 @@ namespace Server.Custom.Reinos
             ReleaseExpiredPrisoners();
             ProcessDailyChargesAndMeals();
             RefreshOnlineFineGumps();
+        }
+
+        private static void EventSink_Login(LoginEventArgs e)
+        {
+            PlayerMobile pm = e.Mobile as PlayerMobile;
+            if (pm == null || pm.Deleted)
+                return;
+
+            Timer.DelayCall(TimeSpan.FromSeconds(1.0), delegate
+            {
+                TryFinalizePendingRelease(pm);
+            });
+        }
+
+        private static void TryFinalizePendingRelease(PlayerMobile pm)
+        {
+            if (pm == null || pm.Deleted)
+                return;
+
+            foreach (KeyValuePair<int, List<ReinoPrisionerState>> kv in m_InmatesByCity)
+            {
+                List<ReinoPrisionerState> list = kv.Value;
+                if (list == null)
+                    continue;
+
+                for (int i = list.Count - 1; i >= 0; i--)
+                {
+                    ReinoPrisionerState inmate = list[i];
+                    if (inmate == null || !inmate.ReleasePending || inmate.PrisonerSerial != pm.Serial.Value)
+                        continue;
+
+                    UnlockPrisonUniform(pm);
+
+                    if (inmate.ReleasePendingToBank)
+                        ReturnBelongingsToBank(pm, inmate.BelongingsBagSerial);
+                    else
+                        ReturnBelongings(pm, inmate.BelongingsBagSerial);
+
+                    pm.CantWalk = false;
+                    OpenOuterDoorsForRelease(kv.Key);
+                    SetCellDoorOccupiedState(kv.Key, inmate.CellIndex, false);
+
+                    pm.CloseGump(typeof(ReinoPrisionFineGump));
+
+                    OSUCarcereiro carcereiro = FindCarcereiro(kv.Key);
+                    if (carcereiro != null && !carcereiro.Deleted)
+                        carcereiro.Say("Aqui estão seus pertences, dá o fora daqui!");
+                    else
+                        pm.SendMessage("Aqui estão seus pertences, dá o fora daqui!");
+
+                    list.RemoveAt(i);
+                    return;
+                }
+            }
+        }
+
+        private static OSUCarcereiro FindCarcereiro(int cityId)
+        {
+            foreach (Mobile m in World.Mobiles.Values)
+            {
+                OSUCarcereiro npc = m as OSUCarcereiro;
+                if (npc != null && !npc.Deleted && npc.CityId == cityId)
+                    return npc;
+            }
+
+            return null;
         }
 
         private static void EnsureDefaults()
@@ -166,7 +233,7 @@ namespace Server.Custom.Reinos
             for (int i = 0; i < inmates.Count; i++)
             {
                 ReinoPrisionerState inmate = inmates[i];
-                if (inmate == null || inmate.CellIndex < 0 || inmate.CellIndex >= 5)
+                if (inmate == null || inmate.ReleasePending || inmate.CellIndex < 0 || inmate.CellIndex >= 5)
                     continue;
 
                 if (!list.Contains(inmate.CellIndex))
@@ -208,7 +275,7 @@ namespace Server.Custom.Reinos
             for (int i = 0; i < list.Count; i++)
             {
                 ReinoPrisionerState inmate = list[i];
-                if (inmate != null && inmate.CellIndex == cellIndex)
+                if (inmate != null && !inmate.ReleasePending && inmate.CellIndex == cellIndex)
                     return inmate;
             }
 
@@ -221,7 +288,7 @@ namespace Server.Custom.Reinos
             for (int i = 0; i < list.Count; i++)
             {
                 ReinoPrisionerState inmate = list[i];
-                if (inmate != null && inmate.PrisonerSerial == prisonerSerial)
+                if (inmate != null && !inmate.ReleasePending && inmate.PrisonerSerial == prisonerSerial)
                     return inmate;
             }
 
@@ -254,7 +321,7 @@ namespace Server.Custom.Reinos
         public static string GetPrisonHtml(int cityId, int viewedCellIndex)
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("<BASEFONT COLOR=#000000>");
+            sb.Append("<BASEFONT COLOR=#FFFFFF>");
 
             ReinoPrisionerState inmate = GetInmateByCell(cityId, viewedCellIndex);
             if (inmate == null)
@@ -315,6 +382,90 @@ namespace Server.Custom.Reinos
             return true;
         }
 
+        public static bool IsCellDoorLinked(int cityId, int cellIndex)
+        {
+            ReinoPrisionSettings settings = GetSettings(cityId);
+
+            return cellIndex >= 0
+                && cellIndex < settings.CellDoorSerials.Length
+                && settings.CellDoorSerials[cellIndex] > 0;
+        }
+
+        public static bool IsCellDoorOpen(int cityId, int cellIndex)
+        {
+            ReinoPrisionSettings settings = GetSettings(cityId);
+
+            if (cellIndex < 0 || cellIndex >= settings.CellDoorSerials.Length)
+                return false;
+
+            int serialValue = settings.CellDoorSerials[cellIndex];
+            if (serialValue <= 0)
+                return false;
+
+            BaseDoor door = World.FindItem((Serial)serialValue) as BaseDoor;
+            if (door == null || door.Deleted)
+                return false;
+
+            return door.Open || !door.Locked;
+        }
+
+        private static List<BaseDoor> CollectPrisonLotDoors(int cityId)
+        {
+            List<BaseDoor> list = new List<BaseDoor>();
+            HashSet<int> seen = new HashSet<int>();
+
+            ReinoConstructionRuntimeInfo prison = FindPrimaryPrisonRuntime(cityId);
+            if (prison == null || prison.Lot == null || prison.Lot.Map == null || prison.Lot.Map == Map.Internal)
+                return list;
+
+            Rectangle2D rect = prison.Lot.Rect;
+            int minZ = prison.Lot.NorthWest.Z - 20;
+            int maxZ = prison.Lot.NorthWest.Z + 40;
+            IPooledEnumerable eable = prison.Lot.Map.GetItemsInBounds(rect);
+
+            foreach (Item item in eable)
+            {
+                BaseDoor door = item as BaseDoor;
+                if (door == null || door.Deleted || door.RootParent != null)
+                    continue;
+
+                if (!rect.Contains(new Point2D(door.X, door.Y)))
+                    continue;
+
+                if (door.Z < minZ || door.Z > maxZ)
+                    continue;
+
+                if (seen.Add(door.Serial.Value))
+                    list.Add(door);
+            }
+
+            eable.Free();
+
+            if (prison.LotState != null)
+            {
+                prison.LotState.DoorSerials.Clear();
+                for (int i = 0; i < list.Count; i++)
+                    prison.LotState.DoorSerials.Add(list[i].Serial.Value);
+            }
+
+            return list;
+        }
+
+        private static bool DoorBelongsToPrisonLot(int cityId, BaseDoor door)
+        {
+            if (door == null || door.Deleted)
+                return false;
+
+            List<BaseDoor> doors = CollectPrisonLotDoors(cityId);
+            for (int i = 0; i < doors.Count; i++)
+            {
+                if (doors[i] != null && doors[i].Serial == door.Serial)
+                    return true;
+            }
+
+            return false;
+        }
+
         public static bool LinkCellDoor(int cityId, int cellIndex, Item item, out string message)
         {
             message = String.Empty;
@@ -332,8 +483,7 @@ namespace Server.Custom.Reinos
                 return false;
             }
 
-            ReinoConstructionRuntimeInfo prison = FindPrimaryPrisonRuntime(cityId);
-            if (prison == null || prison.LotState == null || prison.LotState.DoorSerials == null || !prison.LotState.DoorSerials.Contains(door.Serial.Value))
+            if (!DoorBelongsToPrisonLot(cityId, door))
             {
                 message = "Essa porta não pertence ao lote da prisão.";
                 return false;
@@ -341,10 +491,52 @@ namespace Server.Custom.Reinos
 
             ReinoPrisionSettings settings = GetSettings(cityId);
             settings.CellDoorSerials[cellIndex] = door.Serial.Value;
-            door.Locked = true;
-            door.Open = false;
+
+            SetCellDoorOccupiedState(cityId, cellIndex, GetInmateByCell(cityId, cellIndex) != null);
+
             message = String.Format("Porta da cela {0} vinculada.", cellIndex + 1);
             return true;
+        }
+
+        private static void SetCellDoorOccupiedState(int cityId, int cellIndex, bool occupied)
+        {
+            ReinoPrisionSettings settings = GetSettings(cityId);
+
+            if (cellIndex < 0 || cellIndex >= settings.CellDoorSerials.Length)
+                return;
+
+            int serialValue = settings.CellDoorSerials[cellIndex];
+            if (serialValue <= 0)
+                return;
+
+            BaseDoor door = World.FindItem((Serial)serialValue) as BaseDoor;
+            if (door == null || door.Deleted)
+                return;
+
+            door.Locked = occupied;
+            door.Open = !occupied;
+        }
+
+        private static void OpenOuterDoorsForRelease(int cityId)
+        {
+            ReinoPrisionSettings settings = GetSettings(cityId);
+            settings.OuterDoorsLocked = false;
+
+            HashSet<int> cellDoors = new HashSet<int>(settings.CellDoorSerials);
+            List<BaseDoor> doors = CollectPrisonLotDoors(cityId);
+
+            for (int i = 0; i < doors.Count; i++)
+            {
+                BaseDoor door = doors[i];
+                if (door == null || door.Deleted)
+                    continue;
+
+                if (cellDoors.Contains(door.Serial.Value))
+                    continue;
+
+                door.Locked = false;
+                door.Open = true;
+            }
         }
 
         public static bool ToggleFeedPrisoners(int cityId)
@@ -391,9 +583,21 @@ namespace Server.Custom.Reinos
                 return false;
             }
 
-            door.Locked = false;
-            door.Open = true;
-            message = String.Format("Cela {0} aberta.", cellIndex + 1);
+            bool aberta = door.Open || !door.Locked;
+
+            if (aberta)
+            {
+                door.Open = false;
+                door.Locked = true;
+                message = String.Format("Cela {0} fechada.", cellIndex + 1);
+            }
+            else
+            {
+                door.Locked = false;
+                door.Open = true;
+                message = String.Format("Cela {0} aberta.", cellIndex + 1);
+            }
+
             return true;
         }
 
@@ -414,8 +618,11 @@ namespace Server.Custom.Reinos
                 return false;
             }
 
-            inmate.ReleaseUtc = DateTime.UtcNow + TimeSpan.FromHours(Math.Max(1, hours));
-            inmate.SentenceHours = Math.Max(1, hours);
+            if (hours <= 0)
+                return ReleaseInmate(cityId, cellIndex, actorName ?? "administração", out message);
+
+            inmate.ReleaseUtc = DateTime.UtcNow + TimeSpan.FromHours(hours);
+            inmate.SentenceHours = hours;
             inmate.Notes = String.Format("Pena ajustada por {0}.", actorName ?? "administração");
 
             UpdateLatestPrisonRecord(inmate.CityId, inmate.PrisonerSerial, inmate.CrimeLabel, inmate.SentenceHours, inmate.FineGold, inmate.Notes, false);
@@ -573,7 +780,7 @@ namespace Server.Custom.Reinos
                 return false;
             }
 
-            return ReleaseInmateInternal(inmate, releasedBy, false, false, true, out message);
+            return ReleaseInmateInternal(inmate, releasedBy, false, false, false, out message);
         }
 
         public static bool ConsumeFineAndRelease(PlayerMobile pm, int cityId, out string message)
@@ -605,7 +812,7 @@ namespace Server.Custom.Reinos
             }
 
             inmate.FinePaid = true;
-            return ReleaseInmateInternal(inmate, pm.Name, true, false, true, out message);
+            return ReleaseInmateInternal(inmate, pm.Name, true, false, false, out message);
         }
 
         public static bool TrySendToPrison(Mobile prisoner, int cityId, OSUCityGuard guard, ReinoMilitaryLaw law)
@@ -660,7 +867,8 @@ namespace Server.Custom.Reinos
             inmate.CityId = cityId;
             inmate.PrisonerSerial = pm.Serial.Value;
             inmate.PrisonerName = pm.Name;
-            inmate.CrimeLabel = ReinoMilitarySystem.GetLawLabel(law);
+            ReinoWantedEntry wantedEntry = ReinoMilitarySystem.FindWanted(cityId, pm);
+            inmate.CrimeLabel = wantedEntry != null ? "Pessoa procurada" : ReinoMilitarySystem.GetLawLabel(law);
             inmate.ArrestUtc = DateTime.UtcNow;
             inmate.ReleaseUtc = DateTime.UtcNow + TimeSpan.FromHours(sentenceHours);
             inmate.SentenceHours = sentenceHours;
@@ -678,8 +886,10 @@ namespace Server.Custom.Reinos
 
             GetInmates(cityId).Add(inmate);
             GetSettings(cityId).PendingWeeklyGold += 10;
+            SetCellDoorOccupiedState(cityId, cellIndex, true);
 
             ReinoMilitarySystem.AddPrisonRecord(cityId, pm, guard, law, sentenceHours, inmate.Notes);
+            UpdateLatestPrisonRecord(cityId, pm.Serial.Value, inmate.CrimeLabel, sentenceHours, fineGold, inmate.Notes, true);
 
             if (GetSettings(cityId).FeedPrisoners)
                 SpawnMealForInmate(cityId, inmate);
@@ -688,6 +898,138 @@ namespace Server.Custom.Reinos
                 ShowFineGump(pm, inmate);
 
             pm.SendMessage("Você foi levado para a prisão do reino.");
+            return true;
+        }
+
+        public static bool TryAdministrativeArrest(PlayerMobile prisoner, int cityId, PlayerMobile actor, out string message)
+        {
+            message = String.Empty;
+
+            if (prisoner == null || prisoner.Deleted || prisoner.Map == null)
+            {
+                message = "Jogador inválido.";
+                return false;
+            }
+
+            ReinoConstructionRuntimeInfo prison = FindPrimaryPrisonRuntime(cityId);
+            if (prison == null || prison.Lot == null || prison.Lot.Map == null)
+            {
+                message = "Não existe prisão construída nesse reino.";
+                return false;
+            }
+
+            if (prisoner.Map != prison.Lot.Map || !prison.Lot.Contains(prisoner.Location))
+            {
+                message = "O jogador precisa estar dentro do lote da prisão.";
+                return false;
+            }
+
+            RemoveExistingInmate(cityId, prisoner.Serial.Value);
+
+            int cellIndex;
+            Point3D dest;
+            Map destMap;
+
+            if (!FindFirstEmptyPrisonCell(cityId, out cellIndex, out dest, out destMap))
+            {
+                message = "Todas as celas da prisão estão ocupadas.";
+                return false;
+            }
+
+            int sentenceHours = 48;
+            int fineGold = 0;
+
+            if (GetSettings(cityId).AllowFinePayment && !HasTribunal(cityId))
+                fineGold = 5000;
+
+            int belongingsBagSerial = 0;
+
+            Bag existingBag = TryMoveNamedBagFromBarracksToPrisonLocker(prisoner, cityId);
+            if (existingBag != null && !existingBag.Deleted)
+            {
+                belongingsBagSerial = existingBag.Serial.Value;
+            }
+            else
+            {
+                Bag bag;
+                if (ConfiscateBelongings(prisoner, cityId, out bag) && bag != null && !bag.Deleted)
+                    belongingsBagSerial = bag.Serial.Value;
+            }
+
+            EquipPrisonUniform(prisoner);
+
+            prisoner.Combatant = null;
+            prisoner.Warmode = false;
+            prisoner.CantWalk = false;
+            prisoner.MoveToWorld(dest, destMap != null ? destMap : prison.Lot.Map);
+
+            ReinoPrisionerState inmate = new ReinoPrisionerState();
+            inmate.CityId = cityId;
+            inmate.PrisonerSerial = prisoner.Serial.Value;
+            inmate.PrisonerName = prisoner.Name;
+            inmate.CrimeLabel = "Prisão administrativa";
+            inmate.ArrestUtc = DateTime.UtcNow;
+            inmate.ReleaseUtc = DateTime.UtcNow + TimeSpan.FromHours(sentenceHours);
+            inmate.SentenceHours = sentenceHours;
+            inmate.CellIndex = cellIndex;
+            inmate.InInterrogation = false;
+            inmate.InTribunal = false;
+            inmate.JudgeName = String.Empty;
+            inmate.Judged = false;
+            inmate.JudgedUtc = DateTime.MinValue;
+            inmate.FineGold = fineGold;
+            inmate.FinePaid = false;
+            inmate.FineGumpShown = false;
+            inmate.BelongingsBagSerial = belongingsBagSerial;
+            inmate.Notes = actor != null ? "Preso manualmente por " + actor.Name + "." : "Prisão administrativa.";
+
+            GetInmates(cityId).Add(inmate);
+            GetSettings(cityId).PendingWeeklyGold += 10;
+            SetCellDoorOccupiedState(cityId, cellIndex, true);
+
+            UpdateLatestPrisonRecord(cityId, prisoner.Serial.Value, inmate.CrimeLabel, sentenceHours, fineGold, inmate.Notes, true);
+
+            if (GetSettings(cityId).FeedPrisoners)
+                SpawnMealForInmate(cityId, inmate);
+
+            if (fineGold > 0)
+                ShowFineGump(prisoner, inmate);
+
+            message = prisoner.Name + " foi levado para a cela.";
+            return true;
+        }
+
+        public static bool ResendFineGumpToViewedInmate(int cityId, int cellIndex, PlayerMobile actor, out string message)
+        {
+            message = String.Empty;
+
+            ReinoPrisionerState inmate = GetInmateByCell(cityId, cellIndex);
+            if (inmate == null)
+            {
+                message = "Não há preso nessa cela.";
+                return false;
+            }
+
+            PlayerMobile pm = World.FindMobile((Serial)inmate.PrisonerSerial) as PlayerMobile;
+            if (pm == null || pm.Deleted)
+            {
+                message = "O preso não está online para receber o gump da multa.";
+                return false;
+            }
+
+            int fine = inmate.Judged ? inmate.FineGold : 5000;
+
+            if (!GetSettings(cityId).AllowFinePayment)
+            {
+                message = "As multas estão desabilitadas nessa prisão.";
+                return false;
+            }
+
+            inmate.FineGold = Math.Max(0, fine);
+            inmate.FineGumpShown = false;
+            ShowFineGump(pm, inmate);
+
+            message = "O gump da multa foi enviado novamente para o preso.";
             return true;
         }
 
@@ -735,7 +1077,7 @@ namespace Server.Custom.Reinos
                 for (int i = 0; i < list.Count; i++)
                 {
                     ReinoPrisionerState inmate = list[i];
-                    if (inmate == null || inmate.FinePaid || inmate.FineGold <= 0 || inmate.InTribunal)
+                    if (inmate == null || inmate.ReleasePending || inmate.FinePaid || inmate.FineGold <= 0 || inmate.InTribunal)
                         continue;
 
                     PlayerMobile pm = World.FindMobile((Serial)inmate.PrisonerSerial) as PlayerMobile;
@@ -769,34 +1111,43 @@ namespace Server.Custom.Reinos
 
             int cityId = inmate.CityId;
             PlayerMobile pm = World.FindMobile((Serial)inmate.PrisonerSerial) as PlayerMobile;
-            ReinoConstructionRuntimeInfo prison = FindPrimaryPrisonRuntime(cityId);
+            bool online = pm != null && !pm.Deleted && pm.NetState != null;
 
-            if (pm != null && prison != null && prison.Lot != null)
+            if (pm != null && !pm.Deleted)
             {
                 UnlockPrisonUniform(pm);
-
-                if (toBank)
-                    ReturnBelongingsToBank(pm, inmate.BelongingsBagSerial);
-                else
-                    ReturnBelongings(pm, inmate.BelongingsBagSerial);
-
                 pm.CantWalk = false;
 
-                if (moveOutside)
+                if (toBank)
                 {
-                    Point3D release = GetReleasePoint(prison.Lot);
-                    pm.MoveToWorld(release, prison.Lot.Map);
+                    ReturnBelongingsToBank(pm, inmate.BelongingsBagSerial);
+                }
+                else if (online)
+                {
+                    ReturnBelongings(pm, inmate.BelongingsBagSerial);
+                }
+                else
+                {
+                    inmate.ReleasePending = true;
+                    inmate.ReleasePendingToBank = false;
                 }
             }
+            else
+            {
+                inmate.ReleasePending = true;
+                inmate.ReleasePendingToBank = toBank;
+            }
 
-            ReinoPrisionSettings settings = GetSettings(cityId);
-            settings.OuterDoorsLocked = false;
-            SetOuterDoorsLocked(cityId, false);
-
-            string unused;
-            OpenCellDoor(cityId, inmate.CellIndex, out unused);
+            OpenOuterDoorsForRelease(cityId);
+            SetCellDoorOccupiedState(cityId, inmate.CellIndex, false);
 
             MarkLatestPrisonRecordReleased(cityId, inmate.PrisonerSerial, releasedBy, byFine || toBank);
+
+            if (inmate.ReleasePending)
+            {
+                message = "A soltura ficará pendente até o jogador logar.";
+                return true;
+            }
 
             List<ReinoPrisionerState> list = GetInmates(cityId);
             list.Remove(inmate);
@@ -823,7 +1174,7 @@ namespace Server.Custom.Reinos
                 for (int i = 0; i < list.Count; i++)
                 {
                     ReinoPrisionerState inmate = list[i];
-                    if (inmate != null && !inmate.InTribunal && inmate.ReleaseUtc <= DateTime.UtcNow)
+                    if (inmate != null && !inmate.ReleasePending && !inmate.InTribunal && inmate.ReleaseUtc <= DateTime.UtcNow)
                         toRelease.Add(new Tuple<int, int>(kv.Key, inmate.CellIndex));
                 }
             }
@@ -1045,25 +1396,20 @@ namespace Server.Custom.Reinos
 
         private static void SetOuterDoorsLocked(int cityId, bool locked)
         {
-            ReinoConstructionRuntimeInfo prison = FindPrimaryPrisonRuntime(cityId);
-            if (prison == null || prison.LotState == null || prison.LotState.DoorSerials == null)
-                return;
-
             ReinoPrisionSettings settings = GetSettings(cityId);
             HashSet<int> cellDoors = new HashSet<int>(settings.CellDoorSerials);
+            List<BaseDoor> doors = CollectPrisonLotDoors(cityId);
 
-            for (int i = 0; i < prison.LotState.DoorSerials.Count; i++)
+            for (int i = 0; i < doors.Count; i++)
             {
-                int serial = prison.LotState.DoorSerials[i];
-                if (cellDoors.Contains(serial))
-                    continue;
-
-                BaseDoor door = World.FindItem((Serial)serial) as BaseDoor;
+                BaseDoor door = doors[i];
                 if (door == null || door.Deleted)
                     continue;
 
+                if (cellDoors.Contains(door.Serial.Value))
+                    continue;
+
                 door.Locked = locked;
-                door.Open = !locked;
             }
         }
 
@@ -1098,13 +1444,23 @@ namespace Server.Custom.Reinos
 
         public static List<ReinoPrisionerState> GetAllActiveInmatesSorted(int cityId)
         {
-            List<ReinoPrisionerState> list = new List<ReinoPrisionerState>(GetInmates(cityId));
+            List<ReinoPrisionerState> list = new List<ReinoPrisionerState>();
+            List<ReinoPrisionerState> source = GetInmates(cityId);
+
+            for (int i = 0; i < source.Count; i++)
+            {
+                ReinoPrisionerState inmate = source[i];
+                if (inmate != null && !inmate.ReleasePending)
+                    list.Add(inmate);
+            }
+
             list.Sort(delegate (ReinoPrisionerState a, ReinoPrisionerState b)
             {
                 int ax = a != null ? a.CellIndex : -1;
                 int bx = b != null ? b.CellIndex : -1;
                 return ax.CompareTo(bx);
             });
+
             return list;
         }
 
@@ -1159,7 +1515,7 @@ namespace Server.Custom.Reinos
             using (FileStream fs = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.None))
             using (BinaryWriter bw = new BinaryWriter(fs))
             {
-                bw.Write(2);
+                bw.Write(3);
 
                 bw.Write(m_SettingsByCity.Count);
                 foreach (KeyValuePair<int, ReinoPrisionSettings> kv in m_SettingsByCity)
@@ -1201,6 +1557,8 @@ namespace Server.Custom.Reinos
                         bw.Write(inmate.FineGumpShown);
                         bw.Write(inmate.BelongingsBagSerial);
                         bw.Write(inmate.Notes ?? String.Empty);
+                        bw.Write(inmate.ReleasePending);
+                        bw.Write(inmate.ReleasePendingToBank);
                     }
                 }
             }
@@ -1265,6 +1623,8 @@ namespace Server.Custom.Reinos
                         inmate.FineGumpShown = br.ReadBoolean();
                         inmate.BelongingsBagSerial = br.ReadInt32();
                         inmate.Notes = br.ReadString();
+                        inmate.ReleasePending = version >= 3 ? br.ReadBoolean() : false;
+                        inmate.ReleasePendingToBank = version >= 3 ? br.ReadBoolean() : false;
                         list.Add(inmate);
                     }
 

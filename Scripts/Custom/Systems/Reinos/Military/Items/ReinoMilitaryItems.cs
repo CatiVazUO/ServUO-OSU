@@ -309,6 +309,7 @@ namespace Server.Custom.Reinos
                 return;
             }
 
+            pm.CloseGump(typeof(ReinoPrisionGump));
             pm.SendGump(new ReinoPrisionGump(pm, m_CityId));
         }
 

@@ -1729,22 +1729,32 @@ namespace Server.Custom.Reinos
                 sign.MoveToWorld(signLoc, lot.Map);
             }
 
-            Item post = state.PostSerial > 0 ? World.FindItem((Serial)state.PostSerial) : null;
-            if (post == null || post.Deleted)
-            {
-                post = new Static(0x012A);
-                post.Movable = false;
-                post.MoveToWorld(postLoc, lot.Map);
-                state.PostSerial = post.Serial.Value;
-            }
-            else
-            {
-                post.MoveToWorld(postLoc, lot.Map);
-            }
-
             bool visible = !(state.Status == ReinoLotStatus.UnderConstruction || state.Status == ReinoLotStatus.Active || state.Status == ReinoLotStatus.Abandoned);
             sign.Visible = visible;
-            post.Visible = visible;
+
+            Item post = state.PostSerial > 0 ? World.FindItem((Serial)state.PostSerial) : null;
+
+            if (visible)
+            {
+                if (post == null || post.Deleted)
+                {
+                    post = new Static(0x012A);
+                    post.Movable = false;
+                    post.MoveToWorld(postLoc, lot.Map);
+                    state.PostSerial = post.Serial.Value;
+                }
+                else
+                {
+                    post.MoveToWorld(postLoc, lot.Map);
+                }
+
+                post.Visible = true;
+            }
+            else if (post != null && !post.Deleted)
+            {
+                post.Delete();
+                state.PostSerial = 0;
+            }
         }
 
         private static void DeleteLotSign(ReinoLotState state)

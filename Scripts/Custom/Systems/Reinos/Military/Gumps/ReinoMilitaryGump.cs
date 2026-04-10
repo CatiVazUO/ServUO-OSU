@@ -44,6 +44,7 @@ namespace Server.Custom.Reinos
         private const int ButtonResetRoute = 58309;
         private const int ButtonRevealRoutes = 58310;
         private const int ButtonResetRouteConfig = 58311;
+        private const int ButtonConfirmLaws = 58312;
 
         private const int ButtonTrainingBase = 58400;
         private const int ButtonTrainingPrev = 58490;
@@ -133,7 +134,10 @@ namespace Server.Custom.Reinos
             AddImageTiled(405, 473, 825, 5, 367);
             AddImageTiled(405, 525, 825, 5, 367);
 
-            AddLabel(702, 493, 0, @"Considerar Atos Criminais");
+            AddLabel(429, 493, 0, @"Considerar Atos Criminais");
+            AddLabel(700, 493, 0, @"Colocar Em Vigor Leis Selecionadas");
+            AddButton(800, 493, 492, 492, ButtonConfirmLaws, GumpButtonType.Reply, 0)
+
             AddHtml(420, 270, 360, 22, "<BASEFONT COLOR=#000000>" + ReinoMilitarySystem.GetLawSummaryHtml(m_CityId) + "</BASEFONT>", false, false);
 
             ReinoMilitaryLaw[] left = new ReinoMilitaryLaw[]

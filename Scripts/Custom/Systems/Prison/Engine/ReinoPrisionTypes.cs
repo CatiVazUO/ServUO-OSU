@@ -40,6 +40,8 @@ namespace Server.Custom.Reinos
         public bool FineGumpShown;
         public int BelongingsBagSerial;
         public string Notes;
+        public bool ReleasePending;
+        public bool ReleasePendingToBank;
 
         public ReinoPrisionerState()
         {
@@ -60,7 +62,7 @@ namespace Server.Custom.Reinos
         public ReinoPrisionSession()
         {
             ViewedCellIndex = 0;
-            PendingRemainingHours = 48;
+            PendingRemainingHours = -1;
         }
     }
 }

@@ -28,6 +28,10 @@ namespace Server.Custom.Reinos
         private const int ButtonOpenCell = 11;
         private const int ButtonLinkDoor = 12;
         private const int ButtonSendToTribunal = 13;
+        private const int ButtonArrest = 14;
+        private const int ButtonChargeFine = 15;
+
+        private const int WhiteHue = 1152;
 
         public ReinoPrisionGump(PlayerMobile from, int cityId) : base(0, 0)
         {
@@ -42,8 +46,9 @@ namespace Server.Custom.Reinos
             ReinoPrisionSession session = ReinoPrisionSystem.GetSession(from);
             ReinoPrisionSettings settings = ReinoPrisionSystem.GetSettings(cityId);
             List<int> occupied = ReinoPrisionSystem.GetOccupiedCellIndices(cityId);
+            bool allLinked = ReinoPrisionSystem.AreAllCellDoorsLinked(cityId);
 
-            if (occupied.Count > 0)
+            if (allLinked && occupied.Count > 0)
             {
                 if (!occupied.Contains(session.ViewedCellIndex))
                     session.ViewedCellIndex = occupied[0];
@@ -54,82 +59,105 @@ namespace Server.Custom.Reinos
             }
 
             int remaining = ReinoPrisionSystem.GetRemainingHours(cityId, session.ViewedCellIndex);
-            if (session.PendingRemainingHours <= 0)
-                session.PendingRemainingHours = Math.Max(1, remaining <= 0 ? 1 : remaining);
+            if (session.PendingRemainingHours < 0)
+                session.PendingRemainingHours = Math.Max(0, remaining);
 
-            bool allLinked = ReinoPrisionSystem.AreAllCellDoorsLinked(cityId);
             ReinoPrisionerState inmate = ReinoPrisionSystem.GetInmateByCell(cityId, session.ViewedCellIndex);
             bool hasTribunal = ReinoPrisionSystem.HasTribunal(cityId);
+            bool currentCellLinked = ReinoPrisionSystem.IsCellDoorLinked(cityId, session.ViewedCellIndex);
+            bool currentCellOpen = ReinoPrisionSystem.IsCellDoorOpen(cityId, session.ViewedCellIndex);
 
             int occupiedIndex = occupied.IndexOf(session.ViewedCellIndex);
-            bool canPrev = occupied.Count > 1 && occupiedIndex > 0;
-            bool canNext = occupied.Count > 1 && occupiedIndex >= 0 && occupiedIndex < occupied.Count - 1;
+            bool canPrev = !allLinked
+                ? session.ViewedCellIndex > 0
+                : occupied.Count > 1 && occupiedIndex > 0;
+
+            bool canNext = !allLinked
+                ? session.ViewedCellIndex < 4
+                : occupied.Count > 1 && occupiedIndex >= 0 && occupiedIndex < occupied.Count - 1;
+
 
             AddPage(0);
-            AddImageTiled(339, 158, 422, 565, 387);
+            AddImageTiled(338, 160, 422, 565, 387);
             AddImageTiled(318, 653, 78, 89, 359);
-            AddImageTiled(712, 653, 74, 90, 360);
+            AddImageTiled(711, 655, 74, 90, 360);
             AddImageTiled(712, 136, 74, 82, 361);
             AddImageTiled(318, 136, 74, 90, 362);
             AddImageTiled(322, 216, 26, 441, 365);
-            AddImageTiled(757, 213, 26, 441, 366);
+            AddImageTiled(757, 215, 26, 441, 366);
             AddImageTiled(387, 712, 326, 31, 367);
             AddImageTiled(384, 138, 328, 31, 368);
             AddImageTiled(556, 201, 184, 21, 470);
             AddImageTiled(367, 201, 178, 21, 469);
-            AddLabel(483, 181, 0, @"Controle da Prisão");
             AddImageTiled(419, 201, 177, 21, 471);
-            AddHtml(406, 327, 289, 183, ReinoPrisionSystem.GetPrisonHtml(cityId, session.ViewedCellIndex), false, true);
+
+            AddLabel(483, 181, WhiteHue, @"Controle da Prisão");
+            AddHtml(406, 343, 289, 183, ReinoPrisionSystem.GetPrisonHtml(cityId, session.ViewedCellIndex), false, false);
 
             if (canPrev)
-                AddButton(360, 401, 580, 580, ButtonPrevCell, GumpButtonType.Reply, 0);
+                AddButton(360, 417, 580, 580, ButtonPrevCell, GumpButtonType.Reply, 0);
 
             if (canNext)
-                AddButton(716, 401, 581, 581, ButtonNextCell, GumpButtonType.Reply, 0);
+                AddButton(716, 417, 581, 581, ButtonNextCell, GumpButtonType.Reply, 0);
 
-            AddLabel(532, 295, 0, ReinoPrisionSystem.GetCellLabel(session.ViewedCellIndex));
+            AddLabel(532, 311, WhiteHue, ReinoPrisionSystem.GetCellLabel(session.ViewedCellIndex));
 
-            AddLabel(395, 246, 0, @"Alimentar Presos");
-            AddButton(365, 245, settings.FeedPrisoners ? 530 : 531, settings.FeedPrisoners ? 530 : 531, ButtonFeed, GumpButtonType.Reply, 0);
+            AddLabel(395, 233, WhiteHue, @"Alimentar Presos");
+            AddButton(365, 232,
+                settings.FeedPrisoners ? 530 : 531,
+                settings.FeedPrisoners ? 530 : 531,
+                ButtonFeed, GumpButtonType.Reply, 0);
 
-            AddLabel(639, 246, 0, @"Liberar Multas");
-            AddButton(611, 246, settings.AllowFinePayment ? 530 : 531, settings.AllowFinePayment ? 530 : 531, ButtonToggleFines, GumpButtonType.Reply, 0);
+            AddLabel(639, 233, WhiteHue, @"Liberar Multas");
+            AddButton(611, 233,
+                settings.AllowFinePayment ? 530 : 531,
+                settings.AllowFinePayment ? 530 : 531,
+                ButtonToggleFines, GumpButtonType.Reply, 0);
+
+            AddLabel(395, 261, WhiteHue, @"Prender");
+            AddButton(365, 260, 531, 248, ButtonArrest, GumpButtonType.Reply, 0);
+
+            AddLabel(641, 261, WhiteHue, @"Cobrar Multa");
+            AddButton(611, 260, 531, 248, ButtonChargeFine, GumpButtonType.Reply, 0);
 
             if (!hasTribunal)
             {
-                AddLabel(420, 539, 0, @"Ajustar Pena");
-                AddButton(528, 537, 580, 580, ButtonMinusHours, GumpButtonType.Reply, 0);
-                AddButton(618, 536, 581, 581, ButtonPlusHours, GumpButtonType.Reply, 0);
-                AddLabel(580, 539, 0, Math.Max(1, session.PendingRemainingHours).ToString());
-                AddButton(393, 537, 531, 248, ButtonApplyHours, GumpButtonType.Reply, 0);
+                AddLabel(421, 547, WhiteHue, @"Ajustar Pena");
+                AddButton(393, 545, 531, 248, ButtonApplyHours, GumpButtonType.Reply, 0);
+                AddButton(528, 545, 580, 580, ButtonMinusHours, GumpButtonType.Reply, 0);
+                AddButton(618, 544, 581, 581, ButtonPlusHours, GumpButtonType.Reply, 0);
+                AddLabel(580, 547, WhiteHue, Math.Max(0, session.PendingRemainingHours).ToString());
             }
 
-            string interrogationLabel = inmate != null && inmate.InInterrogation ? "Levar pra a cela" : "Levar Para Interrogatorio";
-            AddLabel(420, 577, 0, interrogationLabel);
-            AddButton(392, 577, 531, 248, ButtonInterrogation, GumpButtonType.Reply, 0);
+            string interrogationLabel = inmate != null && inmate.InInterrogation
+                ? "Levar pra a cela"
+                : "Levar Para Interrogatorio";
 
-            AddLabel(420, 607, 0, @"Soltar Preso");
-            AddButton(392, 607, 531, 248, ButtonRelease, GumpButtonType.Reply, 0);
+            AddLabel(420, 585, WhiteHue, interrogationLabel);
+            AddButton(392, 585, 531, 531, ButtonInterrogation, GumpButtonType.Reply, 0);
 
-            AddLabel(420, 637, 0, settings.OuterDoorsLocked ? @"Abrir Portas" : @"Fechar Portas");
-            AddButton(392, 637, 531, 248, ButtonToggleDoors, GumpButtonType.Reply, 0);
+            AddLabel(420, 615, WhiteHue, @"Soltar Preso");
+            AddButton(392, 615, 531, 531, ButtonRelease, GumpButtonType.Reply, 0);
+
+            AddLabel(420, 645, WhiteHue, settings.OuterDoorsLocked ? @"Abrir Portas" : @"Fechar Portas");
+            AddButton(392, 645, 531, 531, ButtonToggleDoors, GumpButtonType.Reply, 0);
+
+            AddLabel(422, 675, WhiteHue, currentCellOpen ? @"Fechar Cela" : @"Abrir Cela");
+            AddButton(392, 675, 531, 531, ButtonOpenCell, GumpButtonType.Reply, 0);
+
+            if (!currentCellLinked)
+            {
+                AddLabel(640, 645, WhiteHue, @"Linkar Portas");
+                AddButton(612, 645, 531, 531, ButtonLinkDoor, GumpButtonType.Reply, 0);
+            }
 
             if (hasTribunal)
             {
-                AddButton(580, 638, 531, 531, ButtonSendToTribunal, GumpButtonType.Reply, 0);
-                AddLabel(607, 638, 0, @"Mandar para tribunal");
+                AddLabel(640, 675, WhiteHue, @"Mandar para tribunal");
+                AddButton(612, 675, 531, 531, ButtonSendToTribunal, GumpButtonType.Reply, 0);     
             }
 
-            AddLabel(422, 667, 0, @"Abrir Cela");
-            AddButton(392, 667, 531, 248, ButtonOpenCell, GumpButtonType.Reply, 0);
-
-            if (!allLinked)
-            {
-                AddLabel(639, 667, 0, @"Linkar Portas");
-                AddButton(612, 667, 531, 248, ButtonLinkDoor, GumpButtonType.Reply, 0);
-            }
-
-            AddImageTiled(347, 280, 408, 5, 368);
+            AddImageTiled(351, 295, 404, 5, 368);
         }
 
         public override void OnResponse(NetState sender, RelayInfo info)
@@ -138,13 +166,20 @@ namespace Server.Custom.Reinos
             if (pm == null || pm.Deleted)
                 return;
 
+            if (info.ButtonID == 0)
+                return;
+
             ReinoPrisionSession session = ReinoPrisionSystem.GetSession(pm);
             List<int> occupied = ReinoPrisionSystem.GetOccupiedCellIndices(m_CityId);
 
-            if (occupied.Count > 0 && !occupied.Contains(session.ViewedCellIndex))
+            bool allLinked = ReinoPrisionSystem.AreAllCellDoorsLinked(m_CityId);
+
+            if (allLinked && occupied.Count > 0 && !occupied.Contains(session.ViewedCellIndex))
                 session.ViewedCellIndex = occupied[0];
 
             string message = String.Empty;
+
+            bool preservePendingHours = false;
 
             switch (info.ButtonID)
             {
@@ -161,10 +196,13 @@ namespace Server.Custom.Reinos
                     MoveAcrossOccupiedCells(session, occupied, 1, m_CityId);
                     break;
                 case ButtonMinusHours:
-                    session.PendingRemainingHours = Math.Max(1, session.PendingRemainingHours - 1);
+                    session.PendingRemainingHours = Math.Max(0, session.PendingRemainingHours - 1);
+                    preservePendingHours = true;
                     break;
+
                 case ButtonPlusHours:
                     session.PendingRemainingHours = Math.Min(720, session.PendingRemainingHours + 1);
+                    preservePendingHours = true;
                     break;
                 case ButtonApplyHours:
                     ReinoPrisionSystem.AdjustRemainingHours(m_CityId, session.ViewedCellIndex, session.PendingRemainingHours, pm.Name, out message);
@@ -183,7 +221,7 @@ namespace Server.Custom.Reinos
                     break;
                 case ButtonToggleDoors:
                     bool locked = ReinoPrisionSystem.ToggleOuterDoors(m_CityId);
-                    pm.SendMessage(locked ? "As portas externas da prisão foram trancadas." : "As portas externas da prisão foram abertas.");
+                    pm.SendMessage(locked ? "As portas externas da prisão foram trancadas." : "As portas externas da prisão foram destrancadas.");
                     break;
                 case ButtonOpenCell:
                     ReinoPrisionSystem.OpenCellDoor(m_CityId, session.ViewedCellIndex, out message);
@@ -199,6 +237,15 @@ namespace Server.Custom.Reinos
                     if (!String.IsNullOrWhiteSpace(message))
                         pm.SendMessage(message);
                     break;
+                case ButtonArrest:
+                    pm.Target = new PrisonAdministrativeArrestTarget(m_CityId);
+                    pm.SendMessage("Selecione o jogador que deseja prender.");
+                    return;
+                case ButtonChargeFine:
+                    ReinoPrisionSystem.ResendFineGumpToViewedInmate(m_CityId, session.ViewedCellIndex, pm, out message);
+                    if (!String.IsNullOrWhiteSpace(message))
+                        pm.SendMessage(message);
+                    break;
             }
 
             if (ReinoPrisionSystem.GetInmateByCell(m_CityId, session.ViewedCellIndex) == null)
@@ -208,13 +255,26 @@ namespace Server.Custom.Reinos
                     session.ViewedCellIndex = occupied[0];
             }
 
-            session.PendingRemainingHours = Math.Max(1, ReinoPrisionSystem.GetRemainingHours(m_CityId, session.ViewedCellIndex));
-           // pm.SendGump(new ReinoPrisionGump(pm, m_CityId));
+            if (!preservePendingHours)
+                session.PendingRemainingHours = Math.Max(0, ReinoPrisionSystem.GetRemainingHours(m_CityId, session.ViewedCellIndex));
+
+            pm.CloseGump(typeof(ReinoPrisionGump));
+            pm.SendGump(new ReinoPrisionGump(pm, m_CityId));
         }
 
         private static void MoveAcrossOccupiedCells(ReinoPrisionSession session, List<int> occupied, int delta, int cityId)
         {
-            if (session == null || occupied == null || occupied.Count <= 1)
+            if (session == null)
+                return;
+
+            if (!ReinoPrisionSystem.AreAllCellDoorsLinked(cityId))
+            {
+                session.ViewedCellIndex = Math.Max(0, Math.Min(4, session.ViewedCellIndex + delta));
+                session.PendingRemainingHours = Math.Max(0, ReinoPrisionSystem.GetRemainingHours(cityId, session.ViewedCellIndex));
+                return;
+            }
+
+            if (occupied == null || occupied.Count <= 1)
                 return;
 
             int index = occupied.IndexOf(session.ViewedCellIndex);
@@ -222,13 +282,51 @@ namespace Server.Custom.Reinos
                 index = 0;
 
             index += delta;
+
             if (index < 0)
                 index = 0;
+
             if (index >= occupied.Count)
                 index = occupied.Count - 1;
 
             session.ViewedCellIndex = occupied[index];
-            session.PendingRemainingHours = Math.Max(1, ReinoPrisionSystem.GetRemainingHours(cityId, session.ViewedCellIndex));
+            session.PendingRemainingHours = Math.Max(0, ReinoPrisionSystem.GetRemainingHours(cityId, session.ViewedCellIndex));
+        }
+
+        private class PrisonAdministrativeArrestTarget : Target
+        {
+            private readonly int m_CityId;
+
+            public PrisonAdministrativeArrestTarget(int cityId) : base(12, false, TargetFlags.None)
+            {
+                m_CityId = cityId;
+            }
+
+            protected override void OnTarget(Mobile from, object targeted)
+            {
+                PlayerMobile jailer = from as PlayerMobile;
+                PlayerMobile target = targeted as PlayerMobile;
+
+                if (jailer == null)
+                    return;
+
+                if (target == null || target.Deleted)
+                {
+                    jailer.SendMessage("Você deve selecionar um jogador.");
+                    jailer.CloseGump(typeof(ReinoPrisionGump));
+                    jailer.SendGump(new ReinoPrisionGump(jailer, m_CityId));
+                    return;
+                }
+
+                string message;
+                if (ReinoPrisionSystem.TryAdministrativeArrest(target, m_CityId, jailer, out message))
+                    jailer.SendMessage(message);
+                else
+                    jailer.SendMessage(message);
+
+                jailer.CloseGump(typeof(ReinoPrisionGump));
+                jailer.SendGump(new ReinoPrisionGump(jailer, m_CityId));
+            }
         }
 
         private class PrisonCellDoorTarget : Target
@@ -254,6 +352,7 @@ namespace Server.Custom.Reinos
                 else
                     pm.SendMessage(message);
 
+                pm.CloseGump(typeof(ReinoPrisionGump));
                 pm.SendGump(new ReinoPrisionGump(pm, m_CityId));
             }
         }
@@ -289,8 +388,8 @@ namespace Server.Custom.Reinos
             AddImageTiled(383, 139, 201, 31, 368);
             AddImageTiled(395, 202, 180, 21, 470);
             AddImageTiled(366, 202, 178, 21, 469);
-            AddLabel(447, 179, 0, @"Multa");
-            AddLabel(441, 443, 0, @"Pagar Multa");
+            AddLabel(447, 179, 1152, @"Multa");
+            AddLabel(441, 443, 1152, @"Pagar Multa");
             AddButton(413, 443, 530, 248, 1, GumpButtonType.Reply, 0);
             AddHtml(370, 239, 210, 184, html, false, true);
         }
@@ -298,10 +397,10 @@ namespace Server.Custom.Reinos
         private static string BuildFineHtml(ReinoPrisionerState inmate)
         {
             if (inmate == null)
-                return "<BASEFONT COLOR=#000000>Nenhuma multa pendente.</BASEFONT>";
+                return "<BASEFONT COLOR=#FFFFFF>Nenhuma multa pendente.</BASEFONT>";
 
             StringBuilder sb = new StringBuilder();
-            sb.Append("<BASEFONT COLOR=#000000>");
+            sb.Append("<BASEFONT COLOR=#FFFFFF>");
             sb.Append("<B>Valor:</B> ").Append(inmate.FineGold).Append(" moedas<BR>");
 
             if (inmate.Judged && !String.IsNullOrWhiteSpace(inmate.JudgeName))

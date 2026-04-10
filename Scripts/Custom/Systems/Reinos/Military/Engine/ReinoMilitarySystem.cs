@@ -568,6 +568,29 @@ namespace Server.Custom.Reinos
             return null;
         }
 
+        public static bool ResolveWantedAfterGuardAction(int cityId, Mobile target, string details)
+        {
+            if (target == null || target.Deleted || String.IsNullOrWhiteSpace(target.Name))
+                return false;
+
+            List<ReinoWantedEntry> list = GetWantedList(cityId);
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                ReinoWantedEntry entry = list[i];
+                if (entry == null)
+                    continue;
+
+                if (!String.Equals(entry.PlayerName, target.Name, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                list.RemoveAt(i);
+                AddCrimeNote(cityId, target.Name + " foi removido da lista de procurados. " + (details ?? String.Empty));
+                return true;
+            }
+
+            return false;
+        }
+
         public static void NotifyCrime(Mobile actor, ReinoMilitaryLaw law, string notes)
         {
             NotifyCrimeByScope(actor, law, notes, ReinoAreaScope.Total);
@@ -1877,6 +1900,9 @@ namespace Server.Custom.Reinos
         {
             if (guard == null)
                 return;
+
+            if (target != null && (knockedOut || died || prisoned))
+                ResolveWantedAfterGuardAction(guard.CityId, target, "A guarda executou a ordem registrada.");
 
             List<ReinoCrimeRecord> list = GetCrimeList(guard.CityId);
             for (int i = list.Count - 1; i >= 0; i--)
