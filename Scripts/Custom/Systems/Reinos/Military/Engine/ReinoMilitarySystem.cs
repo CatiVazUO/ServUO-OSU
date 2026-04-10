@@ -27,7 +27,6 @@ namespace Server.Custom.Reinos
         private static readonly Dictionary<int, List<ReinoCrimeRecord>> m_Crimes = new Dictionary<int, List<ReinoCrimeRecord>>();
         private static readonly Dictionary<int, List<ReinoPrisonRecord>> m_Prisons = new Dictionary<int, List<ReinoPrisonRecord>>();
         private static readonly Dictionary<int, ReinoMilitaryReportState> m_ReportStates = new Dictionary<int, ReinoMilitaryReportState>();
-        private static readonly Dictionary<int, List<ReinoArchivedReport>> m_ArchivedReportsByCity = new Dictionary<int, List<ReinoArchivedReport>>();
         private static readonly Dictionary<int, List<ReinoGuardPostInfo>> m_PostsByCity = new Dictionary<int, List<ReinoGuardPostInfo>>();
         private static readonly Dictionary<int, ReinoMilitarySession> m_Sessions = new Dictionary<int, ReinoMilitarySession>();
         private static readonly HashSet<int> m_AutoSheathe = new HashSet<int>();
@@ -92,7 +91,6 @@ namespace Server.Custom.Reinos
                 GetCrimeList(i);
                 GetPrisonList(i);
                 GetReportState(i);
-                GetArchivedReports(i);
                 GetPosts(i);
             }
         }
@@ -164,18 +162,6 @@ namespace Server.Custom.Reinos
             }
 
             return st;
-        }
-
-        public static List<ReinoArchivedReport> GetArchivedReports(int cityId)
-        {
-            List<ReinoArchivedReport> list;
-            if (!m_ArchivedReportsByCity.TryGetValue(cityId, out list))
-            {
-                list = new List<ReinoArchivedReport>();
-                m_ArchivedReportsByCity[cityId] = list;
-            }
-
-            return list;
         }
 
         public static List<ReinoGuardPostInfo> GetPosts(int cityId)
@@ -2262,360 +2248,6 @@ namespace Server.Custom.Reinos
             return true;
         }
 
-        private static bool HasReportDataToArchive(int cityId)
-        {
-            return GetCrimeList(cityId).Count > 0 || GetPrisonList(cityId).Count > 0 || !String.IsNullOrWhiteSpace(GetReportState(cityId).Summary);
-        }
-
-        private static ReinoArchivedReport BuildArchivedReportSnapshot(int cityId, string closedBy)
-        {
-            ReinoArchivedReport report = new ReinoArchivedReport();
-            report.ClosedUtc = DateTime.UtcNow;
-            report.ClosedBy = closedBy ?? String.Empty;
-            report.SummaryHtml = GetReportsSummaryHtml(cityId);
-
-            int count = GetDetailCount(cityId, 1);
-            for (int i = 0; i < count; i++)
-                report.CrimeDetails.Add(GetReportsDetailHtml(cityId, 1, i));
-
-            count = GetDetailCount(cityId, 2);
-            for (int i = 0; i < count; i++)
-                report.PrisonDetails.Add(GetReportsDetailHtml(cityId, 2, i));
-
-            count = GetDetailCount(cityId, 3);
-            for (int i = 0; i < count; i++)
-                report.WantedDetails.Add(GetReportsDetailHtml(cityId, 3, i));
-
-            count = GetDetailCount(cityId, 4);
-            for (int i = 0; i < count; i++)
-                report.RecurringDetails.Add(GetReportsDetailHtml(cityId, 4, i));
-
-            return report;
-        }
-
-        public static void ArchiveAndClearCurrentReport(int cityId, PlayerMobile closedBy)
-        {
-            if (cityId < 0)
-                return;
-
-            if (HasReportDataToArchive(cityId))
-            {
-                List<ReinoArchivedReport> archives = GetArchivedReports(cityId);
-                archives.Insert(0, BuildArchivedReportSnapshot(cityId, closedBy != null ? closedBy.Name : String.Empty));
-                if (archives.Count > 10)
-                    archives.RemoveRange(10, archives.Count - 10);
-            }
-
-            ReinoMilitaryReportState st = GetReportState(cityId);
-            st.LastDeliveredUtc = DateTime.UtcNow;
-            st.LastDeliveredTo = closedBy != null ? closedBy.Name : String.Empty;
-            st.LastDeliveredToSerial = closedBy != null ? closedBy.Serial.Value : 0;
-            st.Summary = String.Empty;
-
-            GetCrimeList(cityId).Clear();
-            GetPrisonList(cityId).Clear();
-        }
-
-        public static string GetArchivedReportTitle(int cityId, int archiveIndex)
-        {
-            List<ReinoArchivedReport> list = GetArchivedReports(cityId);
-            if (archiveIndex < 0 || archiveIndex >= list.Count)
-                return "Relatorio Antigo";
-
-            return "Relatorio " + (archiveIndex + 1) + ": " + list[archiveIndex].ClosedUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm");
-        }
-
-        public static string GetArchivedReportListLabel(int cityId, int archiveIndex)
-        {
-            return GetArchivedReportTitle(cityId, archiveIndex);
-        }
-
-        public static string GetArchivedReportsSummaryHtml(int cityId, int archiveIndex)
-        {
-            List<ReinoArchivedReport> list = GetArchivedReports(cityId);
-            if (archiveIndex < 0 || archiveIndex >= list.Count)
-                return "<BASEFONT COLOR=#000000>Nenhum relatório antigo encontrado.</BASEFONT>";
-
-            return list[archiveIndex].SummaryHtml ?? "<BASEFONT COLOR=#000000>Nenhum conteúdo.</BASEFONT>";
-        }
-
-        public static int GetArchivedDetailCount(int cityId, int archiveIndex, int mode)
-        {
-            List<ReinoArchivedReport> list = GetArchivedReports(cityId);
-            if (archiveIndex < 0 || archiveIndex >= list.Count)
-                return 0;
-
-            ReinoArchivedReport r = list[archiveIndex];
-            switch (mode)
-            {
-                case 1: return r.CrimeDetails != null ? r.CrimeDetails.Count : 0;
-                case 2: return r.PrisonDetails != null ? r.PrisonDetails.Count : 0;
-                case 3: return r.WantedDetails != null ? r.WantedDetails.Count : 0;
-                case 4: return r.RecurringDetails != null ? r.RecurringDetails.Count : 0;
-                default: return 0;
-            }
-        }
-
-        public static string GetArchivedReportDetailHtml(int cityId, int archiveIndex, int mode, int detailIndex)
-        {
-            List<ReinoArchivedReport> list = GetArchivedReports(cityId);
-            if (archiveIndex < 0 || archiveIndex >= list.Count)
-                return "<BASEFONT COLOR=#000000>Nenhum relatório antigo encontrado.</BASEFONT>";
-
-            List<string> source;
-            ReinoArchivedReport r = list[archiveIndex];
-            switch (mode)
-            {
-                case 1: source = r.CrimeDetails; break;
-                case 2: source = r.PrisonDetails; break;
-                case 3: source = r.WantedDetails; break;
-                case 4: source = r.RecurringDetails; break;
-                default: source = null; break;
-            }
-
-            if (source == null || source.Count == 0)
-                return "<BASEFONT COLOR=#000000>Nenhum registro nessa seção.</BASEFONT>";
-
-            if (detailIndex < 0) detailIndex = 0;
-            if (detailIndex >= source.Count) detailIndex = source.Count - 1;
-            return source[detailIndex] ?? "<BASEFONT COLOR=#000000>Nenhum conteúdo.</BASEFONT>";
-        }
-
-        private static string StripHtmlForBook(string html)
-        {
-            if (String.IsNullOrEmpty(html))
-                return String.Empty;
-
-            string source = html.Replace("<BR>", "\n").Replace("<br>", "\n").Replace("<BR/>", "\n").Replace("<br/>", "\n");
-            StringBuilder sb = new StringBuilder(source.Length);
-            bool inside = false;
-            for (int i = 0; i < source.Length; i++)
-            {
-                char c = source[i];
-                if (c == '<')
-                {
-                    inside = true;
-                    continue;
-                }
-                if (c == '>')
-                {
-                    inside = false;
-                    continue;
-                }
-                if (!inside)
-                    sb.Append(c);
-            }
-
-            return sb.ToString().Replace("&nbsp;", " ").Replace("&amp;", "&");
-        }
-
-        private static List<string> WrapPlainTextLines(string text, int maxChars)
-        {
-            List<string> lines = new List<string>();
-            if (String.IsNullOrWhiteSpace(text))
-            {
-                lines.Add(String.Empty);
-                return lines;
-            }
-
-            string[] sourceLines = text.Replace("\r", String.Empty).Split('\n');
-            for (int i = 0; i < sourceLines.Length; i++)
-            {
-                string remaining = (sourceLines[i] ?? String.Empty).Trim();
-                if (remaining.Length == 0)
-                {
-                    lines.Add(String.Empty);
-                    continue;
-                }
-
-                while (remaining.Length > maxChars)
-                {
-                    int split = remaining.LastIndexOf(' ', Math.Min(maxChars, remaining.Length - 1));
-                    if (split <= 0)
-                        split = maxChars;
-
-                    string piece = remaining.Substring(0, split).Trim();
-                    if (piece.Length == 0)
-                        piece = remaining.Substring(0, Math.Min(maxChars, remaining.Length));
-
-                    lines.Add(piece);
-                    remaining = remaining.Substring(Math.Min(split, remaining.Length)).TrimStart();
-                }
-
-                lines.Add(remaining);
-            }
-
-            return lines;
-        }
-
-        private static string PrepareBookPageHtml(string html)
-        {
-            string plain = StripHtmlForBook(html);
-            StringBuilder sb = new StringBuilder();
-            List<string> lines = WrapPlainTextLines(plain, 20);
-            for (int i = 0; i < lines.Count; i++)
-            {
-                if (i > 0)
-                    sb.Append("<BR>");
-                sb.Append(lines[i]);
-            }
-            return sb.ToString();
-        }
-
-        private static bool IsBlankHtmlBook(HtmlBook30 book)
-        {
-            if (book == null || book.Deleted)
-                return false;
-
-            if (book.IsSealed)
-                return false;
-
-            if (!String.IsNullOrWhiteSpace(book.DocumentTitle))
-                return false;
-
-            if (book.GetWrittenPageCount() > 1)
-                return false;
-
-            string page0 = StripHtmlForBook(book.GetPageHtml(0));
-            return String.IsNullOrWhiteSpace(page0);
-        }
-
-        private static void ClearHtmlBook(HtmlBook30 book)
-        {
-            if (book == null || book.Deleted)
-                return;
-
-            for (int i = 0; i < book.PageCount; i++)
-                book.SetPageHtml(i, String.Empty);
-        }
-
-        private static void FillReportBook(HtmlBook30 book, string title, string summaryHtml, List<string> crimePages, List<string> prisonPages)
-        {
-            if (book == null || book.Deleted)
-                return;
-
-            ClearHtmlBook(book);
-            book.Name = title;
-            book.DocumentTitle = title;
-            book.Language = OSULanguage.Common;
-            book.SetPageHtml(0, PrepareBookPageHtml(summaryHtml));
-
-            int page = 1;
-            if (crimePages != null)
-            {
-                for (int i = 0; i < crimePages.Count && page < book.PageCount; i++, page++)
-                    book.SetPageHtml(page, PrepareBookPageHtml(crimePages[i]));
-            }
-
-            if (prisonPages != null)
-            {
-                for (int i = 0; i < prisonPages.Count && page < book.PageCount; i++, page++)
-                    book.SetPageHtml(page, PrepareBookPageHtml(prisonPages[i]));
-            }
-
-            book.ForceSealAsCopy("Ofício Militar", 0);
-        }
-
-        public static void BeginPrintReportBook(PlayerMobile from, int cityId)
-        {
-            if (from == null || from.Deleted)
-                return;
-
-            if (!LanguageKnowledge.Understands(from, OSULanguage.Common))
-            {
-                from.SendMessage("Você precisa falar a língua comum para copiar esse relatório para um livro.");
-                return;
-            }
-
-            from.SendMessage("Selecione um livro HTML de 30 páginas em branco.");
-            from.Target = new ReinoMilitaryReportBookTarget(cityId, -1);
-        }
-
-        public static void BeginPrintArchivedReportBook(PlayerMobile from, int cityId, int archiveIndex)
-        {
-            if (from == null || from.Deleted)
-                return;
-
-            if (!LanguageKnowledge.Understands(from, OSULanguage.Common))
-            {
-                from.SendMessage("Você precisa falar a língua comum para copiar esse relatório para um livro.");
-                return;
-            }
-
-            from.SendMessage("Selecione um livro HTML de 30 páginas em branco.");
-            from.Target = new ReinoMilitaryReportBookTarget(cityId, archiveIndex);
-        }
-
-        private sealed class ReinoMilitaryReportBookTarget : Target
-        {
-            private readonly int m_CityId;
-            private readonly int m_ArchiveIndex;
-
-            public ReinoMilitaryReportBookTarget(int cityId, int archiveIndex)
-                : base(12, false, TargetFlags.None)
-            {
-                m_CityId = cityId;
-                m_ArchiveIndex = archiveIndex;
-            }
-
-            protected override void OnTarget(Mobile from, object targeted)
-            {
-                PlayerMobile pm = from as PlayerMobile;
-                HtmlBook30 book = targeted as HtmlBook30;
-
-                if (pm == null || pm.Deleted)
-                    return;
-
-                if (book == null || book.Deleted || book.RootParent != pm)
-                {
-                    pm.SendMessage("Você precisa selecionar um livro HTML de 30 páginas na sua mochila.");
-                    return;
-                }
-
-                if (!IsBlankHtmlBook(book))
-                {
-                    pm.SendMessage("Esse livro não está em branco.");
-                    return;
-                }
-
-                pm.Frozen = true;
-                Timer.DelayCall(TimeSpan.FromSeconds(5.0), delegate
-                {
-                    if (pm != null && !pm.Deleted)
-                        pm.Frozen = false;
-                });
-
-                if (m_ArchiveIndex >= 0)
-                {
-                    List<ReinoArchivedReport> archives = GetArchivedReports(m_CityId);
-                    if (m_ArchiveIndex < 0 || m_ArchiveIndex >= archives.Count)
-                    {
-                        pm.SendMessage("Esse relatório antigo não existe mais.");
-                        return;
-                    }
-
-                    ReinoArchivedReport archived = archives[m_ArchiveIndex];
-                    string title = "relatórios de " + archived.ClosedUtc.ToLocalTime().ToString("dd-MM-yyyy HH-mm");
-                    FillReportBook(book, title, archived.SummaryHtml, archived.CrimeDetails, archived.PrisonDetails);
-                    pm.SendMessage("O relatório antigo foi copiado para o livro.");
-                }
-                else
-                {
-                    string title = "relatórios de " + DateTime.UtcNow.ToLocalTime().ToString("dd-MM-yyyy HH-mm");
-                    List<string> crimePages = new List<string>();
-                    List<string> prisonPages = new List<string>();
-                    List<ReinoCrimeRecord> crimes = GetCrimeList(m_CityId);
-                    for (int i = 0; i < crimes.Count; i++)
-                        crimePages.Add(GetReportsDetailHtml(m_CityId, 1, i));
-                    List<ReinoPrisonRecord> prisons = GetPrisonList(m_CityId);
-                    for (int i = 0; i < prisons.Count; i++)
-                        prisonPages.Add(GetReportsDetailHtml(m_CityId, 2, i));
-                    FillReportBook(book, title, GetReportsSummaryHtml(m_CityId), crimePages, prisonPages);
-                    pm.SendMessage("O relatório foi copiado para o livro.");
-                }
-            }
-        }
-
         public static string GetReportsSummaryHtml(int cityId)
         {
             List<ReinoCrimeRecord> crimes = GetCrimeList(cityId);
@@ -2800,8 +2432,47 @@ namespace Server.Custom.Reinos
 
         public static string PrintReportBook(PlayerMobile from, int cityId)
         {
-            BeginPrintReportBook(from, cityId);
-            return "Selecione um livro HTML de 30 páginas em branco.";
+            if (from == null || from.Deleted || from.Backpack == null)
+                return "Jogador inválido.";
+
+            if (!LanguageKnowledge.Understands(from, OSULanguage.Common))
+                return "Você precisa falar a língua comum para copiar esse relatório para um livro.";
+
+            HtmlBook30 book = from.Backpack.FindItemByType(typeof(HtmlBook30)) as HtmlBook30;
+            if (book == null)
+                return "Você precisa ter um livro HTML de 30 páginas em branco na mochila.";
+
+            from.Frozen = true;
+            Timer.DelayCall(TimeSpan.FromSeconds(5.0), delegate
+            {
+                if (from != null && !from.Deleted)
+                    from.Frozen = false;
+            });
+
+            string title = "relatórios de " + DateTime.UtcNow.ToLocalTime().ToString("dd-MM-yyyy");
+
+            book.Name = title;
+            book.DocumentTitle = title;
+            book.Language = OSULanguage.Common;
+            book.SetPageHtml(0, GetReportsSummaryHtml(cityId));
+
+            int page = 1;
+            List<ReinoCrimeRecord> crimes = GetCrimeList(cityId);
+            for (int i = 0; i < crimes.Count && page < 30; i++, page++)
+                book.SetPageHtml(page, GetReportsDetailHtml(cityId, 1, i));
+
+            List<ReinoPrisonRecord> prisons = GetPrisonList(cityId);
+            for (int i = 0; i < prisons.Count && page < 30; i++, page++)
+                book.SetPageHtml(page, GetReportsDetailHtml(cityId, 2, i));
+
+            book.ForceSealAsCopy("Ofício Militar", 0);
+
+            ReinoMilitaryReportState st = GetReportState(cityId);
+            st.LastDeliveredUtc = DateTime.UtcNow;
+            st.LastDeliveredTo = from.Name;
+            st.LastDeliveredToSerial = from.Serial.Value;
+
+            return "O relatório foi impresso no livro após 5 segundos.";
         }
 
         public static void DeletePostWorldObjects(ReinoGuardPostInfo post)
@@ -3163,7 +2834,7 @@ namespace Server.Custom.Reinos
             using (FileStream fs = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.None))
             using (BinaryWriter bw = new BinaryWriter(fs))
             {
-                bw.Write(4);
+                bw.Write(3);
 
                 bw.Write(m_Policies.Count);
                 foreach (KeyValuePair<int, ReinoMilitaryPolicy> kv in m_Policies)
@@ -3249,40 +2920,6 @@ namespace Server.Custom.Reinos
                     bw.Write(kv.Value.Summary ?? String.Empty);
                 }
 
-                bw.Write(m_ArchivedReportsByCity.Count);
-                foreach (KeyValuePair<int, List<ReinoArchivedReport>> kv in m_ArchivedReportsByCity)
-                {
-                    bw.Write(kv.Key);
-                    bw.Write(kv.Value.Count);
-                    for (int i = 0; i < kv.Value.Count; i++)
-                    {
-                        ReinoArchivedReport r = kv.Value[i];
-                        bw.Write(r.ClosedUtc.ToBinary());
-                        bw.Write(r.ClosedBy ?? String.Empty);
-                        bw.Write(r.SummaryHtml ?? String.Empty);
-
-                        bw.Write(r.CrimeDetails != null ? r.CrimeDetails.Count : 0);
-                        if (r.CrimeDetails != null)
-                            for (int x = 0; x < r.CrimeDetails.Count; x++)
-                                bw.Write(r.CrimeDetails[x] ?? String.Empty);
-
-                        bw.Write(r.PrisonDetails != null ? r.PrisonDetails.Count : 0);
-                        if (r.PrisonDetails != null)
-                            for (int x = 0; x < r.PrisonDetails.Count; x++)
-                                bw.Write(r.PrisonDetails[x] ?? String.Empty);
-
-                        bw.Write(r.WantedDetails != null ? r.WantedDetails.Count : 0);
-                        if (r.WantedDetails != null)
-                            for (int x = 0; x < r.WantedDetails.Count; x++)
-                                bw.Write(r.WantedDetails[x] ?? String.Empty);
-
-                        bw.Write(r.RecurringDetails != null ? r.RecurringDetails.Count : 0);
-                        if (r.RecurringDetails != null)
-                            for (int x = 0; x < r.RecurringDetails.Count; x++)
-                                bw.Write(r.RecurringDetails[x] ?? String.Empty);
-                    }
-                }
-
                 bw.Write(m_PostsByCity.Count);
                 foreach (KeyValuePair<int, List<ReinoGuardPostInfo>> kv in m_PostsByCity)
                 {
@@ -3342,7 +2979,6 @@ namespace Server.Custom.Reinos
             m_Crimes.Clear();
             m_Prisons.Clear();
             m_ReportStates.Clear();
-            m_ArchivedReportsByCity.Clear();
             m_PostsByCity.Clear();
             m_AutoSheathe.Clear();
             m_PendingLawNoticesByPlayer.Clear();
@@ -3460,43 +3096,6 @@ namespace Server.Custom.Reinos
                     st.LastDeliveredToSerial = br.ReadInt32();
                     st.Summary = version >= 3 ? br.ReadString() : String.Empty;
                     m_ReportStates[cityId] = st;
-                }
-
-                if (version >= 4)
-                {
-                    count = br.ReadInt32();
-                    for (int i = 0; i < count; i++)
-                    {
-                        cityId = br.ReadInt32();
-                        listCount = br.ReadInt32();
-                        List<ReinoArchivedReport> list = new List<ReinoArchivedReport>();
-                        for (int x = 0; x < listCount; x++)
-                        {
-                            ReinoArchivedReport r = new ReinoArchivedReport();
-                            r.ClosedUtc = DateTime.FromBinary(br.ReadInt64());
-                            r.ClosedBy = br.ReadString();
-                            r.SummaryHtml = br.ReadString();
-
-                            int inner = br.ReadInt32();
-                            for (int y = 0; y < inner; y++)
-                                r.CrimeDetails.Add(br.ReadString());
-
-                            inner = br.ReadInt32();
-                            for (int y = 0; y < inner; y++)
-                                r.PrisonDetails.Add(br.ReadString());
-
-                            inner = br.ReadInt32();
-                            for (int y = 0; y < inner; y++)
-                                r.WantedDetails.Add(br.ReadString());
-
-                            inner = br.ReadInt32();
-                            for (int y = 0; y < inner; y++)
-                                r.RecurringDetails.Add(br.ReadString());
-
-                            list.Add(r);
-                        }
-                        m_ArchivedReportsByCity[cityId] = list;
-                    }
                 }
 
                 count = br.ReadInt32();
