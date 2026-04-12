@@ -303,6 +303,21 @@ namespace Server.Custom.Reinos
                 return false;
             }
 
+            int occupiedRoleCityId;
+            ReinoCargoEntry occupiedRole = ReinoEmploymentSystem.GetOccupiedRoleAnywhere(pm, out occupiedRoleCityId);
+
+            if (occupiedRole != null
+                && occupiedRole.Hierarchy <= 2
+                && occupiedRoleCityId >= 0
+                && occupiedRoleCityId != targetCityId)
+            {
+                reason = "Quem ocupa um cargo de hierarquia " + occupiedRole.Hierarchy +
+                         " em " + ReinoElectionsSystem.GetCityName(occupiedRoleCityId) +
+                         " não pode alugar ou comprar propriedades em outro reino.";
+
+                return false;
+            }
+
             return true;
         }
 

@@ -758,6 +758,80 @@ namespace Server.Custom.Reinos
             return null;
         }
 
+        public static ReinoCargoEntry GetOccupiedRoleAnywhere(PlayerMobile pm, out int cityId)
+        {
+            cityId = -1;
+
+            if (pm == null || pm.Deleted)
+                return null;
+
+            foreach (KeyValuePair<int, List<ReinoCargoEntry>> kv in m_RolesByCity)
+            {
+                List<ReinoCargoEntry> list = kv.Value;
+
+                for (int i = 0; i < list.Count; i++)
+                {
+                    ReinoCargoEntry role = list[i];
+
+                    if (role == null || !role.IsOccupied || role.IsLeaderRole)
+                        continue;
+
+                    if (role.OccupantSerial == pm.Serial.Value)
+                    {
+                        cityId = kv.Key;
+                        return role;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public static bool DismissPlayerFromForeignRoles(PlayerMobile pm, int newCitizenCityId, out string removedRoles)
+        {
+            removedRoles = String.Empty;
+
+            if (pm == null || pm.Deleted)
+                return false;
+
+            List<string> removed = new List<string>();
+
+            foreach (KeyValuePair<int, List<ReinoCargoEntry>> kv in m_RolesByCity)
+            {
+                int cityId = kv.Key;
+
+                if (cityId == newCitizenCityId)
+                    continue;
+
+                List<ReinoCargoEntry> list = kv.Value;
+
+                for (int i = 0; i < list.Count; i++)
+                {
+                    ReinoCargoEntry role = list[i];
+
+                    if (role == null || role.IsLeaderRole || !role.IsOccupied)
+                        continue;
+
+                    if (role.OccupantSerial != pm.Serial.Value)
+                        continue;
+
+                    RemoveRoleLinkedItems(pm, cityId, role);
+
+                    string title = role.Title;
+                    string cityName = ReinoElectionsSystem.GetCityName(cityId);
+
+                    role.OccupantSerial = 0;
+                    role.OccupantName = String.Empty;
+                    SyncRoleDependentState(cityId);
+
+                    removed.Add(title + " de " + cityName);
+                }
+            }
+
+            removedRoles = String.Join(", ", removed.ToArray());
+            return removed.Count > 0;
+        }
+
         public static bool PlayerOccupiesAnyRole(PlayerMobile pm)
         {
             if (pm == null || pm.Deleted)

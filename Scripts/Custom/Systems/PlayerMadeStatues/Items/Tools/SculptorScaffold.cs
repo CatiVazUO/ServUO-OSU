@@ -227,7 +227,7 @@ namespace Server.Custom.Systems.PlayerMadeStatues
             if (version >= 1)
                 m_PlacedScaffold = reader.ReadItem() as PlacedSculptorScaffold;
 
-            ItemID = (m_Facing == StatueScaffoldFacing.East) ? 0x12B4 : 0x12AD;
+            ItemID = (m_Facing == StatueScaffoldFacing.East) ? 0x0E3E : 0X0E3F;
             Hue = 0;
         }
     }

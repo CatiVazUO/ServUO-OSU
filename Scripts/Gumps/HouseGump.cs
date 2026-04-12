@@ -1,8 +1,9 @@
-using System;
-using System.Collections.Generic;
+using Server.Custom.Systems.Rent;
 using Server.Multis;
 using Server.Network;
 using Server.Prompts;
+using System;
+using System.Collections.Generic;
 
 namespace Server.Gumps
 {
@@ -743,8 +744,13 @@ namespace Server.Prompts
         {
             if (m_House.IsFriend(from))
             {
+
                 if (m_House.Sign != null)
                     m_House.Sign.Name = text;
+
+                TownHouse town = m_House as TownHouse;
+                if (town != null && town.ForSaleSign != null && !town.ForSaleSign.Deleted)
+                    town.ForSaleSign.InvalidateProperties();
 
                 from.SendMessage("Sign changed.");
             }

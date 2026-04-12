@@ -282,7 +282,7 @@ namespace Server.Gumps
             {
                 case HouseGumpPageAOS.Information:
                     {
-                        AddHtml(20, 130, 200, 20, "Adiquirda Por:", false, false); // Owned By: 
+                        AddHtmlLocalized(20, 130, 200, 20, 1011242, LabelColor, false, false); // Owned By: 
                         AddLabel(210, 130, LabelHue, GetOwnerName());
 
                         //   AddHtmlLocalized(20, 170, 380, 20, 1018032, SelectedColor, false, false); // This house is properly placed.
@@ -290,8 +290,8 @@ namespace Server.Gumps
                         //   AddHtmlLocalized(20, 210, 380, 20, (house is HouseFoundation) ? 1060681 : 1060680, SelectedColor, false, false); // This is a (pre | custom)-built house.
                         //  AddHtmlLocalized(20, 230, 380, 20, house.Public ? 1060678 : 1060679, SelectedColor, false, false); // This house is (private | open to the public).
 
-                        AddHtml(20, 170, 380, 100, "Uma casa típica da região, em ótimo estado para aluguel ou compra. O reino agradece a sua contribuição. " +
-                            "com essa moradia você agora é apto a pedir cidadania do reino. Espero que se sinta em casa!", false, false);
+                      //  AddHtml(20, 170, 380, 100, "Uma casa típica da região, em ótimo estado para aluguel ou compra. O reino agradece a sua contribuição. " +
+                       //     "com essa moradia você agora é apto a pedir cidadania do reino. Espero que se sinta em casa!", false, false);
 
                         switch ( house.DecayType )
                         {
@@ -313,7 +313,7 @@ namespace Server.Gumps
                                 }
                         }
 
-                        AddHtml(20, 290, 200, 20, "Adiquirida", false, false); // Built On:
+                        AddHtmlLocalized(20, 290, 200, 20, 1060692, SelectedColor, false, false); // Built On:
                         AddLabel(250, 290, LabelHue, GetDateTime(house.BuiltOn));
 
                      //   AddHtmlLocalized(20, 310, 200, 20, 1060693, SelectedColor, false, false); // Last Traded:
@@ -414,37 +414,37 @@ namespace Server.Gumps
 
                         if (bonusStorage > 0)
                         {
-                           // AddHtmlLocalized(10, 150, 300, 20, 1072519, LabelColor, false, false); // Increased Storage
-                           // AddLabel(310, 150, LabelHue, String.Format("{0}%", bonusStorage));
+                            AddHtmlLocalized(10, 150, 300, 20, 1072519, LabelColor, false, false); // Increased Storage
+                            AddLabel(310, 150, LabelHue, String.Format("{0}%", bonusStorage));
                         }
 
-                        AddHtml(10, 170, 300, 20, "Número de Recipientes Seguros", false, false); // Maximum Secure Storage
+                        AddHtmlLocalized(10, 170, 300, 20, 1060683, LabelColor, false, false); // Maximum Secure Storage
                         AddLabel(310, 170, LabelHue, maxSecures.ToString());
 
-                      //  AddHtmlLocalized(10, 190, 300, 20, 1060685, LabelColor, false, false); // Used by Moving Crate
-                      //  AddLabel(310, 190, LabelHue, fromMovingCrate.ToString());
+                        //  AddHtmlLocalized(10, 190, 300, 20, 1060685, LabelColor, false, false); // Used by Moving Crate
+                        //  AddLabel(310, 190, LabelHue, fromMovingCrate.ToString());
 
-                        AddHtml(10, 210, 300, 20, "Trancados Usados", false, false); // Used by Lockdowns
+                        AddHtmlLocalized(10, 210, 300, 20, 1060686, LabelColor, false, false); // Used by Lockdowns
                         AddLabel(310, 210, LabelHue, fromLockdowns.ToString());
 
                         if (BaseHouse.NewVendorSystem)
                         {
-                            AddHtml(10, 230, 300, 20, "Recipientes Seguros Usados", false, false); // Used by Secure Containers
+                            AddHtmlLocalized(10, 230, 300, 20, 1060688, LabelColor, false, false); // Used by Secure Containers
                             AddLabel(310, 230, LabelHue, fromSecures.ToString());
 
-                            AddHtml(10, 250, 300, 20, "Recipientes Seguros Disponíveis", false, false); // Available Storage
+                            AddHtmlLocalized(10, 250, 300, 20, 1060689, LabelColor, false, false); // Available Storage
                             AddLabel(310, 250, LabelHue, Math.Max(maxSecures - curSecures, 0).ToString());
 
-                            AddHtml(10, 290, 300, 20, "Máximo de Itens Trancados", false, false); // Maximum Lockdowns
+                            AddHtmlLocalized(10, 290, 300, 20, 1060690, LabelColor, false, false); // Maximum Lockdowns
                             AddLabel(310, 290, LabelHue, maxLockdowns.ToString());
 
-                            AddHtml(10, 310, 300, 20, "Itens Trancados Disponíveis", false, false); // Available Lockdowns
+                            AddHtmlLocalized(10, 310, 300, 20, 1060691, LabelColor, false, false); // Available Lockdowns
                             AddLabel(310, 310, LabelHue, Math.Max(maxLockdowns - curLockdowns, 0).ToString());
 
                             int maxVendors = house.GetNewVendorSystemMaxVendors();
                             int vendors = house.PlayerVendors.Count + house.VendorRentalContracts.Count;
 
-                            AddHtml(10, 350, 300, 20, "Espaço Para Vendedores", false, false); // Vendor Count
+                            AddHtmlLocalized(10, 350, 300, 20, 1062391, LabelColor, false, false); // Vendor Count
                             AddLabel(310, 350, LabelHue, vendors.ToString() + " / " + maxVendors.ToString());
                         }
                         else

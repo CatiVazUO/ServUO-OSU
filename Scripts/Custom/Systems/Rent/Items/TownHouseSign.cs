@@ -24,9 +24,9 @@ namespace Server.Custom.Systems.Rent
 		private string c_Skill;
 		private double c_SkillReq;
 		private ArrayList c_Blocks, c_DecoreItemInfos, c_PreviewItems;
-		private TownHouse c_House;
-		private Timer c_DemolishTimer, c_RentTimer, c_PreviewTimer;
-		private DateTime c_DemolishTime, c_RentTime;
+        private TownHouse c_House;
+        private Timer c_DemolishTimer, c_RentTimer, c_PreviewTimer, c_DisplaySyncTimer;
+        private DateTime c_DemolishTime, c_RentTime;
 		private TimeSpan c_RentByTime, c_OriginalRentTime;
 		private Intu c_Murderers;
 		//private Nation m_Nation;
@@ -872,6 +872,7 @@ namespace Server.Custom.Systems.Rent
                 if (pm != null && (PropertyType == OSUPropertyType.House || PropertyType == OSUPropertyType.Commercial))
                     ReinoDiplomacySystem.HandleCitizenshipAfterPropertyAcquired(pm, CitizenCityId);
 
+                InvalidateProperties();
             }
             catch(Exception e)
             {
@@ -1236,15 +1237,17 @@ namespace Server.Custom.Systems.Rent
             }
 
             UnconvertDoors();
-			ClearDemolishTimer();
-			ClearRentTimer();
-			PackUpItems();
-			c_House = null;
-			Visible = true;
+            ClearDemolishTimer();
+            ClearRentTimer();
+            PackUpItems();
+            c_House = null;
+            Visible = true;
 
-			if ( c_RentToOwn )
-				c_RentByTime = c_OriginalRentTime;
-		}
+            if (c_RentToOwn)
+                c_RentByTime = c_OriginalRentTime;
+
+            InvalidateProperties();
+        }
 
 		public virtual void ValidateOwnership()
 		{
@@ -1352,13 +1355,13 @@ namespace Server.Custom.Systems.Rent
             try
             {
                 c_House.Delete();
+                InvalidateProperties();
             }
             catch
             {
                 Errors.Report("The infamous SVN bug has occured.");
             }
-
-		}
+        }
 
 		protected void PackUpItems()
 		{
@@ -1943,6 +1946,12 @@ namespace Server.Custom.Systems.Rent
             return birth + " - " + death;
         }
 
+        public override void OnSingleClick(Mobile from)
+        {
+            InvalidateProperties();
+            base.OnSingleClick(from);
+        }
+
         public override void OnDoubleClick(Mobile m)
         {
             if (m == null)
@@ -2019,6 +2028,7 @@ namespace Server.Custom.Systems.Rent
             {
                 if (c_House.IsOwner(m))
                 {
+                    InvalidateProperties();
                     m.CloseGump(typeof(HouseGumpAOS));
                     m.SendGump(new HouseGumpAOS(HouseGumpPageAOS.Information, m, c_House));
                     return;
@@ -2051,25 +2061,10 @@ namespace Server.Custom.Systems.Rent
 
         public override void GetProperties(ObjectPropertyList list)
         {
-            base.GetProperties(list);
-
-            if (c_Free)
-                list.Add(1060658, "Price\tFree");
-            if (c_SkillReq != 0.0)
-                list.Add(1060661, "Requires\t{0}", c_SkillReq + " in " + c_Skill);
-            if (c_MinTotalSkill != 0)
-                list.Add(1060662, "Requires more than\t{0} total skills", c_MinTotalSkill);
-            if (c_MaxTotalSkill != 0)
-                list.Add(1060663, "Requires less than\t{0} total skills", c_MaxTotalSkill);
-            if (c_YoungOnly)
-                list.Add(1063483, "Must be\tYoung");
-            else if (c_Murderers == Intu.Yes)
-                list.Add(1063483, "Must be\ta murderer");
-            else if (c_Murderers == Intu.No)
-                list.Add(1063483, "Must be\tinnocent");
-
             if (IsTomb)
             {
+                base.GetProperties(list);
+
                 TombstoneDefinition def = TombSelectedDefinition;
 
                 if (def != null)
@@ -2091,34 +2086,49 @@ namespace Server.Custom.Systems.Rent
                             list.Add("Mensagem: " + msg);
                     }
                 }
+
+                return;
             }
 
-            else if (Owned && c_House != null && !c_House.Deleted)
+            string areaName = !String.IsNullOrWhiteSpace(Name) ? Name : "Sem nome";
+            list.Add(areaName);
+
+            if (!Owned || c_House == null || c_House.Deleted)
             {
-                string areaName = Name ?? "-";
-                string playerHouseName = String.Empty;
-                string ownerName = c_House.Owner != null ? (c_House.Owner.Name ?? "-") : "-";
-
-                if (c_House.Sign != null && !c_House.Sign.Deleted && !String.IsNullOrWhiteSpace(c_House.Sign.Name))
-                    playerHouseName = c_House.Sign.Name;
-
-                list.Add("Área: " + areaName);
-
-                if (!String.IsNullOrWhiteSpace(playerHouseName) && !String.Equals(playerHouseName, areaName, StringComparison.OrdinalIgnoreCase))
-                    list.Add("Casa: " + playerHouseName);
-
-                list.Add("Dono: " + ownerName);
+                list.Add("Aluguel semanal: " + c_Price);
+                return;
             }
 
-            else if (c_RentByTime == TimeSpan.Zero)
-                list.Add(1060658, "Price\t{0}{1}", c_Price, "");
-            else if (c_RecurRent)
-                list.Add(1060658, "{0}\t{1}\r{2}", PriceType + (c_RentToOwn ? " Rent-to-Own" : " Tax"), c_Price, "");
-           // else
-           //     list.Add(1060658, "One {0}\t{1}{2}", PriceTypeShort, c_Price, "");
+            string houseName = "Sem nome";
+
+            if (c_House.Sign != null && !c_House.Sign.Deleted)
+            {
+                string raw = c_House.Sign.Name;
+
+                if (!String.IsNullOrWhiteSpace(raw))
+                {
+                    string normalized = raw.Trim();
+
+                    if (!normalized.Equals("unnamed house", StringComparison.OrdinalIgnoreCase) &&
+                        !normalized.Equals("unamedhouse", StringComparison.OrdinalIgnoreCase) &&
+                        !normalized.Equals("unnamedhouse", StringComparison.OrdinalIgnoreCase) &&
+                        !normalized.Equals("a house sign", StringComparison.OrdinalIgnoreCase))
+                    {
+                        houseName = normalized;
+                    }
+                }
+            }
+
+            string ownerName = c_House.Owner != null && !String.IsNullOrWhiteSpace(c_House.Owner.Name)
+                ? c_House.Owner.Name
+                : "Sem dono";
+
+            list.Add("Nome: " + houseName);
+            list.Add("De: " + ownerName);
         }
 
-		public TownHouseSign( Serial serial ) : base( serial )
+
+        public TownHouseSign( Serial serial ) : base( serial )
 		{
 		}
 

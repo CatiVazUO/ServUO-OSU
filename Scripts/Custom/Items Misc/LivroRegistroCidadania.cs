@@ -98,6 +98,14 @@ namespace Server.Custom.Reinos
             }
 
             pm.OSUCitizenCityId = cityName;
+
+            string removedRoles;
+            if (ReinoEmploymentSystem.DismissPlayerFromForeignRoles(pm, CityId, out removedRoles))
+            {
+                pm.SendMessage("Ao se tornar cidadão de " + cityName + ", você foi exonerado dos cargos que ocupava em outros reinos" +
+                    (String.IsNullOrWhiteSpace(removedRoles) ? "." : ": " + removedRoles + "."));
+            }
+
             pm.SendMessage("Sua cidadania agora é: " + cityName + ".");
         }
 
