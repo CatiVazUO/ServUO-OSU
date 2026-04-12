@@ -179,6 +179,9 @@ namespace Server.Custom.Reinos
                 case 6:
                     BuildDiplomacyPage();
                     break;
+                case 7:
+                    BuildVisualPage();
+                    break;
                 case 8:
                     if (!HasBuiltConstruction("quartel_aurora"))
                     {

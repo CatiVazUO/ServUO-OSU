@@ -227,7 +227,7 @@ namespace Server.Custom.Reinos
                 body += "<BR><BR>Responsável pela exoneração: " + DismissedBy + ".";
             body += "</BASEFONT>";
 
-            from.SendGump(new ReinoCargoDismissalNoticeGump("Carta de exoneração", body, Serial.Value));
+            from.SendGump(new ReinoCargoDismissalNoticeGump("Carta de exoneração", body, Serial.Value, CityId));
         }
 
         public override void Serialize(GenericWriter writer)

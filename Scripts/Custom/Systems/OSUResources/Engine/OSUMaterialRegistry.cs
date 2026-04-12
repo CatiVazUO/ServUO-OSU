@@ -19,7 +19,7 @@ namespace Server.Custom.Systems.OSUResources
         static OSUMaterialRegistry()
         {
             Register(new OSUMaterialDefinition(
-                OSUMaterialIds.Stone, "stone", "Pedra", OSUMaterialCategory.Stone, 0x000,
+                OSUMaterialIds.Stone, "stone", "Pedra", OSUMaterialCategory.Stone, 0xA7F,
                 true, true, true, true, true,
                 typeof(StoneChunk), typeof(StoneBlockSmall), typeof(StoneBlockLarge), null, null,
                 "Pedra comum. O chunk serve para crafts gerais. Os blocos servem para escultura."));

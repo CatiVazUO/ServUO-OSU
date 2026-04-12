@@ -188,6 +188,9 @@ namespace Server.Custom.Reinos
             if (HandleDiplomacyResponse(from, info))
                 return;
 
+            if (HandleVisualResponse(from, info))
+                return;
+
             if (HandleMilitaryResponse(from, info))
                 return;
 

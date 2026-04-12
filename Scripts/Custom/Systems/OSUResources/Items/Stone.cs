@@ -12,7 +12,7 @@ namespace Server.Items
         public StoneChunk(int amount) : base(0x1779, OSUMaterialIds.Stone)
         {
             Name = "pedra";
-            Hue = 0x000;
+            Hue = 0xA7F;
             Stackable = true;
             Amount = amount;
         }
@@ -41,7 +41,7 @@ namespace Server.Items
         public StoneBlockSmall(int amount) : base(0x10B2, OSUMaterialIds.Stone, 10.0)
         {
             Name = "bloco de pedra";
-            Hue = 0x000;
+            Hue = 0xA7F;
             Stackable = true;
             Amount = amount;
         }
@@ -70,7 +70,7 @@ namespace Server.Items
         public StoneBlockLarge(int amount) : base(0x10B6, OSUMaterialIds.Stone, 130.0)
         {
             Name = "grande bloco de pedra";
-            Hue = 0x000;
+            Hue = 0xA7F;
             Stackable = true;
             Amount = amount;
         }

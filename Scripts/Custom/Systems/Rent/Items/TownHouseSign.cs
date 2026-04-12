@@ -25,7 +25,7 @@ namespace Server.Custom.Systems.Rent
 		private double c_SkillReq;
 		private ArrayList c_Blocks, c_DecoreItemInfos, c_PreviewItems;
         private TownHouse c_House;
-        private Timer c_DemolishTimer, c_RentTimer, c_PreviewTimer, c_DisplaySyncTimer;
+        private Timer c_DemolishTimer, c_RentTimer, c_PreviewTimer;
         private DateTime c_DemolishTime, c_RentTime;
 		private TimeSpan c_RentByTime, c_OriginalRentTime;
 		private Intu c_Murderers;

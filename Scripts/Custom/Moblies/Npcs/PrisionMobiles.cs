@@ -2,7 +2,8 @@ using Server;
 using Server.Items;
 using Server.Mobiles;
 using System;
-using static Server.Items.Uniforme44;
+using System.Collections.Generic;
+
 
 namespace Server.Custom.Reinos
 {
@@ -31,8 +32,8 @@ namespace Server.Custom.Reinos
             Name = NameList.RandomName(Female ? "female" : "male");
             AddItem(new Boots { Movable = false });
             AddItem(new LongPants { Movable = false });
-            AddItem(new UniformeUnderShirt  { Movable = false });
-            AddUniform(cityId);
+            AddItem(new UniformeUnderShirt { Movable = false });
+            ApplyUniform();
             HairItemID = Race.RandomHair(Female);
             HairHue = Race.RandomHairHue();
             if (!Female)
@@ -43,33 +44,26 @@ namespace Server.Custom.Reinos
             m_NextSpeechUtc = DateTime.UtcNow + TimeSpan.FromSeconds(Utility.RandomMinMax(25, 50));
         }
 
-        private void AddUniform(int cityId)
+        public void ApplyUniform()
         {
-            Tunic tunic = new Tunic();
-            tunic.Movable = false;
+            List<Item> toDelete = new List<Item>();
 
-            string culture = ReinoEmploymentSystem.GetGovernmentCultureId(cityId);
-            switch ((culture ?? String.Empty).Trim().ToLowerInvariant())
+            for (int i = 0; i < Items.Count; i++)
             {
-                case "sarangs":
-                    tunic.ItemID = 0x227E;
-                    break;
-                case "kamay":
-                    tunic.ItemID = 0x2281;
-                    break;
-                case "zorteros":
-                case "zosteros":
-                    tunic.ItemID = 0x228A;
-                    break;
-                case "matalun":
-                    tunic.ItemID = 0x229C;
-                    break;
-                default:
-                    tunic.ItemID = 0x1FA1;
-                    break;
+                Item item = Items[i];
+                if (item != null && item.Layer == Layer.MiddleTorso)
+                    toDelete.Add(item);
             }
 
-            AddItem(tunic);
+            for (int i = 0; i < toDelete.Count; i++)
+                toDelete[i].Delete();
+
+            Item uniform = ReinoVisualSystem.CreateUniformForCity(m_CityId);
+            if (uniform == null)
+                uniform = new Tunic();
+
+            uniform.Movable = false;
+            AddItem(uniform);
         }
 
         public override void OnThink()
@@ -106,6 +100,7 @@ namespace Server.Custom.Reinos
             m_NextSpeechUtc = reader.ReadDateTime();
             CantWalk = true;
             Blessed = true;
+            ApplyUniform();
         }
     }
 

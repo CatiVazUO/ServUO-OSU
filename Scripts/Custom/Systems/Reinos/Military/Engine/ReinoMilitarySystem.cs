@@ -561,7 +561,7 @@ namespace Server.Custom.Reinos
 
             sb.Append("</BASEFONT>");
 
-            pm.SendGump(new ReinoCargoDismissalNoticeGump("Aviso de leis", sb.ToString(), 0));
+            pm.SendGump(new ReinoCargoDismissalNoticeGump("Aviso de leis", sb.ToString(), 0, ReinoVisualSystem.ResolvePlayerCityId(pm)));
             list.Clear();
         }
 

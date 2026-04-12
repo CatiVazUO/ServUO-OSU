@@ -8,9 +8,16 @@ namespace Server.Custom.Reinos
     public class ReinoCargoDismissalNoticeGump : Gump
     {
         private readonly int m_SourceLetterSerial;
-        public ReinoCargoDismissalNoticeGump(string title, string body, int sourceLetterSerial) : base(0, 0)
+        private readonly int m_CityId;
+
+        public ReinoCargoDismissalNoticeGump(string title, string body, int sourceLetterSerial) : this(title, body, sourceLetterSerial, -1)
+        {
+        }
+
+        public ReinoCargoDismissalNoticeGump(string title, string body, int sourceLetterSerial, int cityId) : base(0, 0)
         {
             m_SourceLetterSerial = sourceLetterSerial;
+            m_CityId = cityId;
 
             Closable = true;
             Disposable = true;
@@ -21,7 +28,7 @@ namespace Server.Custom.Reinos
             AddImage(113, 55, 3557);
             AddLabel(303, 128, 0, title);
             AddHtml(221, 154, 377, 168, body, false, false);
-            AddImage(535, 307, 2923);
+            AddImage(535, 307, cityId >= 0 ? ReinoVisualSystem.GetSealGumpId(cityId) : 2923);
         }
 
         private void DeleteSourceLetter()

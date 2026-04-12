@@ -29,7 +29,7 @@ namespace Server.Custom.Systems.PlayerMadeStatues
     {
         private static readonly StatueMaterialOption[] m_All = new StatueMaterialOption[]
         {
-            new StatueMaterialOption(OSUMaterialIds.Stone, "Pedra", 0x0837, typeof(StoneBlockSmall), typeof(StoneBlockLarge), true),
+            new StatueMaterialOption(OSUMaterialIds.Stone, "Pedra", 0xA7F, typeof(StoneBlockSmall), typeof(StoneBlockLarge), true),
             new StatueMaterialOption(OSUMaterialIds.Marble, "Mármore", 0x0455, typeof(MarbleBlockSmall), typeof(MarbleBlockLarge), true),
             new StatueMaterialOption(OSUMaterialIds.Granite, "Granito", 0x0835, typeof(GraniteBlockSmall), typeof(GraniteBlockLarge), true),
             new StatueMaterialOption(OSUMaterialIds.Soapstone, "Pedra-sabão", 0x097B, typeof(SoapstoneBlockSmall), typeof(SoapstoneBlockLarge), true),

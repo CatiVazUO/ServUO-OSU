@@ -1424,7 +1424,7 @@ namespace Server.Custom.Reinos
                     continue;
 
                 pm.CloseGump(typeof(ReinoDiplomacyNoticeGump));
-                pm.SendGump(new ReinoDiplomacyNoticeGump(notice.NoticeId));
+                pm.SendGump(new ReinoDiplomacyNoticeGump(pm, notice.NoticeId));
                 return;
             }
         }

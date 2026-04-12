@@ -49,7 +49,7 @@ namespace Server.Custom.Reinos
             AddHtml(221, 154, 377, 168, html, false, false);
             if (m_AllowAccept)
                 AddButton(191, 359, 492, 492, 1, GumpButtonType.Reply, 0);
-            AddImage(535, 307, 2923);
+            AddImage(535, 307, ReinoVisualSystem.GetSealGumpId(m_CityId));
         }
 
         private void DeleteSourceLetter()

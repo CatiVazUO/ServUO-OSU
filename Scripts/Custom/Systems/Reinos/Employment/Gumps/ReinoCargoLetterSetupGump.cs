@@ -41,7 +41,7 @@ namespace Server.Custom.Reinos
             AddImage(113, 55, 3557);
             AddLabel(303, 128, 0, forHire ? @"Convite para Cargo Comissionado" : @"Carta de exoneração");
             AddButton(191, 359, 492, 492, 1, GumpButtonType.Reply, 0);
-            AddImage(535, 307, 2923);
+            AddImage(535, 307, ReinoVisualSystem.GetSealGumpId(m_CityId));
 
             for (int i = 0; i < 4; i++)
             {

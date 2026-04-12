@@ -128,12 +128,15 @@ namespace Server.Custom.Reinos
                     pm.BankBox.DropItem(chave);
                 else
                     chave.MoveToWorld(pm.Location, pm.Map);
+
+                ReinoVisualSystem.AssignLeaderRing(pm, cityId);
             }
         }
 
         public static void RevokeGovernorAccess(PlayerMobile pm, int cityId)
         {
             DeleteAllGovernorKeysInWorld(cityId);
+            ReinoVisualSystem.DeleteLeaderRings(cityId);
         }
 
         public static void DeleteGovernorKeys(Mobile m, int cityId)

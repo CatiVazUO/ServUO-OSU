@@ -13,6 +13,9 @@ namespace Server.Custom.Reinos
         {
             m_RequestId = requestId;
             ReinoDiplomacyRequest request = ReinoDiplomacySystem.GetRequest(requestId);
+            int sealCityId = request != null
+                ? (request.State == ReinoDiplomacyRequestState.PendingTargetApproval ? request.TargetCityId : request.SourceCityId)
+                : -1;
 
             Closable = false;
             Disposable = true;
@@ -26,7 +29,7 @@ namespace Server.Custom.Reinos
                 request != null ? (request.State == ReinoDiplomacyRequestState.PendingTargetApproval ? request.TargetHtml : request.SourceHtml) : "<BASEFONT COLOR=#000000>Essa solicitação já foi resolvida.</BASEFONT>",
                 false, true);
             AddButton(189, 359, 493, 493, 1, GumpButtonType.Reply, 0);
-            AddImage(360, 324, 2923);
+            AddImage(360, 324, sealCityId >= 0 ? ReinoVisualSystem.GetSealGumpId(sealCityId) : 2923);
             AddButton(537, 358, 492, 492, 2, GumpButtonType.Reply, 0);
         }
 
@@ -56,10 +59,11 @@ namespace Server.Custom.Reinos
     {
         private readonly int m_NoticeId;
 
-        public ReinoDiplomacyNoticeGump(int noticeId) : base(0, 0)
+        public ReinoDiplomacyNoticeGump(PlayerMobile from, int noticeId) : base(0, 0)
         {
             m_NoticeId = noticeId;
             ReinoDiplomacyNotice notice = ReinoDiplomacySystem.GetNotice(noticeId);
+            int sealCityId = ReinoVisualSystem.ResolvePlayerCityId(from);
 
             Closable = notice == null || notice.Closable;
             Disposable = true;
@@ -72,7 +76,7 @@ namespace Server.Custom.Reinos
             AddHtml(221, 154, 377, 168,
                 notice != null ? notice.Html : "<BASEFONT COLOR=#000000>Este aviso diplomático não está mais disponível.</BASEFONT>",
                 false, true);
-            AddImage(535, 307, 2923);
+            AddImage(535, 307, sealCityId >= 0 ? ReinoVisualSystem.GetSealGumpId(sealCityId) : 2923);
         }
 
         public override void OnResponse(NetState sender, RelayInfo info)

@@ -5,7 +5,6 @@ using Server.Mobiles;
 using Server.Network;
 using System;
 using System.Collections.Generic;
-using static Server.Items.Uniforme44;
 
 namespace Server.Custom.Reinos
 {
@@ -372,9 +371,23 @@ namespace Server.Custom.Reinos
 
         public void ApplyUniform()
         {
-            Item torso = FindItemOnLayer(Layer.MiddleTorso);
-            if (torso != null)
-                torso.Delete();
+            List<Item> toDelete = new List<Item>();
+
+            for (int i = 0; i < Items.Count; i++)
+            {
+                Item item = Items[i];
+                if (item == null)
+                    continue;
+
+                if (item.Layer == Layer.MiddleTorso || item is BaseMiddleTorso)
+                    toDelete.Add(item);
+            }
+
+            for (int i = 0; i < toDelete.Count; i++)
+            {
+                if (toDelete[i] != null && !toDelete[i].Deleted)
+                    toDelete[i].Delete();
+            }
 
             Item uniform = CreateUniformForCity();
             if (uniform == null)
@@ -386,16 +399,8 @@ namespace Server.Custom.Reinos
 
         private Item CreateUniformForCity()
         {
-            string culture = (ReinoEmploymentSystem.GetGovernmentCultureId(m_CityId) ?? String.Empty).Trim().ToLowerInvariant();
-            switch (culture)
-            {
-                case "sarangs": return new Uniforme1();
-                case "kamay": return new Uniforme4();
-                case "zorteros":
-                case "zosteros": return new Uniforme13();
-                case "matalun": return new Uniforme31();
-                default: return new Tunic();
-            }
+            Item uniform = ReinoVisualSystem.CreateUniformForCity(m_CityId);
+            return uniform ?? new Tunic();
         }
 
         private void DeleteEquipment()
@@ -461,6 +466,7 @@ namespace Server.Custom.Reinos
                     break;
                 case ReinoGuardKind.Oficial:
                     AddItem(new StuddedGloves() { Movable = false });
+                    AddItem(new UniformeUnderShirt { Movable = false });
                     break;
             }
         }

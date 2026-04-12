@@ -22,7 +22,7 @@ namespace Server.Custom.Reinos
                 ReinoTreasurySystem.GetCitizenTaxNoticeText(cityId, amount, noticeType) +
                 "</BASEFONT>",
                 false, true);
-            AddImage(535, 307, 2923);
+            AddImage(535, 307, ReinoVisualSystem.GetSealGumpId(cityId));
         }
 
         public override void OnResponse(NetState sender, RelayInfo info)
@@ -51,7 +51,7 @@ namespace Server.Custom.Reinos
                 approval != null ? approval.Html : "<BASEFONT COLOR=#000000>Essa mudança já foi resolvida.</BASEFONT>",
                 false, true);
             AddButton(189, 359, 493, 493, 1, GumpButtonType.Reply, 0);
-            AddImage(360, 324, 2923);
+            AddImage(360, 324, approval != null ? ReinoVisualSystem.GetSealGumpId(approval.CityId) : 2923);
             AddButton(537, 358, 492, 492, 2, GumpButtonType.Reply, 0);
         }
 

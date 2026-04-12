@@ -25,7 +25,7 @@ namespace Server.Custom.Reinos
                 proposal != null ? proposal.Html : "<BASEFONT COLOR=#000000>Essa mudança já foi resolvida.</BASEFONT>",
                 false, true);
             AddButton(189, 359, 493, 493, 1, GumpButtonType.Reply, 0);
-            AddImage(360, 324, 2923);
+            AddImage(360, 324, proposal != null ? ReinoVisualSystem.GetSealGumpId(proposal.CityId) : 2923);
             AddButton(537, 358, 492, 492, 2, GumpButtonType.Reply, 0);
         }
 

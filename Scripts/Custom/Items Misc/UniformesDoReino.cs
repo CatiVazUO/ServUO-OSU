@@ -1541,133 +1541,134 @@ namespace Server.Items
             base.Deserialize(reader);
 
             int version = reader.ReadInt();
+        }   
+    }
+
+
+    public class UniformePrisaoShirt : BaseShirt
+    {
+        [Constructable]
+        public UniformePrisaoShirt()
+            : this(0)
+        {
         }
 
-        public class UniformePrisaoShirt : BaseShirt
+        [Constructable]
+        public UniformePrisaoShirt(int hue)
+            : base(0x1533, hue)
         {
-            [Constructable]
-            public UniformePrisaoShirt()
-                : this(0)
-            {
-            }
-
-            [Constructable]
-            public UniformePrisaoShirt(int hue)
-                : base(0x1533, hue)
-            {
-                this.Weight = 7.0;
-            }
-
-            public override void OnRemoved(object parent)
-            {
-                base.OnRemoved(parent);
-
-                if (Deleted)
-                    return;
-
-                if (parent is Mobile)
-                    Timer.DelayCall(TimeSpan.Zero, Delete);
-            }
-
-            public UniformePrisaoShirt(Serial serial)
-                : base(serial)
-            {
-            }
-
-            public override void Serialize(GenericWriter writer)
-            {
-                base.Serialize(writer);
-
-                writer.Write((int)0);
-            }
-
-            public override void Deserialize(GenericReader reader)
-            {
-                base.Deserialize(reader);
-
-                int version = reader.ReadInt();
-            }
+            this.Weight = 7.0;
         }
 
-        public class UniformePrisaoPants : BasePants
+        public override void OnRemoved(object parent)
         {
-            [Constructable]
-            public UniformePrisaoPants()
-                : this(0)
-            {
-            }
+            base.OnRemoved(parent);
 
-            [Constructable]
-            public UniformePrisaoPants(int hue)
-                : base(0x1534, hue)
-            {
-                this.Weight = 7.0;
-            }
+            if (Deleted)
+                return;
 
-            public override void OnRemoved(object parent)
-            {
-                base.OnRemoved(parent);
-
-                if (Deleted)
-                    return;
-
-                if (parent is Mobile)
-                    Timer.DelayCall(TimeSpan.Zero, Delete);
-            }
-
-            public UniformePrisaoPants(Serial serial)
-                : base(serial)
-            {
-            }
-
-            public override void Serialize(GenericWriter writer)
-            {
-                base.Serialize(writer);
-
-                writer.Write((int)0);
-            }
-
-            public override void Deserialize(GenericReader reader)
-            {
-                base.Deserialize(reader);
-
-                int version = reader.ReadInt();
-            }
+            if (parent is Mobile)
+                Timer.DelayCall(TimeSpan.Zero, Delete);
         }
 
-        public class UniformeUnderShirt : BaseShirt
+        public UniformePrisaoShirt(Serial serial)
+            : base(serial)
         {
-            [Constructable]
-            public UniformeUnderShirt()
-                : this(0)
-            {
-            }
+        }
 
-            [Constructable]
-            public UniformeUnderShirt(int hue)
-                : base(0x1532, hue)
-            {
-                this.Weight = 7.0;
-            }
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
 
-            public UniformeUnderShirt(Serial serial)
-                : base(serial)
-            {
-            }
+            writer.Write((int)0);
+        }
 
-            public override void Serialize(GenericWriter writer)
-            {
-                base.Serialize(writer);
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
 
-                writer.Write((int)0);
-            }
+            int version = reader.ReadInt();
+        }
+    }
 
-            public override void Deserialize(GenericReader reader)
-            {
-                base.Deserialize(reader);
+    public class UniformePrisaoPants : BasePants
+    {
+        [Constructable]
+        public UniformePrisaoPants()
+            : this(0)
+        {
+        }
 
-                int version = reader.ReadInt();
-            }
+        [Constructable]
+        public UniformePrisaoPants(int hue)
+            : base(0x1534, hue)
+        {
+            this.Weight = 7.0;
+        }
+
+        public override void OnRemoved(object parent)
+        {
+            base.OnRemoved(parent);
+
+            if (Deleted)
+                return;
+
+            if (parent is Mobile)
+                Timer.DelayCall(TimeSpan.Zero, Delete);
+        }
+
+        public UniformePrisaoPants(Serial serial)
+            : base(serial)
+        {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            int version = reader.ReadInt();
+        }
+    }
+
+    public class UniformeUnderShirt : BaseShirt
+    {
+        [Constructable]
+        public UniformeUnderShirt()
+            : this(0)
+        {
+        }
+
+        [Constructable]
+        public UniformeUnderShirt(int hue)
+            : base(0x1532, hue)
+        {
+            this.Weight = 7.0;
+        }
+
+        public UniformeUnderShirt(Serial serial)
+            : base(serial)
+        {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            int version = reader.ReadInt();
         }
     }
 }
