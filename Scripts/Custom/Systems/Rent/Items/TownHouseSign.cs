@@ -961,7 +961,12 @@ namespace Server.Custom.Systems.Rent
             if (!m_GovernmentManaged)
                 return false;
 
-            return ReinoEmploymentSystem.CanManageRentalSign((PlayerMobile)m, this);
+            PlayerMobile pm = (PlayerMobile)m;
+
+            if (ReinoEmploymentSystem.CanManageRentalSign(pm, this))
+                return true;
+
+            return ReinoRentalManagerKeyHelper.HasAccess(pm, this);
         }
 
         public bool IsCultureAllowed(Mobile m)

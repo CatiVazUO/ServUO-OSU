@@ -94,40 +94,40 @@ namespace Server.Custom.Reinos
             if (count > 1 && m_DetailIndex < count - 1)
                 AddButton(806, 556, 581, 581, ButtonNext, GumpButtonType.Reply, 0);
 
-            AddLabel(419, 391, 0, @"Ver Crimes Detalhados");
-            AddLabel(419, 419, 0, @"Ver Prisões Detalhadas");
-            AddLabel(644, 391, 0, @"Ver Procurados Detalhados");
-            AddLabel(644, 418, 0, @"Ver Criminosos Recorrentes");
+            AddLabel(419, 391, 1152, @"Ver Crimes Detalhados");
+            AddLabel(419, 419, 1152, @"Ver Prisões Detalhadas");
+            AddLabel(644, 391, 1152, @"Ver Procurados Detalhados");
+            AddLabel(644, 418, 1152, @"Ver Criminosos Recorrentes");
 
             AddButton(391, 389, m_DetailMode == 1 ? 530 : 531, m_DetailMode == 1 ? 530 : 531, ButtonCrimes, GumpButtonType.Reply, 0);
             AddButton(391, 419, m_DetailMode == 2 ? 530 : 531, m_DetailMode == 2 ? 530 : 531, ButtonPrisons, GumpButtonType.Reply, 0);
             AddButton(614, 390, m_DetailMode == 3 ? 530 : 531, m_DetailMode == 3 ? 530 : 531, ButtonWanted, GumpButtonType.Reply, 0);
             AddButton(614, 420, m_DetailMode == 4 ? 530 : 531, m_DetailMode == 4 ? 530 : 531, ButtonRecurring, GumpButtonType.Reply, 0);
 
-            AddLabel(537, 676, 0, @"Pegar Relatório Impresso");
+            AddLabel(537, 676, 1152, @"Pegar Relatório Impresso");
             AddButton(507, 675, 531, 531, ButtonPrint, GumpButtonType.Reply, 0);
 
             if (m_ArchiveIndex < 0)
             {
-                AddLabel(769, 294, 0, @"Antigos");
+                AddLabel(769, 294, 1152, @"Antigos");
                 AddButton(739, 293, 531, 531, ButtonOldReports, GumpButtonType.Reply, 0);
             }
             else
             {
-                AddLabel(769, 294, 0, @"Atual");
+                AddLabel(769, 294, 1152, @"Atual");
                 AddButton(739, 293, 531, 531, ButtonBackToCurrent, GumpButtonType.Reply, 0);
             }
         }
 
         private void BuildArchiveListView()
         {
-            AddLabel(541, 228, 0, @"Relatórios Antigos");
+            AddLabel(541, 228, 1152, @"Relatórios Antigos");
 
             int count = Math.Min(10, ReinoMilitarySystem.GetArchivedReportCount(m_CityId));
             if (count <= 0)
             {
-                AddHtml(410, 279, 350, 40, "<BASEFONT COLOR=#000000>Nenhum relatório antigo encontrado.</BASEFONT>", false, false);
-                AddLabel(769, 294, 0, @"Atual");
+                AddHtml(410, 279, 350, 40, "<BASEFONT COLOR=#FFFFFF>Nenhum relatório antigo encontrado.</BASEFONT>", false, false);
+                AddLabel(769, 294, 1152, @"Atual");
                 AddButton(739, 293, 531, 531, ButtonBackToCurrent, GumpButtonType.Reply, 0);
                 return;
             }
@@ -135,11 +135,11 @@ namespace Server.Custom.Reinos
             int y = 279;
             for (int i = 0; i < count; i++, y += 28)
             {
-                AddLabel(410, y, 0, ReinoMilitarySystem.GetArchivedReportListLabel(m_CityId, i));
+                AddLabel(410, y, 1152, ReinoMilitarySystem.GetArchivedReportListLabel(m_CityId, i));
                 AddButton(382, y - 2, 531, 531, ButtonArchiveBase + i, GumpButtonType.Reply, 0);
             }
 
-            AddLabel(769, 294, 0, @"Atual");
+            AddLabel(769, 294, 1152, @"Atual");
             AddButton(739, 293, 531, 531, ButtonBackToCurrent, GumpButtonType.Reply, 0);
         }
 

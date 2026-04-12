@@ -45,6 +45,11 @@ namespace Server.Mobiles
             get { return m_CanRummage; }
         }
 
+        public PostoThreatTier ThreatTier
+        {
+            get { return m_Tier; }
+        }
+
         protected virtual void ApplyTier(PostoThreatTier tier)
         {
             SetDamageType(ResistanceType.Physical, 100);

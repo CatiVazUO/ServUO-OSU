@@ -362,11 +362,11 @@ namespace Server.Custom.Reinos
         {
             switch (schedule)
             {
-                case ReinoRouteSchedule.Every15Minutes: return "A cada 15 minutos";
-                case ReinoRouteSchedule.Every30Minutes: return "A cada 30 minutos";
-                case ReinoRouteSchedule.Every45Minutes: return "A cada 45 minutos";
-                case ReinoRouteSchedule.Every60Minutes: return "A cada 1 hora";
-                case ReinoRouteSchedule.DawnOnly: return "Somente de madrugada";
+                case ReinoRouteSchedule.Every15Minutes: return "A cada 5 minutos";
+                case ReinoRouteSchedule.Every30Minutes: return "A cada 10 minutos";
+                case ReinoRouteSchedule.Every45Minutes: return "A cada 15 minutos";
+                case ReinoRouteSchedule.Every60Minutes: return "Rota infinita";
+                case ReinoRouteSchedule.DawnOnly: return "Rota infinita";
                 case ReinoRouteSchedule.Infinite: return "Rota infinita";
                 default: return "Rota infinita";
             }
@@ -554,7 +554,7 @@ namespace Server.Custom.Reinos
 
             StringBuilder sb = new StringBuilder();
             sb.Append("<BASEFONT COLOR=#000000>");
-            sb.Append("Foi registrada uma alteração nas leis vigentes do reino.<BR><BR>");
+            sb.Append("Há novos avisos do reino.<BR><BR>");
 
             for (int i = 0; i < list.Count; i++)
                 sb.Append("• ").Append(list[i]).Append("<BR>");
@@ -1180,7 +1180,7 @@ namespace Server.Custom.Reinos
         public static string GetWantedHtml(int cityId)
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("<BASEFONT COLOR=#000000>");
+            sb.Append("<BASEFONT COLOR=#FFFFFF>");
 
             List<ReinoWantedEntry> list = GetWantedList(cityId);
             if (list.Count <= 0)
@@ -1393,6 +1393,9 @@ namespace Server.Custom.Reinos
             if (from == null || from.Deleted || from.Map == null)
                 return "Jogador inválido.";
 
+            if (kind == ReinoGuardKind.Oficial)
+                return "O oficial do quartel já vem junto com a construção e não pode ser contratado por esse gump.";
+
             ReinoGuardPostInfo post = GetPostAt(cityId, from.Location, from.Map);
             if (post == null)
                 return "Fique sobre um ponto de guarda para adicionar um guarda.";
@@ -1485,6 +1488,9 @@ namespace Server.Custom.Reinos
             {
                 ReinoGuardPostInfo post = source[i];
                 if (post == null)
+                    continue;
+
+                if (post.GuardKind == ReinoGuardKind.Oficial)
                     continue;
 
                 if (post.Training)
@@ -1701,15 +1707,14 @@ namespace Server.Custom.Reinos
                 case ReinoRouteSchedule.Infinite:
                     return true;
                 case ReinoRouteSchedule.Every15Minutes:
-                    return now >= post.LastRouteUtc + TimeSpan.FromMinutes(15.0);
+                    return now >= post.LastRouteUtc + TimeSpan.FromMinutes(5.0);
                 case ReinoRouteSchedule.Every30Minutes:
-                    return now >= post.LastRouteUtc + TimeSpan.FromMinutes(30.0);
+                    return now >= post.LastRouteUtc + TimeSpan.FromMinutes(10.0);
                 case ReinoRouteSchedule.Every45Minutes:
-                    return now >= post.LastRouteUtc + TimeSpan.FromMinutes(45.0);
+                    return now >= post.LastRouteUtc + TimeSpan.FromMinutes(15.0);
                 case ReinoRouteSchedule.Every60Minutes:
-                    return now >= post.LastRouteUtc + TimeSpan.FromHours(1.0);
                 case ReinoRouteSchedule.DawnOnly:
-                    return now.Hour >= 1 && now.Hour <= 5 && now >= post.LastRouteUtc + TimeSpan.FromHours(6.0);
+                    return true;
                 default:
                     return false;
             }
@@ -2409,6 +2414,82 @@ namespace Server.Custom.Reinos
             return true;
         }
 
+        private static List<ReinoCrimeRecord> GetCurrentReportCrimeEntries(int cityId)
+        {
+            DateTime since = GetReportState(cityId).LastDeliveredUtc;
+            List<ReinoCrimeRecord> source = GetCrimeList(cityId);
+            List<ReinoCrimeRecord> list = new List<ReinoCrimeRecord>();
+
+            for (int i = 0; i < source.Count; i++)
+            {
+                ReinoCrimeRecord record = source[i];
+                if (record == null)
+                    continue;
+
+                if (record.Utc > since)
+                    list.Add(record);
+            }
+
+            return list;
+        }
+
+        private static List<ReinoPrisonRecord> GetCurrentReportPrisonEntries(int cityId)
+        {
+            DateTime since = GetReportState(cityId).LastDeliveredUtc;
+            List<ReinoPrisonRecord> source = GetPrisonList(cityId);
+            List<ReinoPrisonRecord> list = new List<ReinoPrisonRecord>();
+
+            for (int i = 0; i < source.Count; i++)
+            {
+                ReinoPrisonRecord record = source[i];
+                if (record == null)
+                    continue;
+
+                if (record.ArrestUtc > since)
+                    list.Add(record);
+            }
+
+            return list;
+        }
+
+        private static List<ReinoWantedEntry> GetCurrentReportWantedEntries(int cityId)
+        {
+            DateTime since = GetReportState(cityId).LastDeliveredUtc;
+            List<ReinoWantedEntry> source = GetWantedList(cityId);
+            List<ReinoWantedEntry> list = new List<ReinoWantedEntry>();
+
+            for (int i = 0; i < source.Count; i++)
+            {
+                ReinoWantedEntry entry = source[i];
+                if (entry == null)
+                    continue;
+
+                if (entry.AddedUtc > since)
+                    list.Add(entry);
+            }
+
+            return list;
+        }
+
+        private static Dictionary<string, int> GetCurrentReportRecurringCriminals(int cityId)
+        {
+            Dictionary<string, int> recurring = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            List<ReinoCrimeRecord> list = GetCurrentReportCrimeEntries(cityId);
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                ReinoCrimeRecord record = list[i];
+                if (record == null || String.IsNullOrWhiteSpace(record.CriminalName) || record.CriminalSerial == 0)
+                    continue;
+
+                int count;
+                recurring.TryGetValue(record.CriminalName, out count);
+                recurring[record.CriminalName] = count + 1;
+            }
+
+            return recurring;
+        }
+
         public static string GetReportsSummaryHtml(int cityId)
         {
             List<ReinoCrimeRecord> crimes = GetCrimeList(cityId);
@@ -2429,7 +2510,7 @@ namespace Server.Custom.Reinos
             }
 
             StringBuilder sb = new StringBuilder();
-            sb.Append("<BASEFONT COLOR=#000000>");
+            sb.Append("<BASEFONT COLOR=#FFFFFF>");
             sb.Append("<B>Relatório</B> ").Append(since).Append(".<BR><BR>");
             sb.Append("<B>Último Relatório:</B><BR>").Append(st.LastDeliveredUtc == DateTime.MinValue ? "nunca" : st.LastDeliveredUtc.ToLocalTime().ToString("dd/MM/yyyy HH:mm")).Append(".<BR>");
             sb.Append("<B>Entregue a:</B><BR> ").Append(String.IsNullOrWhiteSpace(st.LastDeliveredTo) ? "ninguém" : st.LastDeliveredTo).Append(".");
@@ -2449,11 +2530,11 @@ namespace Server.Custom.Reinos
         public static string GetReportsDetailHtml(int cityId, int mode, int index)
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("<BASEFONT COLOR=#000000>");
+            sb.Append("<BASEFONT COLOR=#FFFFFF>");
 
             if (mode == 1)
             {
-                List<ReinoCrimeRecord> list = GetCrimeList(cityId);
+                List<ReinoCrimeRecord> list = GetCurrentReportCrimeEntries(cityId);
                 
                 if (list.Count <= 0)
                 {
@@ -2495,7 +2576,7 @@ namespace Server.Custom.Reinos
 
             else if (mode == 2)
             {
-                List<ReinoPrisonRecord> list = GetPrisonList(cityId);
+                List<ReinoPrisonRecord> list = GetCurrentReportPrisonEntries(cityId);
                 if (list.Count <= 0)
                 {
                     sb.Append("Nenhuma prisão registrada.");
@@ -2519,7 +2600,7 @@ namespace Server.Custom.Reinos
             }
             else if (mode == 3)
             {
-                List<ReinoWantedEntry> list = GetWantedList(cityId);
+                List<ReinoWantedEntry> list = GetCurrentReportWantedEntries(cityId);
                 if (list.Count <= 0)
                     sb.Append("Nenhum procurado registrado.");
                 else
@@ -2536,7 +2617,7 @@ namespace Server.Custom.Reinos
             }
             else if (mode == 4)
             {
-                Dictionary<string, int> recurring = GetRecurringCriminals(cityId);
+                Dictionary<string, int> recurring = GetCurrentReportRecurringCriminals(cityId);
                 if (recurring.Count <= 0)
                     sb.Append("Nenhum criminoso recorrente ainda.");
                 else
@@ -2589,16 +2670,16 @@ namespace Server.Custom.Reinos
         {
             switch (mode)
             {
-                case 1: return GetCrimeList(cityId).Count;
-                case 2: return GetPrisonList(cityId).Count;
-                case 3: return GetWantedList(cityId).Count;
-                case 4: return GetRecurringCriminals(cityId).Count;
+                case 1: return GetCurrentReportCrimeEntries(cityId).Count;
+                case 2: return GetCurrentReportPrisonEntries(cityId).Count;
+                case 3: return GetCurrentReportWantedEntries(cityId).Count;
+                case 4: return GetCurrentReportRecurringCriminals(cityId).Count;
                 default: return 0;
             }
         }
         private static bool HasReportDataToArchive(int cityId)
         {
-            return GetCrimeList(cityId).Count > 0 || GetPrisonList(cityId).Count > 0 || !String.IsNullOrWhiteSpace(GetReportState(cityId).Summary);
+            return GetCurrentReportCrimeEntries(cityId).Count > 0 || GetCurrentReportPrisonEntries(cityId).Count > 0 || GetCurrentReportWantedEntries(cityId).Count > 0 || !String.IsNullOrWhiteSpace(GetReportState(cityId).Summary);
         }
 
         private static ReinoArchivedReport BuildArchivedReportSnapshot(int cityId, string closedBy)
@@ -2673,9 +2754,9 @@ namespace Server.Custom.Reinos
         {
             List<ReinoArchivedReport> list = GetArchivedReports(cityId);
             if (archiveIndex < 0 || archiveIndex >= list.Count)
-                return "<BASEFONT COLOR=#000000>Nenhum relatório antigo encontrado.</BASEFONT>";
+                return "<BASEFONT COLOR=#FFFFFF>Nenhum relatório antigo encontrado.</BASEFONT>";
 
-            return list[archiveIndex].SummaryHtml ?? "<BASEFONT COLOR=#000000>Nenhum conteúdo.</BASEFONT>";
+            return list[archiveIndex].SummaryHtml ?? "<BASEFONT COLOR=#FFFFFF>Nenhum conteúdo.</BASEFONT>";
         }
 
         public static int GetArchivedDetailCount(int cityId, int archiveIndex, int mode)
@@ -2699,7 +2780,7 @@ namespace Server.Custom.Reinos
         {
             List<ReinoArchivedReport> list = GetArchivedReports(cityId);
             if (archiveIndex < 0 || archiveIndex >= list.Count)
-                return "<BASEFONT COLOR=#000000>Nenhum relatório antigo encontrado.</BASEFONT>";
+                return "<BASEFONT COLOR=#FFFFFF>Nenhum relatório antigo encontrado.</BASEFONT>";
 
             List<string> source;
             ReinoArchivedReport r = list[archiveIndex];
@@ -2713,11 +2794,11 @@ namespace Server.Custom.Reinos
             }
 
             if (source == null || source.Count == 0)
-                return "<BASEFONT COLOR=#000000>Nenhum registro nessa seção.</BASEFONT>";
+                return "<BASEFONT COLOR=#FFFFFF>Nenhum registro nessa seção.</BASEFONT>";
 
             if (detailIndex < 0) detailIndex = 0;
             if (detailIndex >= source.Count) detailIndex = source.Count - 1;
-            return source[detailIndex] ?? "<BASEFONT COLOR=#000000>Nenhum conteúdo.</BASEFONT>";
+            return source[detailIndex] ?? "<BASEFONT COLOR=#FFFFFF>Nenhum conteúdo.</BASEFONT>";
         }
 
         private static string StripHtmlForBook(string html)
@@ -2978,6 +3059,8 @@ namespace Server.Custom.Reinos
             if (post == null)
                 return;
 
+            DeleteRouteChain(post);
+
             Item marker = FindItem(post.MarkerSerial);
             if (marker != null)
                 marker.Delete();
@@ -2986,16 +3069,209 @@ namespace Server.Custom.Reinos
             if (guard != null)
                 guard.Delete();
 
-            if (post.RouteRootSerial != 0)
-            {
-                WayPoint point = FindItem(post.RouteRootSerial) as WayPoint;
-                if (point != null)
-                    point.Delete();
-            }
-
             post.MarkerSerial = 0;
             post.GuardSerial = 0;
             post.RouteRootSerial = 0;
+            post.RouteHomeSerial = 0;
+            post.RouteColorHue = 0;
+            post.RouteActivated = false;
+        }
+
+        public static bool IsInsideConstructionBounds(string constructionKey, Point3D loc, Map map)
+        {
+            if (String.IsNullOrWhiteSpace(constructionKey) || map == null || map == Map.Internal)
+                return false;
+
+            ReinoConstructionRuntimeInfo info = ReinoMaintenanceSystem.GetConstruction(constructionKey);
+            if (info == null)
+                return false;
+
+            if (info.IsArea)
+                return info.Area != null && info.Area.Map == map && info.Area.Contains(loc);
+
+            return info.Lot != null && info.Lot.Map == map && info.Lot.Contains(loc);
+        }
+
+        public static Mobile FindMonsterThreatForGuard(OSUCityGuard guard)
+        {
+            if (guard == null || guard.Deleted || guard.Map == null || guard.Map == Map.Internal || guard.IsOfficial)
+                return null;
+
+            IPooledEnumerable eable = guard.GetMobilesInRange(12);
+            try
+            {
+                foreach (Mobile mob in eable)
+                {
+                    BaseCreature bc = mob as BaseCreature;
+                    if (bc == null || bc.Deleted || !bc.Alive || bc == guard)
+                        continue;
+
+                    if (bc is OSUCityGuard || bc is ReinoPrisionNpcBase)
+                        continue;
+
+                    if (bc.Controlled || bc.Summoned)
+                        continue;
+
+                    if (ResolveCityIdAt(bc.Location, bc.Map) != guard.CityId)
+                        continue;
+
+                    bool hostile = bc.IsAggressiveMonster || bc.Karma < 0 || (bc.FightMode != FightMode.None && bc.Combatant != null);
+                    if (!hostile)
+                        continue;
+
+                    if (guard.IsConstructionOfficial && !IsInsideConstructionBounds(guard.ConstructionKey, bc.Location, bc.Map))
+                        continue;
+
+                    if (!guard.InLOS(bc) || !guard.InRange(bc.Location, 12))
+                        continue;
+
+                    return bc;
+                }
+            }
+            finally
+            {
+                eable.Free();
+            }
+
+            return null;
+        }
+
+        public static void NotifyGuardKilled(OSUCityGuard guard)
+        {
+            if (guard == null || guard.Deleted)
+                return;
+
+            if (guard.PostId > 0)
+            {
+                ReinoGuardPostInfo post = FindPostById(guard.CityId, guard.PostId);
+                if (post != null)
+                {
+                    post.GuardSerial = 0;
+                    post.Training = false;
+                    post.TrainingEndsUtc = DateTime.MinValue;
+                    post.RouteActivated = false;
+                }
+            }
+
+            string line = guard.IsConstructionOfficial
+                ? "O oficial do quartel está fora de combate e o posto interno ficou vazio."
+                : "Um guarda do reino foi morto e o ponto de guarda ficou vazio.";
+
+            QueueGuardVacancyNotice(guard.CityId, guard.ConstructionKey, line);
+        }
+
+        private static void QueueGuardVacancyNotice(int cityId, string constructionKey, string line)
+        {
+            if (String.IsNullOrWhiteSpace(line))
+                return;
+
+            HashSet<int> recipients = new HashSet<int>();
+
+            foreach (Mobile mobile in World.Mobiles.Values)
+            {
+                PlayerMobile pm = mobile as PlayerMobile;
+                if (pm == null || pm.Deleted)
+                    continue;
+
+                if (ReinoAccessHelper.IsCurrentGovernor(pm, cityId))
+                {
+                    recipients.Add(pm.Serial.Value);
+                    continue;
+                }
+
+                ReinoCargoEntry role = ReinoEmploymentSystem.GetOccupiedRole(pm, cityId);
+                if (role == null || !role.CanMilitary)
+                    continue;
+
+                if (!String.IsNullOrWhiteSpace(constructionKey) && String.Equals(role.LinkedConstructionKey, constructionKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    recipients.Add(pm.Serial.Value);
+                    continue;
+                }
+
+                string culture = ReinoEmploymentSystem.GetGovernmentCultureId(cityId);
+                if (String.Equals(culture, "kamay", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (role.Kind == ReinoCargoKind.MinisterDefense)
+                        recipients.Add(pm.Serial.Value);
+                }
+                else if (role.Hierarchy <= 2)
+                {
+                    recipients.Add(pm.Serial.Value);
+                }
+            }
+
+            foreach (int serial in recipients)
+            {
+                List<string> list;
+                if (!m_PendingLawNoticesByPlayer.TryGetValue(serial, out list))
+                {
+                    list = new List<string>();
+                    m_PendingLawNoticesByPlayer[serial] = list;
+                }
+
+                if (!list.Contains(line))
+                    list.Add(line);
+
+                Mobile found;
+                if (World.Mobiles.TryGetValue(serial, out found))
+                {
+                    PlayerMobile pm = found as PlayerMobile;
+                    if (pm != null && pm.NetState != null)
+                        ShowPendingLawNotice(pm);
+                }
+            }
+        }
+
+        public static void DeleteBarracksAssetsForConstruction(int cityId, string constructionKey)
+        {
+            if (cityId < 0 || String.IsNullOrWhiteSpace(constructionKey))
+                return;
+
+            List<ReinoGuardPostInfo> posts = GetPosts(cityId);
+            List<ReinoGuardPostInfo> toDelete = new List<ReinoGuardPostInfo>();
+
+            for (int i = 0; i < posts.Count; i++)
+            {
+                ReinoGuardPostInfo post = posts[i];
+                if (post != null && String.Equals(post.ConstructionKey, constructionKey, StringComparison.OrdinalIgnoreCase))
+                    toDelete.Add(post);
+            }
+
+            for (int i = 0; i < toDelete.Count; i++)
+            {
+                DeletePostWorldObjects(toDelete[i]);
+                posts.Remove(toDelete[i]);
+            }
+
+            List<Mobile> extraGuards = new List<Mobile>();
+            foreach (Mobile mobile in World.Mobiles.Values)
+            {
+                OSUCityGuard guard = mobile as OSUCityGuard;
+                if (guard != null && !guard.Deleted && guard.CityId == cityId && String.Equals(guard.ConstructionKey, constructionKey, StringComparison.OrdinalIgnoreCase) && guard.PostId <= 0)
+                    extraGuards.Add(guard);
+            }
+
+            for (int i = 0; i < extraGuards.Count; i++)
+                extraGuards[i].Delete();
+
+            ResetBarracksReports(cityId);
+        }
+
+        public static void ResetBarracksReports(int cityId)
+        {
+            if (cityId < 0)
+                return;
+
+            ReinoMilitaryReportState st = GetReportState(cityId);
+            st.LastDeliveredUtc = DateTime.MinValue;
+            st.LastDeliveredTo = String.Empty;
+            st.LastDeliveredToSerial = 0;
+            st.Summary = String.Empty;
+
+            GetCrimeList(cityId).Clear();
+            GetPrisonList(cityId).Clear();
+            GetArchivedReports(cityId).Clear();
         }
 
         public static Item FindItem(int serial)
@@ -3144,6 +3420,7 @@ namespace Server.Custom.Reinos
             {
                 marker.Hue = hue;
                 marker.PostId = post.Id;
+                marker.MakeVisibleFor(TimeSpan.FromMinutes(1.0));
             }
 
             post.RouteRootSerial = root.Serial.Value;
@@ -3274,6 +3551,7 @@ namespace Server.Custom.Reinos
                 ReinoMilitaryRoutePoint point = item as ReinoMilitaryRoutePoint;
                 if (point != null && point.CityId == cityId)
                 {
+                    point.Hue = point.ClosedRoute ? (point.RouteHue <= 0 ? 0x44E : point.RouteHue) : 0x59B;
                     point.SetTemporaryVisible(show, show ? (TimeSpan?)TimeSpan.FromMinutes(1.0) : null);
                     changed++;
                     continue;
@@ -3282,6 +3560,8 @@ namespace Server.Custom.Reinos
                 ReinoGuardPostMarker marker = item as ReinoGuardPostMarker;
                 if (marker != null && marker.CityId == cityId)
                 {
+                    ReinoGuardPostInfo post = FindPostById(cityId, marker.PostId);
+                    marker.Hue = post != null && post.RouteColorHue > 0 ? post.RouteColorHue : 0x44E;
                     marker.SetTemporaryVisible(show, show ? (TimeSpan?)TimeSpan.FromMinutes(1.0) : null);
                     changed++;
                 }
@@ -3301,6 +3581,11 @@ namespace Server.Custom.Reinos
                 return "Selecione primeiro uma rota ligada a um ponto de guarda.";
 
             linkedPost.RouteSpeed = speed;
+
+            OSUCityGuard guard = FindGuard(linkedPost);
+            if (guard != null && !guard.Deleted)
+                guard.ConfigureRouteSpeed(speed);
+
             return "Velocidade da rota ajustada para " + GetRouteSpeedLabel(speed).ToLower() + ".";
         }
 
@@ -3337,6 +3622,11 @@ namespace Server.Custom.Reinos
 
             linkedPost.RouteSpeed = ReinoRouteSpeed.Short;
             linkedPost.RouteSchedule = ReinoRouteSchedule.Infinite;
+
+            OSUCityGuard guard = FindGuard(linkedPost);
+            if (guard != null && !guard.Deleted)
+                guard.ConfigureRouteSpeed(linkedPost.RouteSpeed);
+
             return "A configuração da rota voltou para o padrão: tempo curto e rota infinita.";
         }
 
@@ -3368,7 +3658,19 @@ namespace Server.Custom.Reinos
         }
 
 
-        private static readonly int[] RouteHues = new int[] { 0x44E, 0x489, 0x4F2, 0x58C, 0x66D, 0x47E, 0x53D, 0x83F, 0x8A5, 0x90F };
+        private static readonly int[] RouteHues = new int[]
+          {
+            0x0026, // vermelho forte
+            0x0044, // azul forte
+            0x005A, // verde forte
+            0x0082, // roxo forte
+            0x0090, // rosa forte
+            0x00A4, // amarelo forte
+            0x00B8, // ciano forte
+            0x0481, // laranja vivo
+            0x0496, // magenta vivo
+            0x04F2  // azul neon
+          };
 
         private static int GetNextRouteHue(int cityId)
         {
@@ -3399,6 +3701,7 @@ namespace Server.Custom.Reinos
                     point.PostId = postId;
                     point.RouteHue = hue;
                     point.ClosedRoute = true;
+                    point.MakeVisibleFor(TimeSpan.FromMinutes(1.0));
                 }
 
                 current = current.NextPoint;

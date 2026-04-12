@@ -1011,32 +1011,145 @@ namespace Server.Custom.Reinos
 
             if (!String.IsNullOrWhiteSpace(role.LinkedConstructionKey) && ReinoMilitarySystem.IsBarracksConstructionKey(cityId, role.LinkedConstructionKey))
             {
-                if (target.Backpack != null && target.Backpack.FindItemByType(typeof(ReinoBarracksBadge)) == null)
+                if (target.Backpack != null && !HasItemAnywhere(target, typeof(ReinoBarracksBadge), cityId))
                     target.Backpack.DropItem(new ReinoBarracksBadge(cityId));
             }
 
             if (!String.IsNullOrWhiteSpace(role.LinkedConstructionKey) && ReinoTrialsSystem.IsTribunalConstructionKey(cityId, role.LinkedConstructionKey))
             {
-                if (target.Backpack != null && target.Backpack.FindItemByType(typeof(ReinoTribunalHammer)) == null)
+                if (target.Backpack != null && !HasItemAnywhere(target, typeof(ReinoTribunalHammer), cityId))
                     target.Backpack.DropItem(new ReinoTribunalHammer(cityId, role.Title));
+            }
+
+            if (role.CanFinancial && !String.IsNullOrWhiteSpace(role.LinkedConstructionKey))
+            {
+                bool residential, commercial;
+                GetRentalKeyNeeds(role.LinkedConstructionKey, out residential, out commercial);
+                ReinoRentalManagerKeyHelper.EnsureKeys(target, cityId, role.LinkedConstructionKey, residential, commercial);
             }
         }
 
         private static void RemoveRoleLinkedItems(PlayerMobile target, int cityId, ReinoCargoEntry role)
         {
-            if (target == null || target.Deleted || target.Backpack == null || role == null)
+            if (target == null || target.Deleted || role == null)
                 return;
 
             if (!String.IsNullOrWhiteSpace(role.LinkedConstructionKey) && ReinoMilitarySystem.IsBarracksConstructionKey(cityId, role.LinkedConstructionKey))
-            {
-                Item badge = target.Backpack.FindItemByType(typeof(ReinoBarracksBadge));
-                if (badge != null && !badge.Deleted)
-                    badge.Delete();
-            }
+                DeleteItemsAnywhere(target, cityId, typeof(ReinoBarracksBadge));
 
             if (!String.IsNullOrWhiteSpace(role.LinkedConstructionKey) && ReinoTrialsSystem.IsTribunalConstructionKey(cityId, role.LinkedConstructionKey))
-            {
                 ReinoTrialsSystem.DeleteTribunalItems(target, cityId);
+
+            if (!String.IsNullOrWhiteSpace(role.LinkedConstructionKey))
+                ReinoRentalManagerKeyHelper.DeleteKeys(target, cityId, role.LinkedConstructionKey);
+        }
+
+        private static bool HasItemAnywhere(PlayerMobile target, Type type, int cityId)
+        {
+            if (target == null || target.Deleted || type == null)
+                return false;
+
+            List<Item> items = CollectAllItems(target);
+            for (int i = 0; i < items.Count; i++)
+            {
+                Item item = items[i];
+                if (item == null || item.Deleted || !type.IsAssignableFrom(item.GetType()))
+                    continue;
+
+                ReinoBarracksBadge badge = item as ReinoBarracksBadge;
+                if (badge != null)
+                    return badge.CityId == cityId;
+
+                ReinoTribunalHammer hammer = item as ReinoTribunalHammer;
+                if (hammer != null)
+                    return hammer.CityId == cityId;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private static void DeleteItemsAnywhere(PlayerMobile target, int cityId, Type type)
+        {
+            if (target == null || target.Deleted || type == null)
+                return;
+
+            List<Item> items = CollectAllItems(target);
+            for (int i = 0; i < items.Count; i++)
+            {
+                Item item = items[i];
+                if (item == null || item.Deleted || !type.IsAssignableFrom(item.GetType()))
+                    continue;
+
+                ReinoBarracksBadge badge = item as ReinoBarracksBadge;
+                if (badge != null && badge.CityId != cityId)
+                    continue;
+
+                item.Delete();
+            }
+        }
+
+        private static List<Item> CollectAllItems(PlayerMobile target)
+        {
+            List<Item> items = new List<Item>();
+            if (target == null)
+                return items;
+
+            for (int i = 0; i < target.Items.Count; i++)
+            {
+                Item item = target.Items[i];
+                if (item != null && !item.Deleted)
+                    items.Add(item);
+            }
+
+            if (target.Backpack != null)
+                CollectItemsRecursive(target.Backpack, items);
+
+            if (target.BankBox != null)
+                CollectItemsRecursive(target.BankBox, items);
+
+            return items;
+        }
+
+        private static void CollectItemsRecursive(Container container, List<Item> items)
+        {
+            if (container == null || container.Deleted || items == null)
+                return;
+
+            Item[] array = container.Items.ToArray();
+            for (int i = 0; i < array.Length; i++)
+            {
+                Item item = array[i];
+                if (item == null || item.Deleted)
+                    continue;
+
+                items.Add(item);
+                Container sub = item as Container;
+                if (sub != null)
+                    CollectItemsRecursive(sub, items);
+            }
+        }
+
+        private static void GetRentalKeyNeeds(string constructionKey, out bool residential, out bool commercial)
+        {
+            residential = false;
+            commercial = false;
+
+            ReinoConstructionRuntimeInfo info = ReinoMaintenanceSystem.GetConstruction(constructionKey);
+            if (info == null || info.Definition == null || info.Definition.RentalTemplates == null)
+                return;
+
+            for (int i = 0; i < info.Definition.RentalTemplates.Length; i++)
+            {
+                ReinoRentalTemplate tpl = info.Definition.RentalTemplates[i];
+                if (tpl == null)
+                    continue;
+
+                if (tpl.PropertyType == OSUPropertyType.Commercial)
+                    commercial = true;
+                else if (tpl.PropertyType == OSUPropertyType.House)
+                    residential = true;
             }
         }
 
@@ -2264,6 +2377,9 @@ namespace Server.Custom.Reinos
                 if (!String.Equals(city, normalized, StringComparison.OrdinalIgnoreCase))
                     continue;
 
+                if (ReinoAccessHelper.IsCurrentGovernor(pm, kv.Key))
+                    return true;
+
                 List<ReinoCargoEntry> roles = kv.Value;
                 for (int i = 0; i < roles.Count; i++)
                 {
@@ -2288,6 +2404,9 @@ namespace Server.Custom.Reinos
                 string city = PlayerMobile.NormalizeOSUCityId(ReinoElectionsSystem.GetCityName(kv.Key));
                 if (!String.Equals(city, normalized, StringComparison.OrdinalIgnoreCase))
                     continue;
+
+                if (ReinoAccessHelper.IsCurrentGovernor(pm, kv.Key))
+                    return true;
 
                 List<ReinoCargoEntry> roles = kv.Value;
                 for (int i = 0; i < roles.Count; i++)

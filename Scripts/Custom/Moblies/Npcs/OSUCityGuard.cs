@@ -44,6 +44,11 @@ namespace Server.Custom.Reinos
 
         public bool IsOfficial { get { return m_GuardKind == ReinoGuardKind.Oficial; } }
 
+        public bool IsConstructionOfficial
+        {
+            get { return IsOfficial && m_PostId <= 0 && !String.IsNullOrWhiteSpace(m_ConstructionKey); }
+        }
+
         [Constructable]
         public OSUCityGuard() : this(0, ReinoGuardKind.Vigia)
         {
@@ -140,10 +145,9 @@ namespace Server.Custom.Reinos
             Mobile target = Combatant as Mobile;
 
             if (target != null)
-            {
                 ReinoMilitarySystem.RegisterGuardOutcome(this, target, m_CurrentLaw, false, false, false, false);
-            }
 
+            ReinoMilitarySystem.NotifyGuardKilled(this);
             return base.OnBeforeDeath();
         }
 
@@ -157,6 +161,7 @@ namespace Server.Custom.Reinos
                 Combatant = null;
                 Warmode = false;
                 CurrentWayPoint = null;
+                CantWalk = true;
                 Direction = (Direction)(FindPostFacing());
                 if (!InRange(m_PostLocation, 0))
                     MoveToWorld(m_PostLocation, Map);
@@ -172,12 +177,35 @@ namespace Server.Custom.Reinos
                     return;
                 }
 
+                if (IsConstructionOfficial && !ReinoMilitarySystem.IsInsideConstructionBounds(m_ConstructionKey, Location, Map))
+                {
+                    Combatant = null;
+                    Warmode = false;
+                    FightMode = FightMode.None;
+                    CurrentWayPoint = null;
+                    MoveToWorld(m_PostLocation, Map);
+                    return;
+                }
+
+                Home = m_PostLocation;
+                RangeHome = 0;
+                FightMode = FightMode.Closest;
+                Warmode = true;
+                CantWalk = false;
                 base.OnThink();
                 return;
             }
 
             if (CurrentWayPoint != null)
             {
+                base.OnThink();
+                return;
+            }
+
+            Mobile hostile = ReinoMilitarySystem.FindMonsterThreatForGuard(this);
+            if (hostile != null)
+            {
+                BeginAttack(hostile, ReinoMilitaryLaw.Fighting, false);
                 base.OnThink();
                 return;
             }
@@ -220,6 +248,7 @@ namespace Server.Custom.Reinos
             FightMode = FightMode.Closest;
             Combatant = target;
             Warmode = true;
+            CantWalk = false;
             CurrentWayPoint = null;
             RangeHome = 0;
 
@@ -322,18 +351,25 @@ namespace Server.Custom.Reinos
             {
                 default:
                 case ReinoRouteSpeed.Short:
-                    ActiveSpeed = 0.20;
-                    PassiveSpeed = 0.40;
+                    ActiveSpeed = 0.50;
+                    PassiveSpeed = 0.50;
                     break;
+
                 case ReinoRouteSpeed.Medium:
-                    ActiveSpeed = 0.30;
-                    PassiveSpeed = 0.55;
+                    ActiveSpeed = 1.00;
+                    PassiveSpeed = 1.00;
                     break;
+
                 case ReinoRouteSpeed.Long:
-                    ActiveSpeed = 0.45;
-                    PassiveSpeed = 0.75;
+                    ActiveSpeed = 2.00;
+                    PassiveSpeed = 2.00;
                     break;
             }
+
+            if (Combatant != null || Warmode)
+                CurrentSpeed = ActiveSpeed;
+            else
+                CurrentSpeed = PassiveSpeed;
         }
 
         public List<SkillName> GetTrainableSkills()
@@ -426,9 +462,19 @@ namespace Server.Custom.Reinos
             boots.Movable = true;
             AddItem(boots);
 
-            Item pants = new LongPants();
-            pants.Movable = true;
-            AddItem(pants);
+            bool usesLegArmor =
+                m_GuardKind == ReinoGuardKind.Rua ||
+                m_GuardKind == ReinoGuardKind.Armado ||
+                m_GuardKind == ReinoGuardKind.Arqueiro ||
+                m_GuardKind == ReinoGuardKind.CavalariaArmada ||
+                m_GuardKind == ReinoGuardKind.CavalariaArqueira;
+
+            if (!usesLegArmor)
+            {
+                Item pants = new LongPants();
+                pants.Movable = true;
+                AddItem(pants);
+            }
         }
 
         private void EquipRoleItems()
@@ -466,7 +512,6 @@ namespace Server.Custom.Reinos
                     break;
                 case ReinoGuardKind.Oficial:
                     AddItem(new StuddedGloves() { Movable = false });
-                    AddItem(new UniformeUnderShirt { Movable = false });
                     break;
             }
         }

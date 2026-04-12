@@ -44,26 +44,26 @@ namespace Server.Custom.Reinos
             AddImageTiled(383, 139, 201, 31, 368);
             AddImageTiled(395, 202, 180, 21, 470);
             AddImageTiled(366, 202, 178, 21, 469);
-            AddLabel(440, 179, 0, @"Tribunal");
-            AddLabel(384, 223, 0, @"Réu atual: " + acusado);
-            AddLabel(384, 241, 0, st.SessionActive ? @"Sessão: aberta" : @"Sessão: fechada");
-            AddLabel(413, 268, 0, @"Bater Martelo");
-            AddButton(385, 268, 530, 248, ButtonBangHammer, GumpButtonType.Reply, 0);
-            AddLabel(413, 298, 0, @"Expulsar da Corte");
-            AddButton(385, 298, 530, 248, ButtonExpel, GumpButtonType.Reply, 0);
-            AddLabel(413, 328, 0, @"Prender por Desacato");
-            AddButton(385, 328, 530, 248, ButtonContempt, GumpButtonType.Reply, 0);
-            AddLabel(384, 426, 0, @"Decretar Pena em Dias");
-            AddButton(541, 452, 530, 248, ButtonSetSentence, GumpButtonType.Reply, 0);
-            AddTextEntry(384, 451, 137, 20, 0, 1, st.PendingSentenceDays > 0 ? st.PendingSentenceDays.ToString() : String.Empty);
-            AddImageTiled(357, 403, 233, 5, 368);
-            AddLabel(384, 486, 0, @"Decretar Multa");
-            AddButton(542, 513, 530, 248, ButtonSetFine, GumpButtonType.Reply, 0);
-            AddTextEntry(385, 512, 137, 20, 0, 2, st.PendingFineGold > 0 ? st.PendingFineGold.ToString() : String.Empty);
-            AddLabel(413, 239, 0, @"Iniciar Sessão");
-            AddButton(385, 239, 530, 248, ButtonStartSession, GumpButtonType.Reply, 0);
-            AddLabel(413, 358, 0, @"Encerrar Sessão");
-            AddButton(385, 358, 530, 248, ButtonEndSession, GumpButtonType.Reply, 0);
+            AddLabel(440, 179, 1152, @"Tribunal");
+            AddLabel(432, 226, 1152, @"Réu atual: " + acusado);
+            AddLabel(384, 266, 1152, st.SessionActive ? @"Sessão: aberta" : @"Sessão: fechada");
+            AddLabel(413, 295, 1152, @"Bater Martelo");
+            AddButton(385, 295, 530, 248, ButtonBangHammer, GumpButtonType.Reply, 0);
+            AddLabel(413, 325, 1152, @"Expulsar da Corte");
+            AddButton(385, 325, 530, 248, ButtonExpel, GumpButtonType.Reply, 0);
+            AddLabel(413, 355, 1152, @"Prender por Desacato");
+            AddButton(385, 355, 530, 248, ButtonContempt, GumpButtonType.Reply, 0);
+            AddLabel(384, 443, 1152, @"Decretar Pena em Dias");
+            AddButton(541, 469, 530, 248, ButtonSetSentence, GumpButtonType.Reply, 0);
+            AddTextEntry(384, 468, 137, 20, 1152, 1, st.PendingSentenceDays > 0 ? st.PendingSentenceDays.ToString() : String.Empty);
+            AddImageTiled(357, 420, 233, 5, 368);
+            AddLabel(384, 497, 1152, @"Decretar Multa");
+            AddButton(542, 524, 530, 248, ButtonSetFine, GumpButtonType.Reply, 0);
+            AddTextEntry(385, 523, 137, 20, 1152, 2, st.PendingFineGold > 0 ? st.PendingFineGold.ToString() : String.Empty);
+            AddLabel(413, 266, 1152, @"Iniciar Sessão");
+            AddButton(385, 266, 530, 248, ButtonStartSession, GumpButtonType.Reply, 0);
+            AddLabel(413, 385, 1152, @"Encerrar Sessão");
+            AddButton(385, 385, 530, 248, ButtonEndSession, GumpButtonType.Reply, 0);
         }
 
         public override void OnResponse(NetState sender, RelayInfo info)

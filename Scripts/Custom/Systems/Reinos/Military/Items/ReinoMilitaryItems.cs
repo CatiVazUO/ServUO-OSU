@@ -85,10 +85,26 @@ namespace Server.Custom.Reinos
         public int PostId { get { return m_PostId; } set { m_PostId = value; } }
 
         [CommandProperty(AccessLevel.GameMaster)]
-        public int RouteHue { get { return m_RouteHue; } set { m_RouteHue = value; Hue = value <= 0 ? 0x59B : value; } }
+        public int RouteHue
+        {
+            get { return m_RouteHue; }
+            set
+            {
+                m_RouteHue = value;
+                Hue = m_Closed ? (value <= 0 ? 0x44E : value) : 0x59B;
+            }
+        }
 
         [CommandProperty(AccessLevel.GameMaster)]
-        public bool ClosedRoute { get { return m_Closed; } set { m_Closed = value; } }
+        public bool ClosedRoute
+        {
+            get { return m_Closed; }
+            set
+            {
+                m_Closed = value;
+                Hue = m_Closed ? (m_RouteHue <= 0 ? 0x44E : m_RouteHue) : 0x59B;
+            }
+        }
 
         [Constructable]
         public ReinoMilitaryRoutePoint() : this(0)
@@ -149,7 +165,7 @@ namespace Server.Custom.Reinos
             m_PostId = version >= 1 ? reader.ReadInt() : 0;
             m_RouteHue = version >= 1 ? reader.ReadInt() : 0x59B;
             m_Closed = version >= 1 && reader.ReadBool();
-            Hue = m_RouteHue <= 0 ? 0x59B : m_RouteHue;
+            Hue = m_Closed ? (m_RouteHue <= 0 ? 0x44E : m_RouteHue) : 0x59B;
         }
     }
 
@@ -441,6 +457,7 @@ namespace Server.Custom.Reinos
         private int m_CityId;
         private int m_LockerSerial;
         private int m_DeskSerial;
+        private int m_OfficerSerial;
 
         public ReinoQuartelMulti(int referenceId, string constructionId, int stageIndex)
             : base(0xA7, referenceId, constructionId, stageIndex)
@@ -491,6 +508,19 @@ namespace Server.Custom.Reinos
                 m_DeskSerial = desk.Serial.Value;
             }
 
+            OSUCityGuard officer = FindWorldMobile(m_OfficerSerial) as OSUCityGuard;
+            if (officer == null)
+            {
+                officer = new OSUCityGuard(cityId, ReinoGuardKind.Oficial);
+                officer.Name = "oficial do quartel";
+                officer.Title = String.Empty;
+                officer.ConstructionKey = key;
+                Point3D off = QuartelAuroraDefinition.OFFICER_OFFSET;
+                officer.PostLocation = new Point3D(X + off.X, Y + off.Y, Z + off.Z + QuartelAuroraDefinition.OFFICER_Z_OFFSET);
+                officer.MoveToWorld(officer.PostLocation, Map);
+                m_OfficerSerial = officer.Serial.Value;
+            }
+
             m_AuxReady = true;
         }
 
@@ -503,6 +533,10 @@ namespace Server.Custom.Reinos
             item = FindWorldItem(m_DeskSerial);
             if (item != null && !item.Deleted)
                 item.MoveToWorld(new Point3D(item.X + dx, item.Y + dy, item.Z + dz), Map);
+
+            Mobile mob = FindWorldMobile(m_OfficerSerial);
+            if (mob != null && !mob.Deleted)
+                mob.MoveToWorld(new Point3D(mob.X + dx, mob.Y + dy, mob.Z + dz), Map);
         }
 
         private int ResolveCityId()
@@ -519,6 +553,14 @@ namespace Server.Custom.Reinos
             return null;
         }
 
+        private static Mobile FindWorldMobile(int serial)
+        {
+            Mobile mob;
+            if (serial != 0 && World.Mobiles.TryGetValue(serial, out mob))
+                return mob;
+            return null;
+        }
+
         public override void OnAfterDelete()
         {
             base.OnAfterDelete();
@@ -526,6 +568,8 @@ namespace Server.Custom.Reinos
             if (item != null) item.Delete();
             item = FindWorldItem(m_DeskSerial);
             if (item != null) item.Delete();
+            Mobile mob = FindWorldMobile(m_OfficerSerial);
+            if (mob != null) mob.Delete();
         }
 
         public override void Serialize(GenericWriter writer)
@@ -536,6 +580,7 @@ namespace Server.Custom.Reinos
             writer.Write(m_CityId);
             writer.Write(m_LockerSerial);
             writer.Write(m_DeskSerial);
+            writer.Write(m_OfficerSerial);
         }
 
         public override void Deserialize(GenericReader reader)
@@ -546,6 +591,7 @@ namespace Server.Custom.Reinos
             m_CityId = reader.ReadInt();
             m_LockerSerial = reader.ReadInt();
             m_DeskSerial = reader.ReadInt();
+            m_OfficerSerial = version >= 0 ? reader.ReadInt() : 0;
             Timer.DelayCall(TimeSpan.FromSeconds(2.0), EnsureAuxiliary);
         }
     }

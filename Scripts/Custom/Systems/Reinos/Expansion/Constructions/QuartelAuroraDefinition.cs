@@ -46,6 +46,9 @@ namespace Server.Custom.Reinos
         private const int FINISHED_MULTI_ID = 0xA7;
         private const int ABANDONED_MULTI_ID = 0xA8;
 
+        public static readonly Point3D OFFICER_OFFSET = new Point3D(3, 1, 0);
+        public const int OFFICER_Z_OFFSET = 0;
+
         public static ReinoConstructionDefinition Create()
         {
             StringBuilder sb = new StringBuilder();

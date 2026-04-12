@@ -1105,7 +1105,7 @@ namespace Server.Custom.Systems.Postos
                     if (def.ObjectiveType != PostoObjectiveType.KillMob)
                         continue;
 
-                    if (!MatchesAnyTypeName(killedTypeName, def.ObjectiveTypeNames))
+                    if (!MatchesPostoObjectiveCreature(def, e.Creature, killedTypeName))
                         continue;
 
                     if (IsContestActive(state))
@@ -1230,6 +1230,37 @@ namespace Server.Custom.Systems.Postos
             }
 
             return false;
+        }
+
+        private static bool MatchesPostoObjectiveCreature(PostoDefinition def, Mobile creature, string killedTypeName)
+        {
+            if (def == null || creature == null || creature.Deleted)
+                return false;
+
+            if (MatchesAnyTypeName(killedTypeName, def.ObjectiveTypeNames))
+                return true;
+
+            BasePostoThreat threat = creature as BasePostoThreat;
+            if (threat == null)
+                return false;
+
+            switch (threat.ThreatTier)
+            {
+                case PostoThreatTier.SmallIron:
+                    return def.ResourceType == PostoResourceType.Iron && def.Size == PostoSize.Small;
+                case PostoThreatTier.LargeIron:
+                    return def.ResourceType == PostoResourceType.Iron && def.Size == PostoSize.Large;
+                case PostoThreatTier.SmallWood:
+                    return def.ResourceType == PostoResourceType.Wood && def.Size == PostoSize.Small;
+                case PostoThreatTier.LargeWood:
+                    return def.ResourceType == PostoResourceType.Wood && def.Size == PostoSize.Large;
+                case PostoThreatTier.SmallCotton:
+                    return def.ResourceType == PostoResourceType.Cotton && def.Size == PostoSize.Small;
+                case PostoThreatTier.LargeCotton:
+                    return def.ResourceType == PostoResourceType.Cotton && def.Size == PostoSize.Large;
+                default:
+                    return false;
+            }
         }
 
         private static PlayerMobile ResolvePlayer(Mobile m)

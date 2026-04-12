@@ -194,6 +194,9 @@ namespace Server.Custom.Reinos
 
         private void BuildMilitaryGuardsPage(ReinoMilitarySession session)
         {
+            if (session.SelectedGuardKind == ReinoGuardKind.Oficial)
+                session.SelectedGuardKind = ReinoGuardKind.Vigia;
+
             AddLabel(740, 285, 0, @"Adicionar Guardas");
             AddImageTiled(406, 317, 825, 5, 367);
             AddImageTiled(584, 338, 6, 357, 365);
@@ -211,11 +214,10 @@ namespace Server.Custom.Reinos
                 ReinoGuardKind.Armado,
                 ReinoGuardKind.Arqueiro,
                 ReinoGuardKind.CavalariaArmada,
-                ReinoGuardKind.CavalariaArqueira,
-                ReinoGuardKind.Oficial
+                ReinoGuardKind.CavalariaArqueira
             };
 
-            int[] y = new int[] { 386, 416, 446, 476, 536, 566, 621 };
+            int[] y = new int[] { 386, 416, 446, 476, 536, 566 };
             for (int i = 0; i < kinds.Length; i++)
             {
                 bool selected = session.SelectedGuardKind == kinds[i];
@@ -494,6 +496,8 @@ namespace Server.Custom.Reinos
             if (button >= ButtonGuardKindBase && button < ButtonGuardKindBase + 20)
             {
                 session.SelectedGuardKind = (ReinoGuardKind)(button - ButtonGuardKindBase);
+                if (session.SelectedGuardKind == ReinoGuardKind.Oficial)
+                    session.SelectedGuardKind = ReinoGuardKind.Vigia;
                 session.Tab = ReinoMilitaryTab.Guards;
                 from.SendGump(new ReinoExpansionGump(from, m_CityId, -1, -1, String.Empty, 0, 8));
                 return true;
@@ -654,9 +658,7 @@ namespace Server.Custom.Reinos
             {
                 case ReinoRouteSchedule.Every15Minutes: return ReinoRouteSchedule.Every30Minutes;
                 case ReinoRouteSchedule.Every30Minutes: return ReinoRouteSchedule.Every45Minutes;
-                case ReinoRouteSchedule.Every45Minutes: return ReinoRouteSchedule.Every60Minutes;
-                case ReinoRouteSchedule.Every60Minutes: return ReinoRouteSchedule.DawnOnly;
-                case ReinoRouteSchedule.DawnOnly: return ReinoRouteSchedule.Infinite;
+                case ReinoRouteSchedule.Every45Minutes: return ReinoRouteSchedule.Infinite;
                 default: return ReinoRouteSchedule.Every15Minutes;
             }
         }

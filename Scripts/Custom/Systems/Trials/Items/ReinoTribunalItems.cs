@@ -112,7 +112,9 @@ namespace Server.Custom.Reinos
                 return;
             }
 
-            if (pm.FindItemOnLayer(Layer.OneHanded) != this && pm.FindItemOnLayer(Layer.TwoHanded) != this)
+            if (!ReinoAccessHelper.HasGovernmentAccess(pm, m_CityId)
+                && pm.FindItemOnLayer(Layer.OneHanded) != this
+                && pm.FindItemOnLayer(Layer.TwoHanded) != this)
             {
                 pm.SendMessage("Você precisa estar empunhando o martelo para abrir o tribunal.");
                 return;

@@ -749,9 +749,7 @@ namespace Server.Custom.Reinos
             }
 
             PlayerMobile oldGovernor = FindPlayer(city.GovernorSerial);
-
-            if (oldGovernor != null)
-                ReinoAccessHelper.RevokeGovernorAccess(oldGovernor, cityId);
+            ReinoAccessHelper.RevokeGovernorAccess(oldGovernor, cityId);
 
             city.GovernorSerial = 0;
             city.GovernorName = String.Empty;

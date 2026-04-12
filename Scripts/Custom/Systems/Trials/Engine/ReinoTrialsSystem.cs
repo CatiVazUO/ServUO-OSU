@@ -124,9 +124,6 @@ namespace Server.Custom.Reinos
             if (pm == null || pm.Deleted)
                 return false;
 
-            if (!HasTribunal(cityId))
-                return false;
-
             if (pm.AccessLevel >= AccessLevel.GameMaster)
                 return true;
 
@@ -142,7 +139,7 @@ namespace Server.Custom.Reinos
 
             string culture = ReinoEmploymentSystem.GetGovernmentCultureId(cityId);
             if (String.Equals(culture, "kamay", StringComparison.OrdinalIgnoreCase))
-                return false;
+                return role.Kind == ReinoCargoKind.MinisterDefense;
 
             return role.Hierarchy <= 2;
         }
@@ -517,14 +514,14 @@ namespace Server.Custom.Reinos
 
             for (int i = 0; i < 3; i++)
             {
-                TimeSpan delay = TimeSpan.FromMilliseconds(250 * i);
+                TimeSpan delay = TimeSpan.FromMilliseconds(400 * i);
                 Timer.DelayCall(delay, delegate
                 {
                     if (judge == null || judge.Deleted)
                         return;
 
                     judge.PlaySound(0x136);
-                    judge.Animate(12, 3, 3, true, false, 0);
+                    judge.Animate(12, 2, 2, true, false, 0);
                 });
             }
         }

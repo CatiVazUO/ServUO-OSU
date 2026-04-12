@@ -1229,6 +1229,9 @@ namespace Server.Custom.Reinos
 
         private static void ConvertLotToAbandoned(ReinoLotDefinition lot, ReinoLotState state, ReinoConstructionDefinition def)
         {
+            if (lot != null && def != null && String.Equals(def.Id, "quartel_aurora", StringComparison.OrdinalIgnoreCase))
+                ReinoMilitarySystem.DeleteBarracksAssetsForConstruction(lot.CityId, ReinoMaintenanceSystem.BuildLotKey(lot.LotId));
+
             CleanupLotWorldObjects(state);
             state.Status = ReinoLotStatus.Abandoned;
             state.CurrentStageIndex = -1;
@@ -1254,6 +1257,9 @@ namespace Server.Custom.Reinos
         private static void PlaceLotStageMulti(ReinoLotDefinition lot, ReinoLotState state, ReinoConstructionDefinition def, int stageIndex)
         {
             EjectLotMobiles(lot);
+            if (lot != null && !String.IsNullOrWhiteSpace(state.ConstructionId) && String.Equals(state.ConstructionId, "quartel_aurora", StringComparison.OrdinalIgnoreCase))
+                ReinoMilitarySystem.DeleteBarracksAssetsForConstruction(lot.CityId, ReinoMaintenanceSystem.BuildLotKey(lot.LotId));
+
             CleanupLotWorldObjects(state);
             CleanupDanglingLotEncounterMultis(lot);
 
@@ -1300,6 +1306,11 @@ namespace Server.Custom.Reinos
         private static void PlaceLotFinishedMulti(ReinoLotDefinition lot, ReinoLotState state, ReinoConstructionDefinition def, bool abandoned)
         {
             EjectLotMobiles(lot);
+            if (lot != null && !String.IsNullOrWhiteSpace(state.ConstructionId) && String.Equals(state.ConstructionId, "quartel_aurora", StringComparison.OrdinalIgnoreCase))
+                ReinoMilitarySystem.DeleteBarracksAssetsForConstruction(lot.CityId, ReinoMaintenanceSystem.BuildLotKey(lot.LotId));
+
+            CleanupLotWorldObjects(state);
+            CleanupDanglingLotEncounterMultis(lot);
 
             int multiId = abandoned ? def.AbandonedMultiId : def.FinishedMultiId;
             Point3D anchor = GetAnchorForTopLeft(lot.NorthWest, multiId, null);
@@ -1337,6 +1348,7 @@ namespace Server.Custom.Reinos
         private static void PlaceAreaFinishedMulti(ReinoAreaDefinition area, ReinoAreaState state, ReinoConstructionDefinition def, bool abandoned)
         {
             EjectAreaMobiles(area);
+            CleanupAreaWorldObjects(state);
 
             int multiId = abandoned ? def.AbandonedMultiId : def.FinishedMultiId;
             Point3D anchor = GetAnchorForTopLeft(area.GetNorthWestPoint(), multiId, null);
@@ -2170,6 +2182,9 @@ namespace Server.Custom.Reinos
                 message = "Esse lote não possui uma construção para demolir.";
                 return false;
             }
+
+            if (String.Equals(state.ConstructionId, "quartel_aurora", StringComparison.OrdinalIgnoreCase))
+                ReinoMilitarySystem.DeleteBarracksAssetsForConstruction(cityId, ReinoMaintenanceSystem.BuildLotKey(lot.LotId));
 
             CleanupLotWorldObjects(state);
             CleanupDanglingLotEncounterMultis(lot);
