@@ -5,6 +5,7 @@ using Server.Mobiles;
 using Server.Targeting;
 using Server.Items;
 using Server.Custom.Systems.Olhar.Gumps;
+using Server.Custom.Systems.Hoods;
 
 namespace Server.Custom.Systems.Olhar.Commands
 {
@@ -40,15 +41,18 @@ namespace Server.Custom.Systems.Olhar.Commands
                 // ======== SE CLICAR EM JOGADOR ========
                 if (targeted is PlayerMobile pm)
                 {
-                    // Placeholder do disfarce:
                     if (OSUDisguiseHelper.IsDisguised(pm))
                     {
-                        // comportamento futuro (vamos implementar depois)
                         from.SendMessage("Você não consegue identificar claramente essa pessoa (disfarce).");
                         return;
                     }
 
-                    // abre sua ficha RP
+                    if (OSUHoodVisibilitySystem.IsEncoberto(pm))
+                    {
+                        from.SendMessage("Essa pessoa está encoberta. Você não consegue olhá-la direito.");
+                        return;
+                    }
+
                     from.SendGump(new OSUOlharPlayerGump(from, pm));
                     return;
                 }

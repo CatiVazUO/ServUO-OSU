@@ -26,6 +26,21 @@ namespace Server.Custom.Systems.Hoods
             return item.ItemID >= 0xCB20 && item.ItemID <= 0xCB3C;
         }
 
+        public static bool IsEncoberto(Mobile m)
+        {
+            PlayerMobile pm = m as PlayerMobile;
+            if (pm == null || pm.Deleted)
+                return false;
+
+            for (int i = 0; i < pm.Items.Count; i++)
+            {
+                if (IsOcultingHood(pm.Items[i]))
+                    return true;
+            }
+
+            return pm.NameMod == "Encoberto";
+        }
+
         private static void OnLogin(LoginEventArgs e)
         {
             PlayerMobile pm = e.Mobile as PlayerMobile;

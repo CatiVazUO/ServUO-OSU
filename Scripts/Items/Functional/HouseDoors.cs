@@ -1,8 +1,9 @@
-using System;
-using System.Collections.Generic;
 using Server.ContextMenus;
 using Server.Gumps;
 using Server.Multis;
+using Server.Network;
+using System;
+using System.Collections.Generic;
 
 namespace Server.Items
 {
@@ -140,7 +141,91 @@ namespace Server.Items
         public override void GetContextMenuEntries(Mobile from, List<ContextMenuEntry> list)
         {
             base.GetContextMenuEntries(from, list);
-            SetSecureLevelEntry.AddTo(from, this, list);
+
+            ISecurable sec = SetSecureLevelEntry.GetSecurable(from, this);
+
+            if (sec != null)
+                list.Add(new DoorSetSecureLevelEntry(this, sec));
+
+            BaseHouse house = FindHouse();
+
+            if (house != null)
+                list.Add(new DoorKnockEntry(this));
+        }
+
+        private static void PlayKnockSequence(Point3D loc, Map map, int remaining)
+        {
+            if (map == null || map == Map.Internal || remaining <= 0)
+                return;
+
+            Effects.PlaySound(loc, map, 0x136);
+
+            if (remaining > 1)
+            {
+                Timer.DelayCall(TimeSpan.FromMilliseconds(300), delegate
+                {
+                    PlayKnockSequence(loc, map, remaining - 1);
+                });
+            }
+        }
+
+        private class DoorSetSecureLevelEntry : ContextMenuEntry
+        {
+            private readonly BaseHouseDoor m_Door;
+            private readonly ISecurable m_Securable;
+
+            public DoorSetSecureLevelEntry(BaseHouseDoor door, ISecurable securable)
+                : base(1063490, 6) // Definir segurança
+            {
+                m_Door = door;
+                m_Securable = securable;
+            }
+
+            public override void OnClick()
+            {
+                Mobile from = Owner.From;
+                if (from == null || m_Door == null || m_Door.Deleted)
+                    return;
+
+                BaseHouse house = m_Door.FindHouse();
+                ISecurable sec = SetSecureLevelEntry.GetSecurable(from, m_Door);
+
+                if (house != null && sec != null)
+                {
+                    from.CloseGump(typeof(SetSecureLevelGump));
+                    from.SendGump(new SetSecureLevelGump(from, sec, house));
+                }
+            }
+        }
+
+        private class DoorKnockEntry : ContextMenuEntry
+        {
+            private readonly BaseHouseDoor m_Door;
+
+            public DoorKnockEntry(BaseHouseDoor door)
+                : base(1063491, 6) // Bater na porta
+            {
+                m_Door = door;
+            }
+
+            public override void OnClick()
+            {
+                Mobile from = Owner.From;
+
+                if (from == null || m_Door == null || m_Door.Deleted)
+                    return;
+
+                BaseHouse house = m_Door.FindHouse();
+                if (house == null)
+                    return;
+
+                from.PublicOverheadMessage(MessageType.Emote, 0x3B2, false, "*bate na porta*");
+
+                Point3D loc = m_Door.GetWorldLocation();
+                Map map = m_Door.Map;
+
+                PlayKnockSequence(loc, map, 3);
+            }
         }
 
         public BaseHouse FindHouse()

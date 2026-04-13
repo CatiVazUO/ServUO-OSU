@@ -137,6 +137,11 @@ namespace Server.Custom.Systems.Rent
 
         public static List<ReinoRentEvictionClaim> GetClaims(Mobile owner)
         {
+            return GetClaims(owner, -1);
+        }
+
+        public static List<ReinoRentEvictionClaim> GetClaims(Mobile owner, int cityId)
+        {
             CleanupExpiredClaims();
 
             List<ReinoRentEvictionClaim> list = new List<ReinoRentEvictionClaim>();
@@ -146,8 +151,13 @@ namespace Server.Custom.Systems.Rent
             for (int i = 0; i < m_Claims.Count; i++)
             {
                 ReinoRentEvictionClaim c = m_Claims[i];
-                if (c != null && c.OwnerSerial == owner.Serial.Value)
-                    list.Add(c);
+                if (c == null || c.OwnerSerial != owner.Serial.Value)
+                    continue;
+
+                if (cityId > 0 && c.CityId != cityId)
+                    continue;
+
+                list.Add(c);
             }
 
             return list;
@@ -165,8 +175,13 @@ namespace Server.Custom.Systems.Rent
 
         public static int GetTotalFine(Mobile owner)
         {
+            return GetTotalFine(owner, -1);
+        }
+
+        public static int GetTotalFine(Mobile owner, int cityId)
+        {
             int total = 0;
-            List<ReinoRentEvictionClaim> claims = GetClaims(owner);
+            List<ReinoRentEvictionClaim> claims = GetClaims(owner, cityId);
 
             for (int i = 0; i < claims.Count; i++)
                 total += GetClaimFine(claims[i]);
@@ -176,7 +191,12 @@ namespace Server.Custom.Systems.Rent
 
         public static void DepositFineToLedgers(Mobile owner)
         {
-            List<ReinoRentEvictionClaim> claims = GetClaims(owner);
+            DepositFineToLedgers(owner, -1);
+        }
+
+        public static void DepositFineToLedgers(Mobile owner, int cityId)
+        {
+            List<ReinoRentEvictionClaim> claims = GetClaims(owner, cityId);
 
             for (int i = 0; i < claims.Count; i++)
             {
@@ -192,6 +212,11 @@ namespace Server.Custom.Systems.Rent
 
         public static bool RedeemAll(PlayerMobile pm, out string message)
         {
+            return RedeemAll(pm, -1, out message);
+        }
+
+        public static bool RedeemAll(PlayerMobile pm, int cityId, out string message)
+        {
             message = null;
 
             if (pm == null || pm.Deleted || pm.Backpack == null)
@@ -200,7 +225,7 @@ namespace Server.Custom.Systems.Rent
                 return false;
             }
 
-            List<ReinoRentEvictionClaim> claims = GetClaims(pm);
+            List<ReinoRentEvictionClaim> claims = GetClaims(pm, cityId);
             if (claims.Count == 0)
             {
                 message = "Você não possui itens retidos no depositário.";
@@ -250,7 +275,7 @@ namespace Server.Custom.Systems.Rent
                 for (int i = m_Claims.Count - 1; i >= 0; i--)
                 {
                     ReinoRentEvictionClaim c = m_Claims[i];
-                    if (c != null && c.OwnerSerial == pm.Serial.Value)
+                    if (c != null && c.OwnerSerial == pm.Serial.Value && (cityId <= 0 || c.CityId == cityId))
                         m_Claims.RemoveAt(i);
                 }
 
@@ -356,6 +381,15 @@ namespace Server.Custom.Systems.Rent
     [CorpseName("um corpo sem vida")]
     public class ReinoEvictionStorageNpc : BaseCreature
     {
+        private int m_CityId;
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int CityId
+        {
+            get { return m_CityId; }
+            set { m_CityId = value; InvalidateProperties(); }
+        }
+
         [Constructable]
         public ReinoEvictionStorageNpc()
             : base(AIType.AI_Vendor, FightMode.None, 10, 1, 0.2, 0.4)
@@ -378,9 +412,18 @@ namespace Server.Custom.Systems.Rent
             AddItem(pack);
 
             Utility.AssignRandomHair(this);
+            m_CityId = -1;
         }
 
         public override bool IsInvulnerable { get { return true; } }
+
+        public override void GetProperties(ObjectPropertyList list)
+        {
+            base.GetProperties(list);
+
+            if (m_CityId > 0)
+                list.Add("Depositário de {0}", ReinoElectionsSystem.GetCityName(m_CityId));
+        }
 
         public ReinoEvictionStorageNpc(Serial serial) : base(serial)
         {
@@ -392,7 +435,7 @@ namespace Server.Custom.Systems.Rent
             if (pm == null)
                 return;
 
-            int fine = ReinoRentEvictionStorageSystem.GetTotalFine(pm);
+            int fine = ReinoRentEvictionStorageSystem.GetTotalFine(pm, m_CityId);
             if (fine <= 0)
             {
                 SayTo(pm, "Você não possui itens retidos aqui.");
@@ -414,7 +457,7 @@ namespace Server.Custom.Systems.Rent
 
         private bool TryTakePayment(PlayerMobile pm, Item payment)
         {
-            int fine = ReinoRentEvictionStorageSystem.GetTotalFine(pm);
+            int fine = ReinoRentEvictionStorageSystem.GetTotalFine(pm, m_CityId);
             if (fine <= 0)
             {
                 pm.SendMessage("Você não possui itens retidos aqui.");
@@ -447,10 +490,10 @@ namespace Server.Custom.Systems.Rent
             }
 
             ConsumeFromStack(payment, fine);
-            ReinoRentEvictionStorageSystem.DepositFineToLedgers(pm);
+            ReinoRentEvictionStorageSystem.DepositFineToLedgers(pm, m_CityId);
 
             string message;
-            if (!ReinoRentEvictionStorageSystem.RedeemAll(pm, out message))
+            if (!ReinoRentEvictionStorageSystem.RedeemAll(pm, m_CityId, out message))
             {
                 pm.SendMessage(message);
                 return false;
@@ -503,13 +546,18 @@ namespace Server.Custom.Systems.Rent
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);
-            writer.Write(0);
+            writer.Write(1);
+            writer.Write(m_CityId);
         }
 
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);
-            reader.ReadInt();
+            int version = reader.ReadInt();
+            if (version >= 1)
+                m_CityId = reader.ReadInt();
+            else
+                m_CityId = -1;
             Blessed = true;
             CantWalk = true;
         }
