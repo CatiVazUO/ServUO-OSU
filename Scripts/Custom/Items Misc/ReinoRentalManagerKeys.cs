@@ -19,7 +19,7 @@ namespace Server.Custom.Reinos
         public string ConstructionKey { get { return m_ConstructionKey; } set { m_ConstructionKey = value ?? String.Empty; InvalidateProperties(); } }
 
         protected abstract OSUPropertyType ManagedPropertyType { get; }
-        protected abstract string DefaultName { get; }
+        protected abstract string KeyDisplayName { get; }
 
         protected ReinoRentalManagerKeyBase(int itemId, int cityId, string constructionKey) : base(itemId)
         {
@@ -28,7 +28,7 @@ namespace Server.Custom.Reinos
             LootType = LootType.Blessed;
             Movable = true;
             Weight = 1.0;
-            Name = DefaultName;
+            Name = KeyDisplayName;
         }
 
         public ReinoRentalManagerKeyBase(Serial serial) : base(serial)
@@ -74,14 +74,14 @@ namespace Server.Custom.Reinos
             m_CityId = reader.ReadInt();
             m_ConstructionKey = reader.ReadString();
             LootType = LootType.Blessed;
-            Name = DefaultName;
+            Name = KeyDisplayName;
         }
     }
 
     public class ReinoResidentialManagerKey : ReinoRentalManagerKeyBase
     {
         protected override OSUPropertyType ManagedPropertyType { get { return OSUPropertyType.House; } }
-        protected override string DefaultName { get { return "chave de administração residencial"; } }
+        protected override string KeyDisplayName { get { return "chave de administração residencial"; } }
 
         [Constructable]
         public ReinoResidentialManagerKey() : this(0, String.Empty)
@@ -100,7 +100,7 @@ namespace Server.Custom.Reinos
     public class ReinoCommercialManagerKey : ReinoRentalManagerKeyBase
     {
         protected override OSUPropertyType ManagedPropertyType { get { return OSUPropertyType.Commercial; } }
-        protected override string DefaultName { get { return "chave de administração comercial"; } }
+        protected override string KeyDisplayName { get { return "chave de administração comercial"; } }
 
         [Constructable]
         public ReinoCommercialManagerKey() : this(0, String.Empty)

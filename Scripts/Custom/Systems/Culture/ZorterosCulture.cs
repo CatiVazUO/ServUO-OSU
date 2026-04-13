@@ -13,7 +13,7 @@ namespace Server.Custom.Systems.Creation.Cultures
         public override int[] MaleHairGumpIds => new[] {
             54056, //1
             54060, //2
-            54177, //3
+            54076, //3
             54197, //4
             54199, //5
             54000, //6 

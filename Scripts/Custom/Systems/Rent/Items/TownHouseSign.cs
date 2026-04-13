@@ -1,10 +1,11 @@
+using Server.Custom.Reinos;
+using Server.Custom.Systems.Reinos;
 using Server.Custom.Systems.Rent;
 using Server.Gumps;
 using Server.Items;
 using Server.Mobiles;
 using Server.Multis;
 using System;
-using Server.Custom.Reinos;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -1100,6 +1101,7 @@ namespace Server.Custom.Systems.Rent
             if (newSec != null)
                 newSec.Level = SecureLevel.Owner;
 
+            ReinoDoorLockSystem.RemoveDoorLock(door);
             door.Delete();
 
             foreach (Item inneritem in newdoor.GetItemsInRange(1))
@@ -1136,7 +1138,8 @@ namespace Server.Custom.Systems.Rent
 				newdoor.Location = door.Location;
 				newdoor.Map = door.Map;
 
-				door.Delete();
+                ReinoDoorLockSystem.RemoveDoorLock(door);
+                door.Delete();
 
 				foreach( Item inneritem in newdoor.GetItemsInRange( 1 ) )
 					if ( inneritem is BaseDoor && inneritem != newdoor && inneritem.Z == newdoor.Z )
@@ -1368,30 +1371,39 @@ namespace Server.Custom.Systems.Rent
             }
         }
 
-		protected void PackUpItems()
-		{
-			if ( c_House == null )
-				return;
+        public void DebugEvictContents()
+        {
+            PackUpItems();
+        }
 
-			ArrayList list = new ArrayList();
+        protected void PackUpItems()
+        {
+            if (c_House == null)
+                return;
+
+            ArrayList lockedOrSecured = new ArrayList();
+            ArrayList looseItems = new ArrayList();
+            HashSet<int> protectedSerials = new HashSet<int>();
 
             foreach (Item item in new ArrayList(c_House.LockDowns.Keys))
             {
                 item.IsLockedDown = false;
                 item.Movable = true;
                 c_House.LockDowns.Remove(item);
-                list.Add(item);
+                lockedOrSecured.Add(item);
+                protectedSerials.Add(item.Serial.Value);
             }
 
-            foreach ( SecureInfo info in new ArrayList( c_House.Secures ) )
-			{
-				info.Item.IsLockedDown = false;
-				info.Item.IsSecure = false;
-				info.Item.Movable = true;
-				info.Item.SetLastMoved();
-				c_House.Secures.Remove( info );
-				list.Add( info.Item );
-			}
+            foreach (SecureInfo info in new ArrayList(c_House.Secures))
+            {
+                info.Item.IsLockedDown = false;
+                info.Item.IsSecure = false;
+                info.Item.Movable = true;
+                info.Item.SetLastMoved();
+                c_House.Secures.Remove(info);
+                lockedOrSecured.Add(info.Item);
+                protectedSerials.Add(info.Item.Serial.Value);
+            }
 
             foreach (Rectangle2D rect in c_Blocks)
             {
@@ -1402,35 +1414,47 @@ namespace Server.Custom.Systems.Rent
                 foreach (Item item in l)
                 {
                     if (item is HouseSign
-                    || item is BaseDoor
-                    || item is BaseMulti
-                    || item is BaseAddon
-                    || item is AddonComponent
-                    || !item.Visible
-                    || item.IsLockedDown
-                    || item.IsSecure
-                    || !item.Movable
-                    || item.Map != c_House.Map
-                    || !c_House.Region.Contains(item.Location))
+                      || item is BaseDoor
+                      || item is BaseMulti
+                      || item is BaseAddon
+                      || item is AddonComponent
+                      || !item.Visible
+                      || item.IsLockedDown
+                      || item.IsSecure
+                      || !item.Movable
+                      || item.Map != c_House.Map
+                      || !c_House.Region.Contains(item.Location)
+                      || protectedSerials.Contains(item.Serial.Value))
                         continue;
 
-                    list.Add( item );
+                    looseItems.Add(item);
                 }
             }
 
             Mobile owner = c_House.Owner;
-            Container bank = owner != null ? owner.BankBox : null;
             Container pack = owner != null ? owner.Backpack : null;
 
-            int movedToBank = 0;
+            if (owner != null && lockedOrSecured.Count > 0)
+            {
+                ReinoRentEvictionStorageSystem.StoreClaim(owner, GovernmentCityId, lockedOrSecured, "despejo/aluguel");
+                owner.SendMessage("{0} item(ns) protegidos da casa foram enviados ao depositário de despejos.", lockedOrSecured.Count);
+            }
+            else
+            {
+                for (int i = 0; i < lockedOrSecured.Count; i++)
+                {
+                    Item it = lockedOrSecured[i] as Item;
+                    if (it != null && !it.Deleted)
+                        looseItems.Add(it);
+                }
+            }
+
             int movedToPack = 0;
             int droppedAtFeet = 0;
 
-            Bag recoveryBag = null;
-
-            for (int i = 0; i < list.Count; i++)
+            for (int i = 0; i < looseItems.Count; i++)
             {
-                Item item = list[i] as Item;
+                Item item = looseItems[i] as Item;
 
                 if (item == null || item.Deleted)
                     continue;
@@ -1443,30 +1467,6 @@ namespace Server.Custom.Systems.Rent
 
                     bool placed = false;
 
-                    // tenta criar/usar uma bag de recuperação dentro do banco
-                    if (bank != null)
-                    {
-                        if (recoveryBag == null || recoveryBag.Deleted || recoveryBag.Parent != bank || recoveryBag.TotalItems >= 120)
-                        {
-                            recoveryBag = new Bag();
-                            recoveryBag.Name = "House Recovery";
-
-                            if (!bank.TryDropItem(owner, recoveryBag, false))
-                            {
-                                recoveryBag.Delete();
-                                recoveryBag = null;
-                            }
-                        }
-
-                        if (recoveryBag != null)
-                        {
-                            recoveryBag.DropItem(item);
-                            movedToBank++;
-                            placed = true;
-                        }
-                    }
-
-                    // se não conseguiu ir pro banco, tenta mochila
                     if (!placed && pack != null)
                     {
                         if (pack.TryDropItem(owner, item, false))
@@ -1476,7 +1476,6 @@ namespace Server.Custom.Systems.Rent
                         }
                     }
 
-                    // se não conseguiu nem banco nem mochila, joga no chão aos pés do dono
                     if (!placed && owner != null && owner.Map != null)
                     {
                         item.MoveToWorld(owner.Location, owner.Map);
@@ -1484,7 +1483,6 @@ namespace Server.Custom.Systems.Rent
                         placed = true;
                     }
 
-                    // último recurso: se nem dono/map existir, apaga
                     if (!placed)
                         item.Delete();
                 }
@@ -1496,16 +1494,14 @@ namespace Server.Custom.Systems.Rent
 
             if (owner != null)
             {
-                if (movedToBank > 0)
-                    owner.SendMessage("{0} item(ns) da casa foram enviados para o seu banco.", movedToBank);
-
                 if (movedToPack > 0)
-                    owner.SendMessage("{0} item(ns) da casa foram enviados para a sua mochila.", movedToPack);
+                    owner.SendMessage("{0} item(ns) soltos da casa foram enviados para a sua mochila.", movedToPack);
 
                 if (droppedAtFeet > 0)
-                    owner.SendMessage("{0} item(ns) da casa foram colocados aos seus pés porque não couberam no banco/mochila.", droppedAtFeet);
+                    owner.SendMessage("{0} item(ns) soltos da casa foram colocados aos seus pés porque não couberam na sua mochila.", droppedAtFeet);
             }
         }
+
 
 		#endregion
 

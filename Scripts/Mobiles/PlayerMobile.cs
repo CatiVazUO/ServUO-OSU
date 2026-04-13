@@ -3465,6 +3465,15 @@ namespace Server.Mobiles
             {
                 bool check = base.CheckMovement(d, out newZ);
 
+                if (check && Mounted && !(Mount is EtherealMount))
+                {
+                    int mountX = X, mountY = Y;
+                    Movement.Movement.Offset(d, ref mountX, ref mountY);
+
+                    if (!Map.CanFit(mountX, mountY, newZ, 30, false, false))
+                        return false;
+                }
+
                 if (check && Sigil.ExistsOn(this, true) && !Server.Engines.VvV.VvVSigil.CheckMovement(this, d))
                 {
                     SendLocalizedMessage(1155414); // You may not remove the sigil from the battle region!

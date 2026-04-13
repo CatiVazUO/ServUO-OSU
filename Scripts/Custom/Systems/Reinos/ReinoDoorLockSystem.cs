@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Server.Custom.Reinos;
+using Server.Custom.Systems.Rent;
+using Server.Multis;
 using Server.Items;
 using Server.Mobiles;
 using Server.Network;
@@ -84,14 +86,14 @@ namespace Server.Custom.Systems.Reinos
         {
             switch (material)
             {
-                case ReinoDoorLockMaterial.DullCopper: return 6;
-                case ReinoDoorLockMaterial.Copper: return 9;
-                case ReinoDoorLockMaterial.Bronze: return 12;
-                case ReinoDoorLockMaterial.Gold: return 15;
-                case ReinoDoorLockMaterial.Agapite: return 17;
-                case ReinoDoorLockMaterial.Verite: return 19;
+                case ReinoDoorLockMaterial.DullCopper: return 3;
+                case ReinoDoorLockMaterial.Copper: return 6;
+                case ReinoDoorLockMaterial.Bronze: return 9;
+                case ReinoDoorLockMaterial.Gold: return 12;
+                case ReinoDoorLockMaterial.Agapite: return 15;
+                case ReinoDoorLockMaterial.Verite: return 18;
                 case ReinoDoorLockMaterial.Valorite: return 21;
-                default: return 3;
+                default: return 0;
             }
         }
 
@@ -126,6 +128,15 @@ namespace Server.Custom.Systems.Reinos
                 PickPenalty = kit.PickPenalty
             };
 
+            door.InvalidateProperties();
+            door.Delta(ItemDelta.Update);
+
+            if (door.Link != null && !door.Link.Deleted)
+            {
+                door.Link.InvalidateProperties();
+                door.Link.Delta(ItemDelta.Update);
+            }
+
             message = "Você instala uma nova fechadura na porta.";
             return true;
         }
@@ -152,6 +163,24 @@ namespace Server.Custom.Systems.Reinos
             }
         }
 
+        public static void RemoveDoorLock(BaseDoor door)
+        {
+            if (door == null)
+                return;
+
+            m_Data.Remove(door.Serial.Value);
+
+            door.InvalidateProperties();
+            door.Delta(ItemDelta.Update);
+
+            if (door.Link != null && !door.Link.Deleted)
+            {
+                m_Data.Remove(door.Link.Serial.Value);
+                door.Link.InvalidateProperties();
+                door.Link.Delta(ItemDelta.Update);
+            }
+        }
+
         public static void AddDoorProperties(BaseDoor door, ObjectPropertyList list)
         {
             if (door == null || list == null)
@@ -163,7 +192,7 @@ namespace Server.Custom.Systems.Reinos
 
             list.Add("Fechadura: {0}", GetMaterialLabel(data.Material));
             list.Add("Desgaste: {0}", GetWearLabel(data));
-            list.Add("Usos restantes: {0}", data.RemainingUses);
+          //  list.Add("Usos restantes: {0}", data.RemainingUses);
         }
 
         private static string GetWearLabel(ReinoDoorLockData data)
@@ -175,8 +204,64 @@ namespace Server.Custom.Systems.Reinos
             if (pct <= 0.20)
                 return "enferrujada";
             if (pct <= 0.60)
-                return "envelhecida";
+                return "desgastada";
             return "nova";
+        }
+
+
+        private static TownHouse FindRentalHouseForDoor(BaseDoor door)
+        {
+            if (door == null || door.Deleted || door.Map == null || door.Map == Map.Internal)
+                return null;
+
+            foreach (TownHouse house in TownHouse.AllTownHouses)
+            {
+                if (house == null || house.Deleted || house.Map != door.Map)
+                    continue;
+
+                try
+                {
+                    if (house.IsInside(door.Location, 16))
+                        return house;
+                }
+                catch
+                {
+                }
+            }
+
+            return null;
+        }
+
+        private static bool HasRentalAccess(TownHouse house, Mobile from)
+        {
+            if (house == null || from == null)
+                return false;
+
+            if (house.Owner == from)
+                return true;
+
+            try
+            {
+                if (house.IsCoOwner(from) || house.IsFriend(from))
+                    return true;
+            }
+            catch
+            {
+            }
+
+            return false;
+        }
+
+        private static bool ConsumeLockpicks(Lockpick pick, int amount)
+        {
+            if (pick == null || pick.Deleted || amount <= 0)
+                return false;
+
+            if (pick.Amount < amount)
+                return false;
+
+            pick.Consume(amount);
+            return true;
         }
 
         public static bool TryHandleLockpickTarget(Mobile from, Lockpick pick, object targeted)
@@ -188,15 +273,31 @@ namespace Server.Custom.Systems.Reinos
             if (from == null || pick == null || pick.Deleted || door.Deleted)
                 return true;
 
+            TownHouse rentalHouse = FindRentalHouseForDoor(door);
+            if (rentalHouse == null)
+                return false;
+
             if (from.Map != door.Map || !from.InRange(door.GetWorldLocation(), 2))
             {
                 from.SendLocalizedMessage(500446);
                 return true;
             }
 
+            if (HasRentalAccess(rentalHouse, from))
+            {
+                from.SendMessage(0x35, "Você não pode arrombar uma porta de uma casa à qual já possui acesso.");
+                return true;
+            }
+
             if (!door.Locked)
             {
                 from.SendLocalizedMessage(502069);
+                return true;
+            }
+
+            if (pick.Amount < 2)
+            {
+                from.SendMessage(0x35, "Você precisa de 2 gazuas para tentar arrombar essa porta.");
                 return true;
             }
 
@@ -209,7 +310,7 @@ namespace Server.Custom.Systems.Reinos
 
             ReinoMilitarySystem.NotifyLockpicking(from, door);
 
-            int durationSeconds = Math.Max(10, 10 + (int)Math.Ceiling((100.0 - skill) / 2.0));
+            int durationSeconds = Math.Max(6, 8 + (int)Math.Ceiling((100.0 - skill) / 5.0));
             from.SendMessage(0x55, "Você começa a trabalhar na fechadura. Não se mova.");
             from.PlaySound(0x241);
 
@@ -248,41 +349,41 @@ namespace Server.Custom.Systems.Reinos
             {
                 from.SendMessage(0x22, "Você se moveu e quebrou a gazua.");
                 from.PlaySound(0x3A4);
-                pick.Consume();
+                ConsumeLockpicks(pick, 2);
                 return;
             }
 
             if (from.Map != door.Map || !from.InRange(door.GetWorldLocation(), 2))
             {
                 from.SendMessage(0x22, "Você se afastou demais da porta.");
-                pick.Consume();
+                ConsumeLockpicks(pick, 2);
                 return;
             }
 
             double skill = from.Skills[SkillName.Lockpicking].Value;
-            int baseChance = Math.Max(0, (int)Math.Floor(skill - 60.0));
+            int baseChance = 20 + Math.Max(0, (int)Math.Floor(skill - 80.0));
 
             ReinoDoorLockData data;
             int penalty = m_Data.TryGetValue(door.Serial.Value, out data) && data != null ? data.PickPenalty : 0;
-            int chance = Math.Max(0, Math.Min(95, baseChance - penalty));
+            int chance = Math.Max(0, Math.Min(40, baseChance) - penalty);
+
+            ConsumeLockpicks(pick, 2);
 
             if (Utility.Random(100) < chance)
             {
-                from.SendMessage(0x55, "A fechadura cede por alguns instantes.");
+                from.SendMessage(0x55, "A fechadura cede e a porta se abre.");
                 from.PlaySound(0x4A);
+
                 door.Locked = false;
-                door.Use(from);
-                Timer.DelayCall(TimeSpan.FromSeconds(12.0), delegate
-                {
-                    if (door != null && !door.Deleted)
-                        door.Locked = true;
-                });
+                door.Open = true;
+                if (door.Link != null && !door.Link.Deleted)
+                    door.Link.Open = true;
+                door.Locked = true;
             }
             else
             {
-                from.SendMessage(0x22, "Você falha e quebra a gazua na tentativa.");
+                from.SendMessage(0x22, "Você falha em arrombar a fechadura.");
                 from.PlaySound(0x3A4);
-                pick.Consume();
             }
         }
 

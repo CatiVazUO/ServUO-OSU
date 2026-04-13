@@ -65,6 +65,12 @@ namespace Server.Gumps
 						return;
 					}
 
+					if (m_House.LockDownCount > 0 || m_House.SecureCount > 0)
+					{
+						m_Mobile.SendMessage("Você não pode demolir a casa enquanto ainda existir qualquer item em lockdown ou secure.");
+						return;
+					}
+
 					if (!Guild.NewGuildSystem && m_House.FindGuildstone() != null)
 					{
 						m_Mobile.SendLocalizedMessage(501389); // You cannot redeed a house with a guildstone inside.

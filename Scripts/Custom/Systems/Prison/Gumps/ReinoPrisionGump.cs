@@ -248,11 +248,21 @@ namespace Server.Custom.Reinos
                     break;
             }
 
-            if (ReinoPrisionSystem.GetInmateByCell(m_CityId, session.ViewedCellIndex) == null)
+            if (ReinoPrisionSystem.AreAllCellDoorsLinked(m_CityId))
             {
-                occupied = ReinoPrisionSystem.GetOccupiedCellIndices(m_CityId);
-                if (occupied.Count > 0)
-                    session.ViewedCellIndex = occupied[0];
+                if (ReinoPrisionSystem.GetInmateByCell(m_CityId, session.ViewedCellIndex) == null)
+                {
+                    occupied = ReinoPrisionSystem.GetOccupiedCellIndices(m_CityId);
+                    if (occupied.Count > 0)
+                        session.ViewedCellIndex = occupied[0];
+                }
+            }
+            else
+            {
+                if (session.ViewedCellIndex < 0)
+                    session.ViewedCellIndex = 0;
+                else if (session.ViewedCellIndex > 4)
+                    session.ViewedCellIndex = 4;
             }
 
             if (!preservePendingHours)
@@ -269,7 +279,14 @@ namespace Server.Custom.Reinos
 
             if (!ReinoPrisionSystem.AreAllCellDoorsLinked(cityId))
             {
-                session.ViewedCellIndex = Math.Max(0, Math.Min(4, session.ViewedCellIndex + delta));
+                int next = session.ViewedCellIndex + delta;
+
+                if (next < 0)
+                    next = 4;
+                else if (next > 4)
+                    next = 0;
+
+                session.ViewedCellIndex = next;
                 session.PendingRemainingHours = Math.Max(0, ReinoPrisionSystem.GetRemainingHours(cityId, session.ViewedCellIndex));
                 return;
             }

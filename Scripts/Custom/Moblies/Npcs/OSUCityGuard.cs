@@ -20,6 +20,7 @@ namespace Server.Custom.Reinos
         private ReinoMilitaryLaw m_CurrentLaw;
         private bool m_ArrestMode;
         private DateTime m_NextBandage;
+        public override bool NoHouseRestrictions { get { return true; } }
 
         [CommandProperty(AccessLevel.GameMaster)]
         public int CityId { get { return m_CityId; } set { m_CityId = value; } }
@@ -260,6 +261,8 @@ namespace Server.Custom.Reinos
             }
         }
 
+
+
         private void HandleTargetDown(PlayerMobile pm)
         {
             if (pm == null || pm.Deleted)
@@ -279,14 +282,39 @@ namespace Server.Custom.Reinos
 
             ReinoMilitarySystem.RegisterGuardOutcome(this, pm, m_CurrentLaw, !permanentDeath, permanentDeath, storedLoot, prisoned);
 
+            ReinoMilitarySystem.RegisterGuardOutcome(this, pm, m_CurrentLaw, !permanentDeath, permanentDeath, storedLoot, prisoned);
+
+            if (!permanentDeath && m_ArrestMode && prisoned)
+            {
+                CantWalk = true;
+                Timer.DelayCall(TimeSpan.FromSeconds(10.0), delegate
+                {
+                    if (Deleted)
+                        return;
+
+                    CantWalk = false;
+                    ResetAfterArrest();
+                });
+            }
+            else
+            {
+                ResetAfterArrest();
+            }
+        }
+
+        private void ResetAfterArrest()
+        {
             Combatant = null;
             Warmode = false;
             FightMode = FightMode.None;
             Hits = HitsMax;
             Stam = StamMax;
             Mana = ManaMax;
-            MoveToWorld(m_PostLocation, Map);
+
+            if (!Deleted && Map != null)
+                MoveToWorld(m_PostLocation, Map);
         }
+
 
         private int FindPostFacing()
         {

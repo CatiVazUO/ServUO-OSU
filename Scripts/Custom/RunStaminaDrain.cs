@@ -8,10 +8,10 @@ namespace Server.Custom
     public static class RunStaminaDrain
     {
         // A pé (correndo): 1 stam a cada X passos
-        private const int StepsPerDrainOnFoot = 2;
+        private const int StepsPerDrainOnFoot = 3;
 
         // Montado (correndo): 1 stam a cada X passos (maior = drena menos)
-        private const int StepsPerDrainMounted = 6; // experimente 8, 10, 12...
+        private const int StepsPerDrainMounted = 7; // experimente 8, 10, 12...
 
         private const int DrainAmount = 1;
         private static readonly bool BlockWhenZero = false;
@@ -70,7 +70,7 @@ namespace Server.Custom
             {
                 if (BlockWhenZero)
                 {
-                    from.SendLocalizedMessage(500110);
+                 //   from.SendLocalizedMessage(500110);
                     e.Blocked = true;
                 }
                 return;
@@ -80,7 +80,7 @@ namespace Server.Custom
 
             if (BlockWhenZero && from.Stam <= 0)
             {
-                from.SendLocalizedMessage(500110);
+             //   from.SendLocalizedMessage(500110);
                 e.Blocked = true;
             }
         }

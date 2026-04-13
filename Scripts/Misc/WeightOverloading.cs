@@ -90,7 +90,7 @@ namespace Server.Misc
 
             if (from.Stam == 0)
             {
-                from.SendLocalizedMessage(from.Mounted ? 500108 : 500110); // Your mount is too fatigued to move. : You are too fatigued to move.
+             //   from.SendLocalizedMessage(from.Mounted ? 500108 : 500110); // Your mount is too fatigued to move. : You are too fatigued to move.
                 e.Blocked = true;
                 return;
             }

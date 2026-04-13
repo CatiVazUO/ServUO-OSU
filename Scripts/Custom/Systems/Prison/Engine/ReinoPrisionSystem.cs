@@ -93,6 +93,33 @@ namespace Server.Custom.Reinos
             }
         }
 
+        private static void MoveKnockoutCorpseToCellAfterDelay(PlayerMobile pm, Point3D dest, Map map)
+        {
+            if (pm == null || pm.Deleted)
+                return;
+
+            Corpse corpse = pm.Corpse as Corpse;
+            if (corpse == null || corpse.Deleted)
+                return;
+
+            Timer.DelayCall(TimeSpan.FromSeconds(10.0), delegate
+            {
+                if (pm == null || pm.Deleted)
+                    return;
+
+                Corpse currentCorpse = pm.Corpse as Corpse;
+                if (currentCorpse == null || currentCorpse.Deleted)
+                    return;
+
+                try
+                {
+                    currentCorpse.MoveToWorld(dest, map);
+                }
+                catch
+                {
+                }
+            });
+        }
         private static OSUCarcereiro FindCarcereiro(int cityId)
         {
             foreach (Mobile m in World.Mobiles.Values)
@@ -868,7 +895,17 @@ namespace Server.Custom.Reinos
             pm.Combatant = null;
             pm.Warmode = false;
             pm.CantWalk = false;
-            pm.MoveToWorld(dest, destMap != null ? destMap : prison.Lot.Map);
+
+            Map finalMap = destMap != null ? destMap : prison.Lot.Map;
+
+            if (!pm.Alive && pm.Corpse is Corpse)
+            {
+                MoveKnockoutCorpseToCellAfterDelay(pm, dest, finalMap);
+            }
+            else
+            {
+                pm.MoveToWorld(dest, finalMap);
+            }
 
             ReinoPrisionerState inmate = new ReinoPrisionerState();
             inmate.CityId = cityId;

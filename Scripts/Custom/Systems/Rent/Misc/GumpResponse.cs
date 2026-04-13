@@ -180,6 +180,21 @@ namespace Server.Custom.Systems.Rent
                 }
             }
 
+
+            else if (gump is HouseDemolishGump)
+            {
+                if (th != null && th.ForSaleSign != null)
+                {
+                    bool hasLocked = th.LockDownCount > 0 || th.SecureCount > 0 || (th.LockDowns != null && th.LockDowns.Count > 0) || (th.Secures != null && th.Secures.Count > 0);
+
+                    if (hasLocked)
+                    {
+                        m.SendMessage("Você precisa remover todos os itens em lockdown e secure antes de demolir a casa.");
+                        return false;
+                    }
+                }
+            }
+
             return true;
         }
     }

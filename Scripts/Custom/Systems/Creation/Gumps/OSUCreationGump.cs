@@ -1343,6 +1343,14 @@ namespace Server.Custom.Systems.Creation.Gumps
                 if (te != null)
                     _pm.OSUCreation.ChosenName = te.Text;
 
+                string earlyNameReason;
+                if (!ValidateChosenNameEarly(_pm, _pm.OSUCreation.ChosenName, out earlyNameReason))
+                {
+                    _pm.SendMessage(0x35, earlyNameReason);
+                    _pm.SendGump(new OSUCreationGump(_pm, 6, _page1Topic, _page3Topic, _page4AttrTopic, _page4ShowDefects, _page4DQPage, _page4SelectedDQId));
+                    return;
+                }
+
                 if (bid == P6_GenderMale)
                 {
                     _pm.OSUCreation.GenderFemale = false;
@@ -1614,7 +1622,14 @@ namespace Server.Custom.Systems.Creation.Gumps
 
                     int idx = start + slot;
                     if (idx >= 0 && idx < avatars.Count)
-                        _pm.OSUCreation.RpAvatarId = avatars[idx];
+                    {
+                        int avatarId = avatars[idx];
+
+                        if (OSUAvatarRegistry.IsUsedByOther(_pm, avatarId))
+                            _pm.SendMessage(0x35, "Esse avatar já foi escolhido por outro jogador.");
+                        else
+                            _pm.OSUCreation.RpAvatarId = avatarId;
+                    }
 
                     _pm.SendGump(new OSUCreationGump(_pm, 7, _page1Topic, _page3Topic, _page4AttrTopic, _page4ShowDefects, _page4DQPage, _page4SelectedDQId));
                     return;
@@ -1740,6 +1755,7 @@ namespace Server.Custom.Systems.Creation.Gumps
                     if (IsNameTaken(_pm, _pm.OSUCreation.ChosenName))
                     {
                         _pm.SendMessage(0x35, "Esse nome já está sendo usado. Escolha outro.");
+                        _pm.SendGump(new OSUCreationGump(_pm, 6, _page1Topic, _page3Topic, _page4AttrTopic, _page4ShowDefects, _page4DQPage, _page4SelectedDQId));
                         return;
                     }
 
@@ -2354,6 +2370,47 @@ namespace Server.Custom.Systems.Creation.Gumps
 
             // compra
             _pm.OSUCreation.SelectedDefQualIds.Add(id);
+        }
+
+
+        private static bool ValidateChosenNameEarly(PlayerMobile me, string name, out string reason)
+        {
+            reason = null;
+
+            if (String.IsNullOrWhiteSpace(name))
+                return true;
+
+            string trimmed = name.Trim();
+
+            if (trimmed.Length < 2)
+            {
+                reason = "O nome precisa ter pelo menos 2 caracteres.";
+                return false;
+            }
+
+            if (trimmed.Length > 16)
+            {
+                reason = "O nome pode ter no máximo 16 caracteres.";
+                return false;
+            }
+
+            for (int i = 0; i < trimmed.Length; i++)
+            {
+                char c = trimmed[i];
+                if (!(Char.IsLetter(c) || c == ' ' || c == '-' || c == '\''))
+                {
+                    reason = "Use apenas letras, espaço, hífen ou apóstrofo no nome.";
+                    return false;
+                }
+            }
+
+            if (IsNameTaken(me, trimmed))
+            {
+                reason = "Esse nome já está sendo usado. Escolha outro.";
+                return false;
+            }
+
+            return true;
         }
 
         private void RefreshPaperdoll()

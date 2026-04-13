@@ -199,6 +199,33 @@ namespace Server.Custom.Correios
         }
     }
 
+
+    public class PendingMailDelivery
+    {
+        public Serial Recipient;
+        public MailMessage Message;
+        public DateTime DeliverAtUtc;
+
+        public void Serialize(GenericWriter writer)
+        {
+            writer.Write(0);
+            writer.Write(Recipient);
+            if (Message == null)
+                Message = new MailMessage();
+            Message.Serialize(writer);
+            writer.Write(DeliverAtUtc);
+        }
+
+        public void Deserialize(GenericReader reader)
+        {
+            int version = reader.ReadInt();
+            Recipient = reader.ReadInt();
+            Message = new MailMessage();
+            Message.Deserialize(reader);
+            DeliverAtUtc = reader.ReadDateTime();
+        }
+    }
+
     public class Publication
     {
         public int PublicationId;
@@ -339,6 +366,7 @@ namespace Server.Custom.Correios
         private int _nextPublicationId = 1;
 
         private int _nextMailMessageId = 1;
+        private List<PendingMailDelivery> _pendingDeliveries = new List<PendingMailDelivery>();
 
         // We use this storage container itself as the vault.
         private Container _itemVault;
@@ -438,22 +466,91 @@ namespace Server.Custom.Correios
             return false;
         }
 
+
+        private static TimeSpan GetMailDelay(Mobile from, Mobile to)
+        {
+            PlayerMobile pf = from as PlayerMobile;
+            PlayerMobile pt = to as PlayerMobile;
+
+            string fromCity = pf != null ? (pf.OSUCitizenCityId ?? String.Empty).Trim() : String.Empty;
+            string toCity = pt != null ? (pt.OSUCitizenCityId ?? String.Empty).Trim() : String.Empty;
+
+            if (!String.IsNullOrWhiteSpace(fromCity) &&
+                !String.IsNullOrWhiteSpace(toCity) &&
+                String.Equals(fromCity, toCity, StringComparison.OrdinalIgnoreCase))
+                return TimeSpan.FromMinutes(5.0);
+
+            return TimeSpan.FromMinutes(30.0);
+        }
+
+        private void EnqueueMail(Mobile from, Mobile to, MailMessage msg)
+        {
+            if (to == null || msg == null)
+                return;
+
+            _pendingDeliveries.Add(new PendingMailDelivery
+            {
+                Recipient = to.Serial,
+                Message = msg,
+                DeliverAtUtc = DateTime.UtcNow + GetMailDelay(from, to)
+            });
+        }
+
+        public void ProcessPendingMail()
+        {
+            if (_pendingDeliveries == null || _pendingDeliveries.Count == 0)
+                return;
+
+            DateTime now = DateTime.UtcNow;
+            List<PendingMailDelivery> deliver = new List<PendingMailDelivery>();
+
+            for (int i = _pendingDeliveries.Count - 1; i >= 0; i--)
+            {
+                PendingMailDelivery entry = _pendingDeliveries[i];
+
+                if (entry == null || entry.Message == null)
+                {
+                    _pendingDeliveries.RemoveAt(i);
+                    continue;
+                }
+
+                if (entry.DeliverAtUtc <= now)
+                {
+                    deliver.Add(entry);
+                    _pendingDeliveries.RemoveAt(i);
+                }
+            }
+
+            for (int i = 0; i < deliver.Count; i++)
+            {
+                PendingMailDelivery entry = deliver[i];
+
+                Mailbox toBox;
+                if (!_mailboxes.TryGetValue(entry.Recipient, out toBox) || toBox == null)
+                {
+                    Mobile to = World.FindMobile(entry.Recipient);
+                    if (to != null)
+                    {
+                        GetOrCreateMailboxId(to);
+                        toBox = GetMailbox(to);
+                    }
+                }
+
+                if (toBox != null)
+                    toBox.Messages.Add(entry.Message);
+            }
+        }
+
         public MailMessage CreateMail(Mobile from, Mobile to, string title, string body, List<Item> attachments)
         {
             if (from == null || to == null)
                 return null;
 
-            var toBox = GetMailbox(to);
-            if (toBox == null)
-            {
-                GetOrCreateMailboxId(to);
-                toBox = GetMailbox(to);
-            }
-
+            GetOrCreateMailboxId(to);
             int fromId = GetOrCreateMailboxId(from);
 
             var msg = new MailMessage(_nextMailMessageId++, fromId, from.Name, title, body, attachments);
-            toBox.Messages.Add(msg);
+            EnqueueMail(from, to, msg);
             return msg;
         }
 
@@ -769,7 +866,7 @@ namespace Server.Custom.Correios
         {
             base.Serialize(writer);
 
-            writer.Write(1); // version
+            writer.Write(2); // version
             writer.Write(_nextMailboxId);
             writer.Write(_nextPublicationId);
             writer.Write(_nextMailMessageId);
@@ -788,6 +885,13 @@ namespace Server.Custom.Correios
             {
                 writer.Write(kv.Key);
                 kv.Value.Serialize(writer);
+            }
+
+            writer.Write(_pendingDeliveries != null ? _pendingDeliveries.Count : 0);
+            if (_pendingDeliveries != null)
+            {
+                for (int i = 0; i < _pendingDeliveries.Count; i++)
+                    _pendingDeliveries[i].Serialize(writer);
             }
         }
 
@@ -824,6 +928,18 @@ namespace Server.Custom.Correios
                 _publications[key] = pub;
             }
 
+            _pendingDeliveries = new List<PendingMailDelivery>();
+            if (version >= 2)
+            {
+                int pendingCount = reader.ReadInt();
+                for (int i = 0; i < pendingCount; i++)
+                {
+                    PendingMailDelivery entry = new PendingMailDelivery();
+                    entry.Deserialize(reader);
+                    _pendingDeliveries.Add(entry);
+                }
+            }
+
             // Backward/defensive: if we don't have a vault item, use this container.
             if (_itemVault == null || _itemVault.Deleted)
                 _itemVault = this;
@@ -854,6 +970,7 @@ namespace Server.Custom.Correios
             try
             {
                 CorreioStorage.Ensure();
+                CorreioStorage.Instance?.ProcessPendingMail();
             }
             catch
             {

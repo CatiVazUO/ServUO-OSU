@@ -1,6 +1,7 @@
 using System;
 using Server.Items;
 using Server.Mobiles;
+using Server.Targeting;
 using Server.Custom.Systems.Needs;
 using Server.Custom.Systems.Needs.Gumps;
 
@@ -10,7 +11,7 @@ namespace Server.Custom.Systems.Crafting.Cooking.Consumables.Drinks
     {
         public override int MaxQuantity
         {
-            get { return 2; }
+            get { return 5; }
         }
 
         public override int ComputeItemID()
@@ -30,16 +31,75 @@ namespace Server.Custom.Systems.Crafting.Cooking.Consumables.Drinks
         {
         }
 
+
         public override void Fill_OnTarget(Mobile from, object targ)
         {
-            // Impede encher de outras bebidas. Só água de fontes/corpos d’água/etc.
-           // if (targ is BaseBeverage)
-           // {
-           //     from.SendMessage("Você só pode encher esse cantil com água.");
-           //     return;
-           // }
+            if (TryFillFromWetTarget(from, targ))
+                return;
 
             base.Fill_OnTarget(from, targ);
+        }
+
+        private bool TryFillFromWetTarget(Mobile from, object targ)
+        {
+            if (from == null || from.Map == null || from.Map == Map.Internal)
+                return false;
+
+            Point3D p;
+            Map map;
+
+            if (!TryResolvePoint(from, targ, out p, out map))
+                return false;
+
+            if (!IsWetTile(map, p.X, p.Y))
+                return false;
+
+            Content = BeverageType.Water;
+            Quantity = MaxQuantity;
+
+            from.PlaySound(0x240);
+            from.SendMessage("Você enche o cantil com água.");
+            return true;
+        }
+
+        private static bool TryResolvePoint(Mobile from, object targ, out Point3D p, out Map map)
+        {
+            p = Point3D.Zero;
+            map = from.Map;
+
+            Item item = targ as Item;
+            if (item != null)
+            {
+                p = item.GetWorldLocation();
+                map = item.Map;
+                return map != null && map != Map.Internal;
+            }
+
+            IPoint3D ip = targ as IPoint3D;
+            if (ip != null)
+            {
+                p = new Point3D(ip.X, ip.Y, ip.Z);
+                return map != null && map != Map.Internal;
+            }
+
+            return false;
+        }
+
+        private static bool IsWetTile(Map map, int x, int y)
+        {
+            LandTile land = map.Tiles.GetLandTile(x, y);
+            if ((TileData.LandTable[land.ID & 0x3FFF].Flags & TileFlag.Wet) != 0)
+                return true;
+
+            StaticTile[] statics = map.Tiles.GetStaticTiles(x, y, true);
+            for (int i = 0; i < statics.Length; i++)
+            {
+                int itemId = statics[i].ID & 0x3FFF;
+                if ((TileData.ItemTable[itemId].Flags & TileFlag.Wet) != 0)
+                    return true;
+            }
+
+            return false;
         }
 
         public override void Pour_OnTarget(Mobile from, object targ)
