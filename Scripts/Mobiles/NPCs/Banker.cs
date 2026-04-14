@@ -23,6 +23,13 @@ namespace Server.Mobiles
             : base("the banker")
         { }
 
+        [Constructable]
+        public Banker(int cityId)
+            : base("the banker")
+        {
+            SetBankCityById(cityId);
+        }
+
         public Banker(Serial serial)
             : base(serial)
         { }
@@ -41,6 +48,27 @@ namespace Server.Mobiles
         private string GetBankCityName()
         {
             return String.IsNullOrWhiteSpace(OSUBankCityName) ? OSUBankCityId : OSUBankCityName;
+        }
+
+        private void SetBankCityById(int cityId)
+        {
+            if (cityId < 0)
+            {
+                OSUBankCityId = null;
+                OSUBankCityName = null;
+                return;
+            }
+
+            string cityName = ReinoElectionsSystem.GetCityName(cityId);
+            if (String.IsNullOrWhiteSpace(cityName))
+            {
+                OSUBankCityId = null;
+                OSUBankCityName = null;
+                return;
+            }
+
+            OSUBankCityId = cityName;
+            OSUBankCityName = cityName;
         }
 
         private bool CanUseThisBank(Mobile from)

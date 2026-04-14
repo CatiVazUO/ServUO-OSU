@@ -58,6 +58,7 @@ namespace Server.Custom.Reinos
         public int LastChangedBySerial;
         public string LastChangedByName;
         public DateTime LastChangedUtc;
+        public bool AppliesToNobles;
 
         public ReinoTrialLawRule()
         {
@@ -65,6 +66,7 @@ namespace Server.Custom.Reinos
             FineGold = 5000;
             LastChangedByName = String.Empty;
             LastChangedUtc = DateTime.MinValue;
+            AppliesToNobles = false;
         }
     }
 }

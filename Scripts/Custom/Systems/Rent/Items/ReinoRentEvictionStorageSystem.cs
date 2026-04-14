@@ -12,19 +12,16 @@ using System.Collections;
 
 namespace Server.Custom.Systems.Rent
 {
-    public class ReinoEvictionVault : Bag
+    public class ReinoEvictionStorageBackpack : Backpack
     {
         [Constructable]
-        public ReinoEvictionVault()
+        public ReinoEvictionStorageBackpack()
         {
             Movable = false;
-            Visible = false;
-            Name = "vault de despejo";
-            Map = Map.Internal;
-            Location = Point3D.Zero;
+            Hue = 0;
         }
 
-        public ReinoEvictionVault(Serial serial) : base(serial)
+        public ReinoEvictionStorageBackpack(Serial serial) : base(serial)
         {
         }
 
@@ -46,9 +43,41 @@ namespace Server.Custom.Systems.Rent
             base.Deserialize(reader);
             reader.ReadInt();
             Movable = false;
-            Visible = false;
-            Map = Map.Internal;
-            Location = Point3D.Zero;
+        }
+    }
+
+    public class ReinoEvictionClaimBag : Bag
+    {
+        [Constructable]
+        public ReinoEvictionClaimBag()
+        {
+            Movable = false;
+            Hue = 0;
+            Weight = 0;
+        }
+
+        public ReinoEvictionClaimBag(Serial serial) : base(serial)
+        {
+        }
+
+        public override int DefaultMaxWeight { get { return 0; } }
+
+        public override bool CheckHold(Mobile m, Item item, bool message, bool checkItems, int plusItems, int plusWeight)
+        {
+            return true;
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write(0);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            reader.ReadInt();
+            Movable = false;
         }
     }
 
@@ -87,8 +116,9 @@ namespace Server.Custom.Systems.Rent
         private static readonly List<ReinoRentEvictionClaim> m_Claims = new List<ReinoRentEvictionClaim>();
         private static Timer m_Timer;
 
-        public static int FinePerDayGold = 200;
-        public static TimeSpan ExpireAfter = TimeSpan.FromDays(10.0);
+        public static int BaseRedeemFineGold = 200;
+        public static int FinePerExtraDayGold = 20;
+        public static TimeSpan ExpireAfter = TimeSpan.FromDays(7.0);
 
         public static void Initialize()
         {
@@ -98,13 +128,51 @@ namespace Server.Custom.Systems.Rent
             m_Timer = Timer.DelayCall(TimeSpan.FromMinutes(1.0), TimeSpan.FromMinutes(30.0), CleanupExpiredClaims);
         }
 
+        public static ReinoEvictionStorageNpc FindNpc(int cityId)
+        {
+            foreach (Mobile m in World.Mobiles.Values)
+            {
+                ReinoEvictionStorageNpc npc = m as ReinoEvictionStorageNpc;
+                if (npc != null && !npc.Deleted && npc.CityId == cityId)
+                    return npc;
+            }
+
+            return null;
+        }
+
+        public static Container EnsureNpcBackpack(ReinoEvictionStorageNpc npc)
+        {
+            if (npc == null || npc.Deleted)
+                return null;
+
+            Container pack = npc.Backpack;
+            if (!(pack is ReinoEvictionStorageBackpack))
+            {
+                if (pack != null && !pack.Deleted)
+                    pack.Delete();
+
+                pack = new ReinoEvictionStorageBackpack();
+                npc.AddItem(pack);
+            }
+
+            return pack;
+        }
+
         public static void StoreClaim(Mobile owner, int cityId, IList items, string reason)
         {
             if (owner == null || owner.Deleted || items == null || items.Count == 0)
                 return;
 
-            ReinoEvictionVault vault = new ReinoEvictionVault();
-            vault.MoveToWorld(Point3D.Zero, Map.Internal);
+            ReinoEvictionStorageNpc npc = FindNpc(cityId);
+            Container parent = EnsureNpcBackpack(npc);
+
+            ReinoEvictionClaimBag bag = new ReinoEvictionClaimBag();
+            bag.Name = "pertences de " + owner.Name;
+
+            if (parent != null)
+                parent.DropItem(bag);
+            else
+                bag.MoveToWorld(Point3D.Zero, Map.Internal);
 
             for (int i = 0; i < items.Count; i++)
             {
@@ -117,7 +185,7 @@ namespace Server.Custom.Systems.Rent
                     item.Movable = true;
                     item.IsLockedDown = false;
                     item.IsSecure = false;
-                    vault.DropItem(item);
+                    bag.DropItem(item);
                 }
                 catch
                 {
@@ -125,11 +193,17 @@ namespace Server.Custom.Systems.Rent
                 }
             }
 
+            if (bag.Items.Count <= 0)
+            {
+                bag.Delete();
+                return;
+            }
+
             m_Claims.Add(new ReinoRentEvictionClaim
             {
                 OwnerSerial = owner.Serial.Value,
                 CityId = cityId,
-                VaultSerial = vault.Serial.Value,
+                VaultSerial = bag.Serial.Value,
                 StoredUtc = DateTime.UtcNow,
                 Reason = reason ?? String.Empty
             });
@@ -154,7 +228,7 @@ namespace Server.Custom.Systems.Rent
                 if (c == null || c.OwnerSerial != owner.Serial.Value)
                     continue;
 
-                if (cityId > 0 && c.CityId != cityId)
+                if (cityId >= 0 && c.CityId != cityId)
                     continue;
 
                 list.Add(c);
@@ -169,8 +243,8 @@ namespace Server.Custom.Systems.Rent
                 return 0;
 
             TimeSpan elapsed = DateTime.UtcNow - claim.StoredUtc;
-            int days = Math.Max(0, (int)Math.Floor(elapsed.TotalDays));
-            return FinePerDayGold * (1 + days);
+            int extraDays = Math.Max(0, (int)Math.Floor(elapsed.TotalDays));
+            return BaseRedeemFineGold + (extraDays * FinePerExtraDayGold);
         }
 
         public static int GetTotalFine(Mobile owner)
@@ -275,7 +349,7 @@ namespace Server.Custom.Systems.Rent
                 for (int i = m_Claims.Count - 1; i >= 0; i--)
                 {
                     ReinoRentEvictionClaim c = m_Claims[i];
-                    if (c != null && c.OwnerSerial == pm.Serial.Value && (cityId <= 0 || c.CityId == cityId))
+                    if (c != null && c.OwnerSerial == pm.Serial.Value && (cityId < 0 || c.CityId == cityId))
                         m_Claims.RemoveAt(i);
                 }
 
@@ -288,7 +362,7 @@ namespace Server.Custom.Systems.Rent
             for (int i = m_Claims.Count - 1; i >= 0; i--)
             {
                 ReinoRentEvictionClaim c = m_Claims[i];
-                if (c != null && c.OwnerSerial == pm.Serial.Value)
+                if (c != null && c.OwnerSerial == pm.Serial.Value && (cityId < 0 || c.CityId == cityId))
                     m_Claims.RemoveAt(i);
             }
 
@@ -304,7 +378,7 @@ namespace Server.Custom.Systems.Rent
 
             int fine = GetTotalFine(pm);
             if (fine > 0)
-                pm.SendMessage("Você possui itens retidos no depositário. Para Recuperar seus itens, pague: {0} moedas.", fine);
+                pm.SendMessage("Você possui itens retidos no depositário. Para recuperar seus itens, pague: {0} moedas.", fine);
         }
 
         public static void CleanupExpiredClaims()
@@ -391,11 +465,12 @@ namespace Server.Custom.Systems.Rent
         }
 
         [Constructable]
-        public ReinoEvictionStorageNpc()
+        public ReinoEvictionStorageNpc(int cityId)
             : base(AIType.AI_Vendor, FightMode.None, 10, 1, 0.2, 0.4)
         {
             Blessed = true;
             CantWalk = true;
+            Container pack = ReinoRentEvictionStorageSystem.EnsureNpcBackpack(this);
             Direction = Direction.South;
             Female = Utility.RandomBool();
             Body = Female ? 0x191 : 0x190;
@@ -407,12 +482,12 @@ namespace Server.Custom.Systems.Rent
             AddItem(new Boots(Utility.RandomNeutralHue()) { Movable = false });
             AddItem(new HalfApron(Utility.RandomNeutralHue()) { Movable = false });
 
-            Container pack = new Backpack();
-            pack.Movable = false;
-            AddItem(pack);
+            if (pack != null)
+                pack.Movable = false;
 
             Utility.AssignRandomHair(this);
-            m_CityId = -1;
+            m_CityId = cityId;
+            InvalidateProperties();
         }
 
         public override bool IsInvulnerable { get { return true; } }
@@ -421,7 +496,7 @@ namespace Server.Custom.Systems.Rent
         {
             base.GetProperties(list);
 
-            if (m_CityId > 0)
+            if (m_CityId >= 0)
                 list.Add("Depositário de {0}", ReinoElectionsSystem.GetCityName(m_CityId));
         }
 
@@ -436,6 +511,12 @@ namespace Server.Custom.Systems.Rent
                 return;
 
             int fine = ReinoRentEvictionStorageSystem.GetTotalFine(pm, m_CityId);
+            if (m_CityId < 0)
+            {
+                SayTo(pm, "Este depositário não está vinculado a um reino.");
+                return;
+            }
+
             if (fine <= 0)
             {
                 SayTo(pm, "Você não possui itens retidos aqui.");
@@ -560,6 +641,7 @@ namespace Server.Custom.Systems.Rent
                 m_CityId = -1;
             Blessed = true;
             CantWalk = true;
+            ReinoRentEvictionStorageSystem.EnsureNpcBackpack(this);
         }
     }
 }

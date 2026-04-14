@@ -847,6 +847,44 @@ namespace Server.Custom.Reinos
             NotifyCrimeByScope(actor, ReinoMilitaryLaw.ArmedWalk, "Entrou armado no reino.", ReinoAreaScope.Total);
         }
 
+        private static bool IsNobleExempt(PlayerMobile pm, int cityId, ReinoMilitaryLaw law)
+        {
+            if (pm == null || pm.Deleted)
+                return false;
+
+            if (ReinoTrialsSystem.DoesLawApplyToNobles(cityId, law))
+                return false;
+
+            NobleRingBase ring = pm.FindItemOnLayer(Layer.Ring) as NobleRingBase;
+            return ring != null && !ring.Deleted;
+        }
+
+        private static void ClearPassivePursuit(PlayerMobile pm, int cityId, ReinoMilitaryLaw law, string actionNote)
+        {
+            if (pm == null || pm.Deleted || cityId < 0)
+                return;
+
+            bool stoppedAny = false;
+
+            foreach (Mobile m in World.Mobiles.Values)
+            {
+                OSUCityGuard guard = m as OSUCityGuard;
+                if (guard == null || guard.Deleted || guard.CityId != cityId)
+                    continue;
+
+                if (guard.Combatant != pm || guard.CurrentLaw != law)
+                    continue;
+
+                guard.StopPursuit();
+                stoppedAny = true;
+            }
+
+            pm.CloseGump(typeof(ReinoGuardSurrenderGump));
+
+            if (stoppedAny)
+                AddCrimeNote(cityId, pm.Name + " " + actionNote);
+        }
+
         private static void OnItemStolen(ItemStolenEventArgs e)
         {
             if (e == null || e.Mobile == null)
@@ -911,6 +949,9 @@ namespace Server.Custom.Reinos
                 return;
 
             PlayerMobile trialPlayer = actor as PlayerMobile;
+            if (trialPlayer != null && IsNobleExempt(trialPlayer, cityId, law))
+                return;
+
             if (trialPlayer != null && ReinoTrialsSystem.IsInsideTribunal(cityId, actor.Location, actor.Map))
             {
                 ReinoTrialsSystem.HandleCourtCrime(trialPlayer, cityId, GetLawLabel(law), false);
@@ -1610,9 +1651,14 @@ namespace Server.Custom.Reinos
                     if (cityId >= 0)
                         TryPassiveCrimeNotice(pm, cityId, ReinoMilitaryLaw.HoodedWalk, "Circulava encapuzado no reino.");
                 }
-                else if (pm.NameMod == "Encoberto")
+                else
                 {
-                    pm.NameMod = null;
+                    int cityId = ResolveCityIdAt(pm.Location, pm.Map);
+                    if (cityId >= 0)
+                        ClearPassivePursuit(pm, cityId, ReinoMilitaryLaw.HoodedWalk, "retirou o capuz.");
+
+                    if (pm.NameMod == "Encoberto")
+                        pm.NameMod = null;
                 }
             }
         }
@@ -1643,6 +1689,8 @@ namespace Server.Custom.Reinos
 
                 if (armed)
                     TryPassiveCrimeNotice(pm, cityId, ReinoMilitaryLaw.ArmedWalk, "Circulava armado no reino.");
+                else
+                    ClearPassivePursuit(pm, cityId, ReinoMilitaryLaw.ArmedWalk, "guardou a arma.");
             }
         }
 
@@ -1652,6 +1700,9 @@ namespace Server.Custom.Reinos
                 return;
 
             if (!IsLawEnabled(cityId, law))
+                return;
+
+            if (IsNobleExempt(pm, cityId, law))
                 return;
 
             int key = (pm.Serial.Value * 100) + (int)law;
@@ -2374,6 +2425,16 @@ namespace Server.Custom.Reinos
                 int gold = ReinoPrisionSystem.GetDynamicWeeklyGold(info.CityId);
                 if (gold > 0)
                     list.Add(new ReinoResourceCost(ReinoResourceType.Gold, gold));
+            }
+        }
+
+        public static void RestockGuardBandages(int cityId)
+        {
+            foreach (Mobile m in World.Mobiles.Values)
+            {
+                OSUCityGuard guard = m as OSUCityGuard;
+                if (guard != null && !guard.Deleted && guard.CityId == cityId)
+                    guard.RestockBandages();
             }
         }
 

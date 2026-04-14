@@ -43,6 +43,12 @@ namespace Server.Custom.Reinos
         [CommandProperty(AccessLevel.GameMaster)]
         public string ConstructionKey { get { return m_ConstructionKey; } set { m_ConstructionKey = value; } }
 
+        [CommandProperty(AccessLevel.GameMaster)]
+        public ReinoMilitaryLaw CurrentLaw { get { return m_CurrentLaw; } }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public bool ArrestMode { get { return m_ArrestMode; } }
+
         public bool IsOfficial { get { return m_GuardKind == ReinoGuardKind.Oficial; } }
 
         public bool IsConstructionOfficial
@@ -185,7 +191,15 @@ namespace Server.Custom.Reinos
                     FightMode = FightMode.None;
                     CurrentWayPoint = null;
                     MoveToWorld(m_PostLocation, Map);
+                    RestoreConfiguredSpeed();
                     return;
+                }
+
+                if (Hits < 60 && DateTime.UtcNow >= m_NextBandage && ConsumeGuardBandage())
+                {
+                    PublicOverheadMessage(MessageType.Emote, 0x3B2, false, "*se cura com bandagens*");
+                    Hits = Math.Min(HitsMax, Hits + Utility.RandomMinMax(8, 14));
+                    m_NextBandage = DateTime.UtcNow + TimeSpan.FromSeconds(8.0);
                 }
 
                 Home = m_PostLocation;
@@ -193,6 +207,9 @@ namespace Server.Custom.Reinos
                 FightMode = FightMode.Closest;
                 Warmode = true;
                 CantWalk = false;
+                ActiveSpeed = 0.10;
+                PassiveSpeed = 0.10;
+                CurrentSpeed = 0.10;
                 base.OnThink();
                 return;
             }
@@ -282,8 +299,6 @@ namespace Server.Custom.Reinos
 
             ReinoMilitarySystem.RegisterGuardOutcome(this, pm, m_CurrentLaw, !permanentDeath, permanentDeath, storedLoot, prisoned);
 
-            ReinoMilitarySystem.RegisterGuardOutcome(this, pm, m_CurrentLaw, !permanentDeath, permanentDeath, storedLoot, prisoned);
-
             if (!permanentDeath && m_ArrestMode && prisoned)
             {
                 CantWalk = true;
@@ -307,9 +322,12 @@ namespace Server.Custom.Reinos
             Combatant = null;
             Warmode = false;
             FightMode = FightMode.None;
+            m_ArrestMode = false;
+            m_CurrentLaw = 0;
             Hits = HitsMax;
             Stam = StamMax;
             Mana = ManaMax;
+            RestoreConfiguredSpeed();
 
             if (!Deleted && Map != null)
                 MoveToWorld(m_PostLocation, Map);
@@ -431,6 +449,7 @@ namespace Server.Custom.Reinos
             EquipRoleItems();
             ApplyUniform();
             EnsureSupplyBackpack();
+            RestockBandages();
         }
 
         public void ApplyUniform()
@@ -580,14 +599,38 @@ namespace Server.Custom.Reinos
 
             if (bandage == null)
             {
-                bandage = new Bandage(50);
+                bandage = new Bandage(0);
                 bandage.Movable = false;
                 Backpack.DropItem(bandage);
             }
-            else if (bandage.Amount < 20)
-            {
-                bandage.Amount = 50;
-            }
+        }
+
+        public void RestockBandages()
+        {
+            EnsureSupplyBackpack();
+            Bandage bandage = Backpack.FindItemByType(typeof(Bandage)) as Bandage;
+            if (bandage != null)
+                bandage.Amount = 100;
+        }
+
+        public void RestoreConfiguredSpeed()
+        {
+            ReinoGuardPostInfo post = ReinoMilitarySystem.FindPostById(m_CityId, m_PostId);
+            ConfigureRouteSpeed(post != null ? post.RouteSpeed : ReinoRouteSpeed.Short);
+        }
+
+        public void StopPursuit()
+        {
+            Combatant = null;
+            Warmode = false;
+            FightMode = FightMode.None;
+            CurrentWayPoint = null;
+            m_ArrestMode = false;
+            m_CurrentLaw = 0;
+            CantWalk = false;
+            RestoreConfiguredSpeed();
+            if (!Deleted && Map != null)
+                MoveToWorld(m_PostLocation, Map);
         }
 
         private bool ConsumeGuardBandage()

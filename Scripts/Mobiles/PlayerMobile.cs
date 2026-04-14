@@ -4542,6 +4542,12 @@ namespace Server.Mobiles
 
         public override void DisplayPaperdollTo(Mobile to)
         {
+            if (to == null || to.Deleted)
+                return;
+
+            if (!to.InLOS(this))
+                return;
+
             if (DesignContext.Check(this))
             {
                 base.DisplayPaperdollTo(to);
@@ -5947,6 +5953,12 @@ namespace Server.Mobiles
 
         public override void OnSingleClick(Mobile from)
         {
+            if (from != null && from != this && !from.InLOS(this))
+            {
+                this.PrivateOverheadMessage(MessageType.Label, 0x3B2, false, "pessoa", from.NetState);
+                return;
+            }
+
             if (Map == Faction.Facet)
             {
                 PlayerState pl = PlayerState.Find(this);

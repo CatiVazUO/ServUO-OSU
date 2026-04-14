@@ -13,6 +13,7 @@ namespace Server.Custom.Reinos
 
         private const int ButtonSetSentence = 1;
         private const int ButtonSetFine = 2;
+        private const int ButtonToggleNobles = 3;
 
         public ReinoTribunalLawConfigGump(PlayerMobile from, int cityId, ReinoMilitaryLaw law) : base(0, 0)
         {
@@ -24,6 +25,8 @@ namespace Server.Custom.Reinos
             Disposable = true;
             Dragable = true;
             Resizable = false;
+
+            bool nobles = ReinoTrialsSystem.DoesLawApplyToNobles(cityId, law);
 
             AddPage(0);
             AddImageTiled(344, 156, 318, 378, 387);
@@ -37,16 +40,16 @@ namespace Server.Custom.Reinos
             AddImageTiled(383, 139, 230, 31, 368);
             AddImageTiled(449, 202, 180, 21, 470);
             AddImageTiled(366, 202, 178, 21, 469);
-
             AddLabel(454, 179, 0, ReinoMilitarySystem.GetLawLabel(law));
-            AddLabel(377, 455, 0, @"Pena");
-            AddButton(605, 452, 530, 248, ButtonSetSentence, GumpButtonType.Reply, 0);
-            AddHtml(370, 239, 261, 187, ReinoTrialsSystem.GetLawDefinitionHtml(cityId, law), false, false);
-            AddTextEntry(437, 450, 154, 20, 0, 1, ReinoTrialsSystem.GetLawDefaultHours(cityId, law).ToString());
-
-            AddLabel(377, 488, 0, @"Multa");
-            AddButton(605, 485, 530, 248, ButtonSetFine, GumpButtonType.Reply, 0);
-            AddTextEntry(437, 483, 154, 20, 0, 2, ReinoTrialsSystem.GetLawDefaultFine(cityId, law).ToString());
+            AddLabel(374, 418, 0, @"Pena");
+            AddButton(602, 415, 530, 248, ButtonSetSentence, GumpButtonType.Reply, 0);
+            AddHtml(370, 239, 261, 155, ReinoTrialsSystem.GetLawDefinitionHtml(cityId, law), false, false);
+            AddTextEntry(434, 413, 154, 20, 0, 1, ReinoTrialsSystem.GetLawDefaultHours(cityId, law).ToString());
+            AddLabel(374, 451, 0, @"Multa");
+            AddButton(602, 448, 530, 248, ButtonSetFine, GumpButtonType.Reply, 0);
+            AddTextEntry(434, 446, 154, 20, 0, 2, ReinoTrialsSystem.GetLawDefaultFine(cityId, law).ToString());
+            AddButton(498, 484, nobles ? 530 : 531, nobles ? 530 : 531, ButtonToggleNobles, GumpButtonType.Reply, 0);
+            AddLabel(374, 483, 0, @"Vale para Nobres:");
         }
 
         public override void OnResponse(NetState sender, RelayInfo info)
@@ -84,6 +87,14 @@ namespace Server.Custom.Reinos
                         else
                             from.SendMessage(ReinoTrialsSystem.SetLawDefaultFine(from, m_CityId, m_Law, fine));
 
+                        from.SendGump(new ReinoTribunalLawConfigGump(from, m_CityId, m_Law));
+                        break;
+                    }
+
+                case ButtonToggleNobles:
+                    {
+                        bool current = ReinoTrialsSystem.DoesLawApplyToNobles(m_CityId, m_Law);
+                        from.SendMessage(ReinoTrialsSystem.SetLawAppliesToNobles(from, m_CityId, m_Law, !current));
                         from.SendGump(new ReinoTribunalLawConfigGump(from, m_CityId, m_Law));
                         break;
                     }

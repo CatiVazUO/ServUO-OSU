@@ -8,10 +8,10 @@ namespace Server.Custom
     public static class RunStaminaDrain
     {
         // A pé (correndo): 1 stam a cada X passos
-        private const int StepsPerDrainOnFoot = 3;
+        private const int StepsPerDrainOnFoot = 4;
 
         // Montado (correndo): 1 stam a cada X passos (maior = drena menos)
-        private const int StepsPerDrainMounted = 7; // experimente 8, 10, 12...
+        private const int StepsPerDrainMounted = 6; // experimente 8, 10, 12...
 
         private const int DrainAmount = 1;
         private static readonly bool BlockWhenZero = false;

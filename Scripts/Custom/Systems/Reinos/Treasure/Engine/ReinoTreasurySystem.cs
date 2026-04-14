@@ -448,6 +448,7 @@ namespace Server.Custom.Reinos
             int guardGold, guardCloth, guardIron, guardWood;
             ReinoMilitarySystem.GetTotalWeeklyGuardCost(cityId, out guardGold, out guardCloth, out guardIron, out guardWood);
             closed.GuardExpense = new ReinoTreasuryResourceBundle(guardGold, guardCloth, guardIron, guardWood);
+            ReinoMilitarySystem.RestockGuardBandages(cityId);
 
             ReinoTreasuryResourceBundle postoNow = GetCurrentPostoResources(cityId);
             int cloth = Math.Max(0, postoNow.Cloth - state.PostoWeekStartSnapshot.Cloth);

@@ -80,14 +80,14 @@ namespace Server.Items
         [Constructable]
         public StablePost() : base(0x14E7)
         {
-            Name = "Poste de Estabulo";
+            Name = "poste de amarração";
             Movable = false;
         }
 
         [Constructable]
         public StablePost(bool east) : base(east ? 0x14E7 : 0x14E8)
         {
-            Name = "Poste de Estabulo";
+            Name = "poste de amarração";
             Movable = false;
         }
 
@@ -103,25 +103,25 @@ namespace Server.Items
                 if (Owner == null)
                 {
                     from.Target = new StablePostTarget(this);
-                    from.SendMessage("30 moedas de cobre vao ser retiradas do seu banco para deixar a criatura no estabulo. " +
-                        "Para solta-lo custa 5 cobres por hora. " +
+                    from.SendMessage("30 moedas de ouro vão ser retiradas do seu banco para deixar a criatura no estábulo. " +
+                        "Para solta-lo custa 5 moedas por hora. " +
                         "Qual criatura deseja amarrar?");
                 }
                 if (Owner != null && from == Owner)
                 {
                     from.Target = new StablePostTarget(this);
                     from.SendMessage("Selecione a criatura que deseja soltar. " +
-                        "O custo de 5 cobres por hora será retirado do seu banco para cobrir suas despesas no estabulo");
+                        "O custo de 5 moedas por hora será retirado do seu banco para cobrir suas despesas no estábulo");
                 }
                 else if (Owner != null && Owner != from)
                 {
-                    from.SendMessage("Esse poste ja esta em uso.");
+                    from.SendMessage("Esse poste já esta em uso.");
                 }
             }
 
             else
             {
-                from.SendMessage("Voce esta longe demais do poste"); // That is too far away.
+                from.SendMessage("Você está longe demais do poste"); // That is too far away.
             }
         }
 
@@ -291,11 +291,11 @@ namespace Server.Items
 
             if (bank == null || bank.GetAmount(typeof(Copper)) < copperCost)
             {
-                from.SendMessage("Voce nao tem moedas o suficiente para pagar pelo que seu animal consumiu.");
+                from.SendMessage("Você não tem moedas o suficiente para pagar pelo que seu animal consumiu.");
                 return;
             }
 
-            bank.ConsumeTotal(typeof(Copper), copperCost);
+            bank.ConsumeTotal(typeof(Gold), copperCost);
             BaseCreature c = (BaseCreature)target;
             c.ControlMaster = this.Owner;
             c.Home = this.Owner.Location;
@@ -574,11 +574,11 @@ namespace Server.Gumps
             AddPage(0);
             AddBackground(0, 0, 248, 122, 9270);
             AddLabel(105, 75, 1071, Convert.ToString(temp));
-            AddLabel(20, 20, 1071, @"Owner:");
+            AddLabel(20, 20, 1071, @"Dono:");
             AddLabel(75, 20, 1071, m_Post.Owner.Name);
-            AddLabel(20, 45, 1071, @"Pet:");
+            AddLabel(20, 45, 1071, @"Animal:");
             AddLabel(75, 45, 1071, m_Post.Controlled.Name);
-            AddLabel(20, 75, 1071, @"HomeRange:");
+            AddLabel(20, 75, 1071, @"Distância:");
             AddButton(150, 80, 2223, 2223, 1, GumpButtonType.Reply, 0);
             AddButton(170, 80, 2224, 2224, 2, GumpButtonType.Reply, 0);
             AddButton(200, 75, 1154, 1155, 3, GumpButtonType.Reply, 0);
@@ -595,7 +595,7 @@ namespace Server.Gumps
                         if (temp > m_Post.MinRange)
                             temp -= 1;
                         else
-                            sender.Mobile.SendMessage("Voce nao pode abaixar esse valor.");
+                            sender.Mobile.SendMessage("Voce não pode abaixar esse valor.");
                         m_Post.HomeRange = temp;
                         sender.Mobile.CloseGump(typeof(HitchGump));
                         sender.Mobile.SendGump(new HitchGump(m_Post));
@@ -606,7 +606,7 @@ namespace Server.Gumps
                         if (temp < m_Post.MaxRange)
                             temp += 1;
                         else
-                            sender.Mobile.SendMessage("Voce nao pode aumentar esse valor.");
+                            sender.Mobile.SendMessage("Voce não pode aumentar esse valor.");
                         m_Post.HomeRange = temp;
                         sender.Mobile.CloseGump(typeof(HitchGump));
                         sender.Mobile.SendGump(new HitchGump(m_Post));

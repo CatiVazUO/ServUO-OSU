@@ -197,6 +197,43 @@ namespace Server.Custom.Reinos
             return Math.Max(0, rule.FineGold);
         }
 
+        public static bool IsNobleExemptableLaw(ReinoMilitaryLaw law)
+        {
+            switch (law)
+            {
+                case ReinoMilitaryLaw.ArmedWalk:
+                case ReinoMilitaryLaw.DrugUse:
+                case ReinoMilitaryLaw.DrunkWalk:
+                case ReinoMilitaryLaw.TakingFruit:
+                case ReinoMilitaryLaw.FenceJumping:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        public static bool DoesLawApplyToNobles(int cityId, ReinoMilitaryLaw law)
+        {
+            if (!IsNobleExemptableLaw(law))
+                return true;
+
+            ReinoTrialLawRule rule = GetLawRule(cityId, law);
+            return rule != null && rule.AppliesToNobles;
+        }
+
+        public static string SetLawAppliesToNobles(PlayerMobile pm, int cityId, ReinoMilitaryLaw law, bool applies)
+        {
+            if (!CanAccessLawSettings(pm, cityId))
+                return "Você não pode alterar essa regra.";
+
+            ReinoTrialLawRule rule = GetLawRule(cityId, law);
+            rule.AppliesToNobles = applies;
+            rule.LastChangedBySerial = pm != null ? pm.Serial.Value : 0;
+            rule.LastChangedByName = pm != null ? pm.Name : String.Empty;
+            rule.LastChangedUtc = DateTime.UtcNow;
+            return applies ? "Essa lei agora também vale para nobres." : "Essa lei não será aplicada a nobres por padrão.";
+        }
+
         public static string SetLawDefaultHours(PlayerMobile pm, int cityId, ReinoMilitaryLaw law, int hours)
         {
             if (!CanAccessLawSettings(pm, cityId))
@@ -234,7 +271,11 @@ namespace Server.Custom.Reinos
             sb.Append(GetLawDescription(law));
             sb.Append("<BR><BR>");
             sb.Append("<B>Pena atual:</B> ").Append(GetLawDefaultHours(cityId, law)).Append(" horas.<BR>");
-            sb.Append("<B>Multa atual:</B> ").Append(GetLawDefaultFine(cityId, law)).Append(" moedas.<BR><BR>");
+            sb.Append("<B>Multa atual:</B> ").Append(GetLawDefaultFine(cityId, law)).Append(" moedas.<BR>");
+            if (IsNobleExemptableLaw(law))
+                sb.Append("<B>Vale para nobres:</B> ").Append(DoesLawApplyToNobles(cityId, law) ? "sim" : "não").Append(".<BR><BR>");
+            else
+                sb.Append("<BR>");
 
             if (rule != null && rule.HasCustomValues && !String.IsNullOrWhiteSpace(rule.LastChangedByName))
             {
@@ -794,7 +835,7 @@ namespace Server.Custom.Reinos
                 using (FileStream fs = new FileStream(FilePath, FileMode.Create, FileAccess.Write, FileShare.None))
                 using (BinaryWriter bw = new BinaryWriter(fs))
                 {
-                    bw.Write(2);
+                    bw.Write(3);
                     bw.Write(m_VerdictsByCity.Count);
                     foreach (KeyValuePair<int, List<ReinoTrialVerdict>> kv in m_VerdictsByCity)
                     {
@@ -834,6 +875,7 @@ namespace Server.Custom.Reinos
                             bw.Write(rule.LastChangedBySerial);
                             bw.Write(rule.LastChangedByName ?? String.Empty);
                             bw.Write(rule.LastChangedUtc.ToBinary());
+                            bw.Write(rule.AppliesToNobles);
                         }
                     }
                 }
@@ -909,6 +951,7 @@ namespace Server.Custom.Reinos
                                 rule.LastChangedBySerial = br.ReadInt32();
                                 rule.LastChangedByName = br.ReadString();
                                 rule.LastChangedUtc = DateTime.FromBinary(br.ReadInt64());
+                                rule.AppliesToNobles = version >= 3 ? br.ReadBoolean() : false;
 
                                 map[law] = rule;
                             }

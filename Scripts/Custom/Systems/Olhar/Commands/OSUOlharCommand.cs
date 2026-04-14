@@ -38,6 +38,18 @@ namespace Server.Custom.Systems.Olhar.Commands
                 if (from == null || from.Deleted)
                     return;
 
+                if (targeted is Mobile targetMobile && !from.InLOS(targetMobile))
+                {
+                    from.SendMessage("Você precisa ter line of sight para olhar isso.");
+                    return;
+                }
+
+                if (targeted is Item targetItem && !from.InLOS(targetItem))
+                {
+                    from.SendMessage("Você precisa ter line of sight para olhar isso.");
+                    return;
+                }
+
                 // ======== SE CLICAR EM JOGADOR ========
                 if (targeted is PlayerMobile pm)
                 {

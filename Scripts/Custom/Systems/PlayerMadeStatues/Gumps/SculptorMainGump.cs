@@ -234,7 +234,7 @@ namespace Server.Gumps
 
         private void AddToggleButton(int x, int y, bool selected, int buttonId)
         {
-            int art = selected ? 541 : 454;
+            int art = selected ? 433 : 454;
             AddButton(x, y, art, art, buttonId, GumpButtonType.Reply, 0);
         }
 
