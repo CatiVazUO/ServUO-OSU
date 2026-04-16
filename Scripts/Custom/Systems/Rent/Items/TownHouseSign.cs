@@ -727,7 +727,7 @@ namespace Server.Custom.Systems.Rent
             {
                 if (Owned)
                 {
-                    m.SendMessage("Someone already owns this house!");
+                    m.SendMessage("Isso já é a casa de alguém!");
                     return;
                 }
 
@@ -745,7 +745,7 @@ namespace Server.Custom.Systems.Rent
 
                 if (!PriceReady)
                 {
-                    m.SendMessage("The setup for this house is not yet complete.");
+                    m.SendMessage("As configurações da casa estão completas.");
                     return;
                 }
 
@@ -771,7 +771,7 @@ namespace Server.Custom.Systems.Rent
 
                 if (price > 0 && !Banker.Withdraw(m, price))
                 {
-                    m.SendMessage("You cannot afford this house.");
+                    m.SendMessage("Você não pode pagar por essa casas.");
                     return;
                 }
 
@@ -1518,11 +1518,6 @@ namespace Server.Custom.Systems.Rent
 			c_RentTime = DateTime.Now;
 		}
 
-		private void BeginRentTimer()
-		{
-			BeginRentTimer( TimeSpan.FromDays( 1 ) );
-		}
-
 		private void BeginRentTimer( TimeSpan time )
 		{
 			if ( !Owned )
@@ -2046,7 +2041,7 @@ namespace Server.Custom.Systems.Rent
             else if (!CanOwnThisProperty(m))
                 m.SendMessage(CannotOwnMessage(m));
             else
-                m.SendMessage("You cannot purchase this house.");
+                m.SendMessage("Você não pode pagar por essa casa.");
         }
 
         public override void Delete()
@@ -2054,7 +2049,7 @@ namespace Server.Custom.Systems.Rent
 			if ( c_House == null || c_House.Deleted )
 				base.Delete();
 			else
-				PublicOverheadMessage( Network.MessageType.Regular, 0x0, true, "You cannot delete this while the home is owned." );
+				PublicOverheadMessage( Network.MessageType.Regular, 0x0, true, "Você não pode deletar uma casas que está alugada." );
 
 			if ( Deleted )
 				s_TownHouseSigns.Remove( this );

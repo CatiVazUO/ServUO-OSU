@@ -95,6 +95,18 @@ namespace Server.Custom.Reinos
         public ReinoResidentialManagerKey(Serial serial) : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write((int)0);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            int version = reader.ReadInt();
+        }
     }
 
     public class ReinoCommercialManagerKey : ReinoRentalManagerKeyBase
@@ -114,6 +126,18 @@ namespace Server.Custom.Reinos
 
         public ReinoCommercialManagerKey(Serial serial) : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write((int)0);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            int version = reader.ReadInt();
         }
     }
 

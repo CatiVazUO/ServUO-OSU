@@ -1493,7 +1493,7 @@ namespace Server.Custom.Reinos
             }
         }
 
-        public static bool CanWithdrawReligiousDonations(PlayerMobile pm, int cityId)
+        public static bool CanWithdrawDonations(PlayerMobile pm, int cityId)
         {
             if (pm == null || pm.Deleted || cityId < 0)
                 return false;

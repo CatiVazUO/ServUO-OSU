@@ -556,8 +556,6 @@ namespace Server.Custom.Systems.Rent
             int available = 0;
             if (payment is Gold)
                 available = ((Gold)payment).Amount;
-            else if (payment is Copper)
-                available = ((Copper)payment).Amount;
             else
             {
                 pm.SendMessage("Use uma pilha de moedas para pagar a multa.");
@@ -586,20 +584,11 @@ namespace Server.Custom.Systems.Rent
 
         private static void ConsumeFromStack(Item item, int amount)
         {
-            if (item is Gold)
-            {
                 Gold gold = (Gold)item;
                 gold.Amount -= amount;
+
                 if (gold.Amount <= 0)
-                    gold.Delete();
-            }
-            else if (item is Copper)
-            {
-                Copper copper = (Copper)item;
-                copper.Amount -= amount;
-                if (copper.Amount <= 0)
-                    copper.Delete();
-            }
+                    gold.Delete();            
         }
 
         private class ReinoEvictionPaymentTarget : Target

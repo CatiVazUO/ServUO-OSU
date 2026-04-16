@@ -5,9 +5,11 @@ namespace Server.Custom.Systems.Religion
         public override string Id => "Ilhena";
         public override string Name => "Ilhena";
         public override int DisplayOrder => 2;
-
-        public override int IconGumpId => 162; // exemplo: coloque o id real do Dortem
-
+        public override int IconGumpId => 162;
+        public override int[] TempleRiteItemIds => new int[] { 0x1223, 0x1224, 0x1F0B, 0x0B1D, 0x1F18 };
+        public override int[] TempleWeddingItemIds => new int[] { 0x1223, 0x1224, 0x0B1D, 0x0B26, 0x0C3B, 0x0C3C };
+        public override int TempleFuneralCoffinItemId => 0x1C42;
+        public override int TempleStatueItemId => 0x18C0;  // 0x18C1
 
         public override string DescriptionHtml =>
         @"<BASEFONT COLOR=#FFFFFF>

@@ -287,15 +287,15 @@ namespace Server.Items
             int diff = (int)(now - this.StabledDate).TotalHours;
 
             Container bank = from.BankBox;
-            int copperCost = (int)Math.Ceiling(diff / 1.0) * 5;
+            int goldCost = (int)Math.Ceiling(diff / 1.0) * 5;
 
-            if (bank == null || bank.GetAmount(typeof(Copper)) < copperCost)
+            if (bank == null || bank.GetAmount(typeof(Gold)) < goldCost)
             {
                 from.SendMessage("Você não tem moedas o suficiente para pagar pelo que seu animal consumiu.");
                 return;
             }
 
-            bank.ConsumeTotal(typeof(Gold), copperCost);
+            bank.ConsumeTotal(typeof(Gold), goldCost);
             BaseCreature c = (BaseCreature)target;
             c.ControlMaster = this.Owner;
             c.Home = this.Owner.Location;
@@ -322,7 +322,7 @@ namespace Server.Items
             c.Frozen = false;
             this.StabledDate = DateTime.MinValue;
 
-            from.SendMessage("Foram retiradas " + copperCost + " do seu banco para pagar as despesas da sua criatura.");
+            from.SendMessage("Foram retiradas " + goldCost + " moedas de ouro do seu banco para pagar as despesas da sua criatura.");
 
         //    if (c is BaseBreedableCreature)
         //    {
@@ -396,15 +396,15 @@ namespace Server.Items
                             else if (c.Controlled && c.ControlMaster == from)
                             {
                                 Container bank = from.BankBox;
-                                int copperCostStable = 30;
+                                int goldCostStable = 30;
 
-                                if (bank == null || bank.GetAmount(typeof(Copper)) < copperCostStable)
+                                if (bank == null || bank.GetAmount(typeof(Gold)) < goldCostStable)
                                 {
-                                    from.SendMessage("Voce nao tem 30 moedas no banco");
+                                    from.SendMessage("Voce nao tem 30 moedas de ouro no banco");
                                     return;
                                 }
 
-                                bank.ConsumeTotal(typeof(Copper), copperCostStable);
+                                bank.ConsumeTotal(typeof(Gold), goldCostStable);
                                 m_Post.Owner = c.ControlMaster;
                                 m_Post.Controlled = c;
                                 c.Home = m_Post.Location;

@@ -64,7 +64,7 @@ namespace Server.Items
             Configure(false, -1);
         }
 
-        protected NobleRingBase(Serial serial) : base(serial)
+        public NobleRingBase(Serial serial) : base(serial)
         {
         }
 
@@ -159,7 +159,7 @@ namespace Server.Items
         {
         }
 
-        protected NobleRingMetalBase(Serial serial) : base(serial)
+        public NobleRingMetalBase(Serial serial) : base(serial)
         {
         }
 
@@ -196,6 +196,18 @@ namespace Server.Items
             ItemID = 0x2BE9;
             MetalName = "bronze";
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write((int)0);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            int version = reader.ReadInt();
+        }
     }
 
     public class NobleRingSilver : NobleRingMetalBase
@@ -218,6 +230,18 @@ namespace Server.Items
             ItemID = 0x2BEA;
             MetalName = "prata";
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write((int)0);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            int version = reader.ReadInt();
+        }
     }
 
     public class NobleRingGold : NobleRingMetalBase
@@ -239,6 +263,18 @@ namespace Server.Items
         {
             ItemID = 0x2BEB;
             MetalName = "ouro";
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write((int)0);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            int version = reader.ReadInt();
         }
     }
 
