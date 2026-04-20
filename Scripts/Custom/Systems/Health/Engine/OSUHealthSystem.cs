@@ -1,18 +1,19 @@
 
-using System;
-using System.Collections.Generic;
-using System.IO;
 using Server;
 using Server.Commands;
+using Server.Custom.OSUDrag;
+using Server.Custom.Reinos;
+using Server.Custom.Systems.DefQual;
+using Server.Custom.Systems.Health.Gumps;
 using Server.Gumps;
 using Server.Items;
 using Server.Mobiles;
 using Server.Network;
 using Server.Targeting;
-using Server.Custom.Reinos;
-using Server.Custom.Systems.DefQual;
-using Server.Custom.Systems.Health.Gumps;
-using Server.Custom.OSUDrag;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Ultima;
 
 namespace Server.Custom.Systems.Health
 {
@@ -1032,82 +1033,96 @@ namespace Server.Custom.Systems.Health
         #endregion
 
 
-#region Surgery
+        #region Surgery
 
         private class SurgeryPlan
         {
-            public bool AllowCut;
-            public bool AllowHeat;
-            public bool AllowBleed;
+            public int CutMin;
             public int CutMax;
+            public int HeatMin;
             public int HeatMax;
+            public int BleedMin;
             public int BleedMax;
         }
 
         private static SurgeryPlan BuildPlan(OSUInjuryType injury)
         {
             SurgeryPlan p = new SurgeryPlan();
-            p.AllowCut = true;
-            p.AllowHeat = true;
-            p.AllowBleed = false;
-            p.CutMax = 2;
-            p.HeatMax = 2;
-            p.BleedMax = 0;
 
             switch (injury)
             {
                 case OSUInjuryType.InternalBleeding:
                 case OSUInjuryType.MassiveBleeding:
-                    p.AllowCut = false;
-                    p.AllowHeat = true;
-                    p.AllowBleed = false;
-                    p.CutMax = 0;
-                    p.HeatMax = 3;
-                    p.BleedMax = 0;
+                    p.CutMin = 0; p.CutMax = 0;
+                    p.HeatMin = 2; p.HeatMax = 7;
+                    p.BleedMin = 2; p.BleedMax = 6;
                     break;
+
                 case OSUInjuryType.RupturedSpleen:
                 case OSUInjuryType.ChestTrauma:
-                    p.AllowCut = true;
-                    p.AllowHeat = true;
-                    p.AllowBleed = true;
-                    p.CutMax = 2;
-                    p.HeatMax = 3;
-                    p.BleedMax = 2;
+                    p.CutMin = 2; p.CutMax = 6;
+                    p.HeatMin = 3; p.HeatMax = 7;
+                    p.BleedMin = 0; p.BleedMax = 5;
                     break;
+
                 case OSUInjuryType.BrokenSkull:
                 case OSUInjuryType.FracturedSkull:
-                    p.AllowCut = false;
-                    p.AllowHeat = true;
-                    p.AllowBleed = true;
-                    p.CutMax = 0;
-                    p.HeatMax = 2;
-                    p.BleedMax = 2;
+                    p.CutMin = 0; p.CutMax = 4;
+                    p.HeatMin = 1; p.HeatMax = 5;
+                    p.BleedMin = 2; p.BleedMax = 6;
                     break;
+
                 case OSUInjuryType.DeepCut:
                 case OSUInjuryType.LaceratedTorso:
-                    p.AllowCut = true;
-                    p.AllowHeat = true;
-                    p.AllowBleed = false;
-                    p.CutMax = 3;
-                    p.HeatMax = 2;
-                    p.BleedMax = 0;
+                    p.CutMin = 2; p.CutMax = 7;
+                    p.HeatMin = 0; p.HeatMax = 6;
+                    p.BleedMin = 1; p.BleedMax = 4;
                     break;
+
                 case OSUInjuryType.FracturedLeftArm:
                 case OSUInjuryType.FracturedRightArm:
+                    p.CutMin = 1; p.CutMax = 5;
+                    p.HeatMin = 2; p.HeatMax = 4;
+                    p.BleedMin = 0; p.BleedMax = 6;
+                    break;
+
                 case OSUInjuryType.FracturedLeftLeg:
                 case OSUInjuryType.FracturedRightLeg:
+                    p.CutMin = 2; p.CutMax = 7;
+                    p.HeatMin = 1; p.HeatMax = 5;
+                    p.BleedMin = 0; p.BleedMax = 3;
+                    break;
+
                 case OSUInjuryType.FracturedRibs:
+                    p.CutMin = 0; p.CutMax = 4;
+                    p.HeatMin = 3; p.HeatMax = 7;
+                    p.BleedMin = 1; p.BleedMax = 5;
+                    break;
+
                 case OSUInjuryType.BrokenLeftArm:
                 case OSUInjuryType.BrokenRightArm:
+                    p.CutMin = 2; p.CutMax = 6;
+                    p.HeatMin = 0; p.HeatMax = 6;
+                    p.BleedMin = 1; p.BleedMax = 5;
+                    break;
+
                 case OSUInjuryType.BrokenLeftLeg:
                 case OSUInjuryType.BrokenRightLeg:
+                    p.CutMin = 2; p.CutMax = 7;
+                    p.HeatMin = 3; p.HeatMax = 6;
+                    p.BleedMin = 0; p.BleedMax = 4;
+                    break;
+
                 case OSUInjuryType.BrokenJaw:
-                    p.AllowCut = true;
-                    p.AllowHeat = false;
-                    p.AllowBleed = false;
-                    p.CutMax = 3;
-                    p.HeatMax = 0;
-                    p.BleedMax = 0;
+                    p.CutMin = 0; p.CutMax = 5;
+                    p.HeatMin = 2; p.HeatMax = 6;
+                    p.BleedMin = 2; p.BleedMax = 6;
+                    break;
+
+                default:
+                    p.CutMin = 2; p.CutMax = 7;
+                    p.HeatMin = 2; p.HeatMax = 5;
+                    p.BleedMin = 1; p.BleedMax = 5;
                     break;
             }
 
@@ -1138,12 +1153,62 @@ namespace Server.Custom.Systems.Health
         {
             switch (severity)
             {
-                case OSUInjurySeverity.Moderate: return TimeSpan.FromSeconds(30.0);
-                case OSUInjurySeverity.Severe: return TimeSpan.FromSeconds(25.0);
+                case OSUInjurySeverity.Moderate: return TimeSpan.FromSeconds(50.0);
+                case OSUInjurySeverity.Severe: return TimeSpan.FromSeconds(40.0);
                 case OSUInjurySeverity.Critical:
-                case OSUInjurySeverity.Deadly: return TimeSpan.FromSeconds(20.0);
-                default: return TimeSpan.FromSeconds(30.0);
+                case OSUInjurySeverity.Deadly: return TimeSpan.FromSeconds(30.0);
+                default: return TimeSpan.FromSeconds(60.0);
             }
+        }
+
+        private static int GetSurgeryBonusSeconds(PlayerMobile surgeon)
+        {
+            if (surgeon == null)
+                return 0;
+
+            int bonus = 0;
+
+            // Troque os nomes das classes abaixo quando você criar os itens reais
+            if (surgeon.FindItemOnLayer(Layer.OuterTorso) is AventalCirurgico)
+                bonus += 10;
+
+            if (surgeon.FindItemOnLayer(Layer.Gloves) is LuvasCirurgicas)
+                bonus += 10;
+
+            if (surgeon.FindItemOnLayer(Layer.Helm) is MascaraCirurgica)
+                bonus += 10;
+
+            OSUHealthProfile profile = GetProfile(surgeon, true);
+            if (profile.SterileHandsUntilUtc > DateTime.UtcNow)
+            {
+                bonus += 10;
+                profile.SterileHandsUntilUtc = DateTime.MinValue;
+            }
+
+            return bonus;
+        }
+
+        public static bool TrySterilizeHands(PlayerMobile surgeon, out string message)
+        {
+            message = String.Empty;
+
+            if (surgeon == null)
+            {
+                message = "Cirurgião inválido.";
+                return false;
+            }
+
+            if (!CanUseSurgery(surgeon))
+            {
+                message = "Você precisa da feat Cirurgia.";
+                return false;
+            }
+
+            OSUHealthProfile profile = GetProfile(surgeon, true);
+            profile.SterileHandsUntilUtc = DateTime.UtcNow + TimeSpan.FromMinutes(10.0);
+
+            message = "Suas mãos estão esterializadas.";
+            return true;
         }
 
         private static OSUInjuryState GetNextSurgeryInjury(OSUHealthProfile profile)
@@ -1214,15 +1279,13 @@ namespace Server.Custom.Systems.Health
             state.SourceCityId = GetCityIdFromHospitalItem(sourceItem);
             state.SourceConstructionKey = GetConstructionKeyFromHospitalItem(sourceItem);
             state.Injury = injury.Type;
-            state.AllowCut = plan.AllowCut;
-            state.AllowHeat = plan.AllowHeat;
-            state.AllowBleed = plan.AllowBleed;
-            state.AllowCool = false;
-            state.TargetCutMin = Utility.RandomMinMax(0, plan.CutMax);
+            state.TargetCutMin = Utility.RandomMinMax(plan.CutMin, plan.CutMax);
             state.TargetCutMax = state.TargetCutMin;
-            state.TargetHeatMin = Utility.RandomMinMax(0, plan.HeatMax);
+
+            state.TargetHeatMin = Utility.RandomMinMax(plan.HeatMin, plan.HeatMax);
             state.TargetHeatMax = state.TargetHeatMin;
-            state.TargetBleedMin = Utility.RandomMinMax(0, plan.BleedMax);
+
+            state.TargetBleedMin = Utility.RandomMinMax(plan.BleedMin, plan.BleedMax);
             state.TargetBleedMax = state.TargetBleedMin;
             state.Cut = 0;
             state.Heat = 0;
@@ -1230,7 +1293,7 @@ namespace Server.Custom.Systems.Health
             state.StatusText = "O paciente foi anestesiado. Comece os procedimentos.";
             state.Anesthetized = true;
             state.StartedUtc = DateTime.UtcNow;
-            state.DeadlineUtc = state.StartedUtc + GetBaseSurgeryTime(def.Severity);
+            state.DeadlineUtc = state.StartedUtc + GetBaseSurgeryTime(def.Severity) + TimeSpan.FromSeconds(GetSurgeryBonusSeconds(surgeon));
             state.LastActionUtc = state.StartedUtc;
 
             lock (_sync)
@@ -1278,9 +1341,18 @@ namespace Server.Custom.Systems.Health
         private static void EndSurgerySuccess(PlayerMobile surgeon, PlayerMobile patient, OSUSurgeryProgressState state)
         {
             OSUHealthProfile profile = GetProfile(patient, false);
+            Item anchor = null;
+
+            if (profile != null && profile.SurgeryStretcherSerial != 0)
+                anchor = World.FindItem(profile.SurgeryStretcherSerial);
+
             if (profile != null)
             {
                 profile.SurgeryFailureCount = 0;
+                profile.SurgeryBlockedUntilUtc = DateTime.MinValue;
+                profile.ComaUntilUtc = DateTime.MinValue;
+                profile.SterileHandsUntilUtc = DateTime.MinValue;
+
                 for (int i = profile.Injuries.Count - 1; i >= 0; i--)
                 {
                     if (!profile.Injuries[i].Cured && profile.Injuries[i].Type == state.Injury)
@@ -1289,6 +1361,8 @@ namespace Server.Custom.Systems.Health
                         break;
                     }
                 }
+
+                profile.SurgeryStretcherSerial = 0;
             }
 
             IncrementWeeklySurgeryCount(state.SourceCityId);
@@ -1298,10 +1372,17 @@ namespace Server.Custom.Systems.Health
 
             if (surgeon != null)
                 surgeon.SendMessage("A cirurgia foi concluída com sucesso.");
+
             patient.SendMessage("Você sente que a cirurgia terminou bem.");
+
             if (surgeon != null)
                 surgeon.CloseGump(typeof(OSUSurgeryStatusGump));
+
+            OSUDragSystem.ReleaseForcedLay(patient);
             patient.Frozen = false;
+
+            if (anchor != null && !anchor.Deleted && anchor.Map != null && anchor.Map != Map.Internal)
+                patient.MoveToWorld(new Point3D(anchor.X + 2, anchor.Y, anchor.Z), anchor.Map);
         }
 
         private static TimeSpan GetComaDurationForFailures(int count)
@@ -1485,89 +1566,94 @@ namespace Server.Custom.Systems.Health
             switch (tool)
             {
                 case OSUSurgeryToolType.Tesoura:
-                    if (!state.AllowCut)
-                        status = "A incisão foi desnecessária e piorou o estado do paciente.";
-                    else
-                    {
-                        state.Cut += 1;
-                        SpillBlood(patient);
-                        status = EvaluateAxisFeedback("Você fez a incisão perfeita.", "A incisão ajudou o procedimento.", "A incisão foi profunda e piorou o estado do paciente.", beforeCut, state.Cut, state.TargetCutMin);
-                    }
+                    state.Cut += 1;
+                    SpillBlood(patient);
+                    status = EvaluateAxisFeedback(
+                        "Você fez a incisão perfeita.",
+                        "A incisão aumentou bem a área de trabalho.",
+                        "O corte foi muito profundo e fez o paciente perder sangue demais.",
+                        beforeCut, state.Cut, state.TargetCutMin);
                     break;
                 case OSUSurgeryToolType.CuteloCirurgico:
-                    if (!state.AllowCut)
-                        status = "O corte pesado foi desnecessário e piorou o estado do paciente.";
-                    else
-                    {
-                        state.Cut += 3;
-                        SpillBlood(patient);
-                        status = EvaluateAxisFeedback("Você fez a incisão perfeita.", "O corte amplo ajudou o procedimento.", "O corte amplo piorou o estado do paciente.", beforeCut, state.Cut, state.TargetCutMin);
-                    }
+                    state.Cut += 3;
+                    SpillBlood(patient);
+                    status = EvaluateAxisFeedback(
+                        "Você fez a incisão perfeita.",
+                        "O corte amplo ajudou o procedimento.",
+                        "O corte foi muito profundo e fez o paciente perder sangue demais.",
+                        beforeCut, state.Cut, state.TargetCutMin);
                     break;
                 case OSUSurgeryToolType.Gazes:
                     state.Cut = Math.Max(0, state.Cut - 1);
-                    status = EvaluateAxisFeedback("Você fez a incisão perfeita.", "A gaze conteve o corte na medida certa.", "A gaze conteve demais o corte e atrapalhou o procedimento.", beforeCut, state.Cut, state.TargetCutMin);
+                    status = EvaluateAxisFeedback(
+                        "Não existe mais sangramento nessa região.",
+                        "A gaze estancou parte da hemorragia.",
+                        "A estancou o sangue numa area que precisava de irrigação.",
+                        beforeCut, state.Cut, state.TargetCutMin);
                     break;
                 case OSUSurgeryToolType.VelaCauterizadora:
-                    if (!state.AllowHeat)
-                        status = "O calor foi desnecessário e piorou o estado do paciente.";
-                    else
-                    {
-                        state.Heat += 1;
-                        status = EvaluateAxisFeedback("O tecido está morto.", "A cauterização ajudou o procedimento.", "A cauterização passou do ponto e piorou o estado do paciente.", beforeHeat, state.Heat, state.TargetHeatMin);
-                    }
+                    state.Heat += 1;
+                    status = EvaluateAxisFeedback(
+                        "O tecido está cauterizado.",
+                        "A cauterização ajudou o procedimento.",
+                        "A cauterização esquentou demais tecidos próximos.",
+                        beforeHeat, state.Heat, state.TargetHeatMin);
                     break;
                 case OSUSurgeryToolType.BrasaCauterizadora:
-                    if (!state.AllowHeat)
-                        status = "O calor intenso foi desnecessário e piorou o estado do paciente.";
-                    else
-                    {
-                        state.Heat += 3;
-                        status = EvaluateAxisFeedback("O tecido está morto.", "A brasa cauterizou com firmeza e ajudou o procedimento.", "A brasa cauterizou demais e piorou o estado do paciente.", beforeHeat, state.Heat, state.TargetHeatMin);
-                    }
+                    state.Heat += 3;
+                    status = EvaluateAxisFeedback(
+                        "O tecido está devidamente cauterizado.",
+                        "A brasa cauterizou a parte da área necessária.",
+                        "A brasa esquentou demias e está matando tecido.",
+                        beforeHeat, state.Heat, state.TargetHeatMin);
                     break;
                 case OSUSurgeryToolType.AguaEsteril:
                     state.Heat = Math.Max(0, state.Heat - 1);
-                    status = EvaluateAxisFeedback("O tecido está morto.", "A água estabilizou a cauterização.", "A água resfriou demais a área e piorou o estado do paciente.", beforeHeat, state.Heat, state.TargetHeatMin);
+                    status = EvaluateAxisFeedback(
+                        "O tecido foi irrigado.",
+                        "A água resfriou tecidos adjuntos.",
+                        "A água inundou a área de trabalho.",
+                        beforeHeat, state.Heat, state.TargetHeatMin);
                     break;
                 case OSUSurgeryToolType.Sanguessuga:
-                    if (!state.AllowBleed)
-                        status = "A drenagem foi desnecessária e piorou o estado do paciente.";
-                    else
-                    {
-                        state.Bleed += 1;
-                        status = EvaluateAxisFeedback("O ferimento foi totalmente drenado.", "A drenagem ajudou o procedimento.", "A drenagem passou do ponto e piorou o estado do paciente.", beforeBleed, state.Bleed, state.TargetBleedMin);
-                    }
+                    state.Bleed += 1;
+                    status = EvaluateAxisFeedback(
+                        "A drenagem foi efetiva no ferimento.",
+                        "Parte da secreção foi drenada.",
+                        "A drenagem foi exagerada e pode causar infeccções futuras ao paciente.",
+                        beforeBleed, state.Bleed, state.TargetBleedMin);
                     break;
                 case OSUSurgeryToolType.AdagaSangria:
-                    if (!state.AllowBleed)
-                        status = "A drenagem agressiva foi desnecessária e piorou o estado do paciente.";
-                    else
-                    {
-                        state.Bleed += 3;
-                        status = EvaluateAxisFeedback("O ferimento foi totalmente drenado.", "A drenagem agressiva ajudou o procedimento.", "A drenagem agressiva passou do ponto e piorou o estado do paciente.", beforeBleed, state.Bleed, state.TargetBleedMin);
-                    }
+                    state.Bleed += 3;
+                    status = EvaluateAxisFeedback(
+                        "O ferimento foi totalmente drenado.",
+                        "A drenagem não está contendo as secreções.",
+                        "A drenagem agressiva pode espalhar bacteria na lesão do paciente",
+                        beforeBleed, state.Bleed, state.TargetBleedMin);
                     break;
                 case OSUSurgeryToolType.AlcoolCirurgico:
-                case OSUSurgeryToolType.TochaCauterizadora:
                     state.Bleed = Math.Max(0, state.Bleed - 1);
-                    status = EvaluateAxisFeedback("O ferimento foi totalmente drenado.", "O álcool estabilizou a drenagem.", "O álcool removeu drenagem demais e piorou o estado do paciente.", beforeBleed, state.Bleed, state.TargetBleedMin);
+                    status = EvaluateAxisFeedback(
+                        "O ferimento foi limpo e está estéril.",
+                        "O álcool limpou parte da lesão.",
+                        "A aplicação de álcool nessa área foi excessiva e pode prejudar o procedimento.",
+                        beforeBleed, state.Bleed, state.TargetBleedMin);
                     break;
                 case OSUSurgeryToolType.LinhaSutura:
                     bool ok = state.Cut == state.TargetCutMin && state.Heat == state.TargetHeatMin && state.Bleed == state.TargetBleedMin;
                     if (ok)
                     {
-                        state.StatusText = "A sutura encerrou a cirurgia com sucesso.";
+                        state.StatusText = "O paciente foi suturado e a cirurgia foi finalizada com sucesso.";
                         EndSurgerySuccess(surgeon, patient, state);
                         message = state.StatusText;
                         return true;
                     }
 
-                    EndSurgeryFailure(surgeon, patient, state, "A sutura final foi feita no momento errado e a cirurgia falhou.");
-                    message = "A sutura final foi feita no momento errado e a cirurgia falhou.";
+                    EndSurgeryFailure(surgeon, patient, state, "A sutura final foi feita antes de finalizar a cirurgia, que não foi benéfica ao paciente.");
+                    message = "A sutura final foi feita antes de finalizar a cirurgia, que não foi benéfica ao paciente.";
                     return false;
                 default:
-                    message = "Esse instrumento não faz parte do novo procedimento cirúrgico.";
+                    message = "Esse objeto não faz parte do procedimento cirúrgico.";
                     return false;
             }
 
@@ -2225,7 +2311,136 @@ namespace Server.Custom.Systems.Health
 
         #endregion
 
-                #region Saves
+        #region Saves
+
+        public static void SerializeProfile(GenericWriter writer, PlayerMobile pm)
+        {
+            if (writer == null)
+                return;
+
+            OSUHealthProfile profile = GetProfile(pm, false);
+
+            writer.Write(profile != null);
+
+            if (profile == null)
+                return;
+
+            writer.Write(profile.DeadlyLocked);
+            writer.Write(profile.DeadlyDeadlineUtc);
+            writer.Write(profile.PortableStretcherSerial);
+            writer.Write(profile.HospitalStretcherSerial);
+            writer.Write(profile.LastCarrierSerial);
+            writer.Write(profile.SurgeryBlockedUntilUtc);
+            writer.Write(profile.ComaUntilUtc);
+            writer.Write(profile.SurgeryStretcherSerial);
+            writer.Write(profile.SurgeryFailureCount);
+            writer.Write(profile.SterileHandsUntilUtc);
+
+            writer.Write(profile.Injuries.Count);
+            for (int i = 0; i < profile.Injuries.Count; i++)
+            {
+                OSUInjuryState injury = profile.Injuries[i];
+                writer.Write((int)injury.Type);
+                writer.Write((int)injury.Severity);
+                writer.Write(injury.StartedUtc);
+                writer.Write(injury.EndsUtc);
+                writer.Write(injury.RequiresSurgery);
+                writer.Write(injury.Cured);
+            }
+
+            writer.Write(profile.Diseases.Count);
+            for (int i = 0; i < profile.Diseases.Count; i++)
+            {
+                OSUDiseaseState disease = profile.Diseases[i];
+                writer.Write((int)disease.Type);
+                writer.Write(disease.ContractedUtc);
+                writer.Write(disease.IncubationEndsUtc);
+                writer.Write(disease.NextPulseUtc);
+                writer.Write(disease.RecoveryCount);
+                writer.Write(disease.Cured);
+            }
+
+            writer.Write(profile.Immunities.Count);
+            for (int i = 0; i < profile.Immunities.Count; i++)
+            {
+                OSUImmunityState immunity = profile.Immunities[i];
+                writer.Write((int)immunity.Disease);
+                writer.Write(immunity.SourceId ?? String.Empty);
+                writer.Write(immunity.ReductionScalar);
+                writer.Write(immunity.EndsUtc);
+            }
+        }
+
+        public static void DeserializeProfile(GenericReader reader, PlayerMobile pm)
+        {
+            if (reader == null || pm == null)
+                return;
+
+            bool hasProfile = reader.ReadBool();
+
+            lock (_sync)
+            {
+                _profiles.Remove(pm.Serial.Value);
+            }
+
+            if (!hasProfile)
+                return;
+
+            OSUHealthProfile profile = new OSUHealthProfile();
+            profile.MobileSerial = pm.Serial.Value;
+            profile.DeadlyLocked = reader.ReadBool();
+            profile.DeadlyDeadlineUtc = reader.ReadDateTime();
+            profile.PortableStretcherSerial = reader.ReadInt();
+            profile.HospitalStretcherSerial = reader.ReadInt();
+            profile.LastCarrierSerial = reader.ReadInt();
+            profile.SurgeryBlockedUntilUtc = reader.ReadDateTime();
+            profile.ComaUntilUtc = reader.ReadDateTime();
+            profile.SurgeryStretcherSerial = reader.ReadInt();
+            profile.SurgeryFailureCount = reader.ReadInt();
+            profile.SterileHandsUntilUtc = reader.ReadDateTime();
+
+            int injuryCount = reader.ReadInt();
+            for (int i = 0; i < injuryCount; i++)
+            {
+                OSUInjuryState injury = new OSUInjuryState();
+                injury.Type = (OSUInjuryType)reader.ReadInt();
+                injury.Severity = (OSUInjurySeverity)reader.ReadInt();
+                injury.StartedUtc = reader.ReadDateTime();
+                injury.EndsUtc = reader.ReadDateTime();
+                injury.RequiresSurgery = reader.ReadBool();
+                injury.Cured = reader.ReadBool();
+                profile.Injuries.Add(injury);
+            }
+
+            int diseaseCount = reader.ReadInt();
+            for (int i = 0; i < diseaseCount; i++)
+            {
+                OSUDiseaseState disease = new OSUDiseaseState();
+                disease.Type = (OSUDiseaseType)reader.ReadInt();
+                disease.ContractedUtc = reader.ReadDateTime();
+                disease.IncubationEndsUtc = reader.ReadDateTime();
+                disease.NextPulseUtc = reader.ReadDateTime();
+                disease.RecoveryCount = reader.ReadInt();
+                disease.Cured = reader.ReadBool();
+                profile.Diseases.Add(disease);
+            }
+
+            int immunityCount = reader.ReadInt();
+            for (int i = 0; i < immunityCount; i++)
+            {
+                OSUImmunityState immunity = new OSUImmunityState();
+                immunity.Disease = (OSUDiseaseType)reader.ReadInt();
+                immunity.SourceId = reader.ReadString();
+                immunity.ReductionScalar = reader.ReadDouble();
+                immunity.EndsUtc = reader.ReadDateTime();
+                profile.Immunities.Add(immunity);
+            }
+
+            lock (_sync)
+            {
+                _profiles[pm.Serial.Value] = profile;
+            }
+        }
 
         private static void LoadStateFile()
         {

@@ -35,11 +35,6 @@ namespace Server.Custom.Systems.Health
             bonus.ExpiresUtc = DateTime.UtcNow + TimeSpan.FromSeconds(15.0);
 
             _pending[healer.Serial.Value] = bonus;
-
-            if (med.MedicineType == OSUMedicatedBandageType.SpeedBonus && healer is PlayerMobile)
-            {
-                healer.AddStatMod(new StatMod(StatType.Dex, "[OSU][BandageSpeed]", 40, TimeSpan.FromSeconds(10.0)));
-            }
         }
 
         public static int PullHealBonus(Mobile healer)
@@ -58,6 +53,25 @@ namespace Server.Custom.Systems.Health
                 return 0;
 
             return bonus.HealBonus;
+        }
+
+        public static double PullSpeedBonusSeconds(Mobile healer)
+        {
+            PendingBandageBonus bonus;
+
+            if (healer == null || !_pending.TryGetValue(healer.Serial.Value, out bonus))
+                return 0.0;
+
+            if (bonus.ExpiresUtc <= DateTime.UtcNow)
+            {
+                _pending.Remove(healer.Serial.Value);
+                return 0.0;
+            }
+
+            if (bonus.Type != OSUMedicatedBandageType.SpeedBonus)
+                return 0.0;
+
+            return 2.0; // só 2 segundos mais rápido
         }
 
         public static int PullPoisonBleedBonus(Mobile healer)

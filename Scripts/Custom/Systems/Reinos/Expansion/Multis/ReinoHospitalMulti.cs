@@ -121,7 +121,7 @@ namespace Server.Custom.Reinos
                 items.Add(EnsureItem(index++, new OSUCuteloCirurgico(cityId, key), new Point3D(o.X, o.Y + 1, o.Z + 10)));
 
                 items.Add(EnsureItem(index++, new OSUAnestesicoCirurgico(cityId, key), new Point3D(o.X, o.Y, o.Z + 2)));
-                items.Add(EnsureItem(index++, new OSUAlcoolCirurgico(cityId, key), new Point3D(o.X, o.Y, o.Z + 8)));
+                items.Add(EnsureItem(index++, new OSUAlcoolCirurgico(cityId, key), new Point3D(o.X, o.Y, o.Z + 5)));
             }
 
             if (_auxSerials != null && _auxSerials.Length > items.Count)

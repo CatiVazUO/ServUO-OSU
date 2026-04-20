@@ -93,5 +93,6 @@ namespace Server.Custom.Systems.Health
         public DateTime ComaUntilUtc;
         public int SurgeryStretcherSerial;
         public int SurgeryFailureCount;
+        public DateTime SterileHandsUntilUtc;
     }
 }

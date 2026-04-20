@@ -39,11 +39,11 @@ namespace Server.Custom.Systems.Health.Gumps
             AddImage(663, 375, 1317);
             AddImage(391, 375, 1318);
 
-            AddLabel(531, 219, 0, "Remédio");
+            AddLabel(531, 219, 1152, "Remédio");
             AddButton(522, 363, 495, 495, 1, GumpButtonType.Reply, 0);
 
             string desc = tub != null ? tub.GetEffectDescription() : String.Empty;
-            desc += "<br><br><BASEFONT COLOR=#000000><B>Custo por bandagem:</B> " + (tub != null ? tub.CostPerBandage : 0).ToString() + " moedas";
+            desc += "<br><br><BASEFONT COLOR=#FFFFFF><B>Custo por bandagem:</B> " + (tub != null ? tub.CostPerBandage : 0).ToString() + " moedas";
             desc += "<br><B>Total:</B> " + _total.ToString() + " moedas</BASEFONT>";
 
             AddHtml(441, 253, 230, 91, desc, false, true);

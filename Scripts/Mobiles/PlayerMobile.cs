@@ -52,6 +52,7 @@ using static System.Net.Mime.MediaTypeNames;
 using RankDefinition = Server.Guilds.RankDefinition;
 using Server.Custom.Systems.DefQual;
 using Server.Custom.Systems.PlayerMadeStatues;
+using Server.Custom.Systems.Health;
 #endregion
 
 namespace Server.Mobiles
@@ -7605,6 +7606,11 @@ namespace Server.Mobiles
             switch (version)
             {
                 #region OSU Deserialize
+                case 52:
+                    {
+                        OSUHealthSystem.DeserializeProfile(reader, this);
+                        goto case 51;
+                    }
                 case 51:
                     {
                         OSUStrCapMax = reader.ReadInt();
@@ -8254,9 +8260,12 @@ namespace Server.Mobiles
 
             base.Serialize(writer);
 
-            writer.Write(51); // version
+            writer.Write(52); // version
 
             #region OSU Serialize
+
+            // Healthsystem
+            OSUHealthSystem.SerializeProfile(writer, this);
 
             // DefQuals
             writer.Write(OSUStrCapMax);
