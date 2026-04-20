@@ -140,12 +140,19 @@ namespace Server.Items
 				{
 					if (from.InRange(m_Bandage.GetWorldLocation(), Bandage.Range))
 					{
-						if (BandageContext.BeginHeal(from, (Mobile)targeted, m_Bandage is EnhancedBandage) != null)
-						{
+                        Server.Custom.Systems.Health.OSUBandageUtility.PrepareBandageUse(from, (Mobile)targeted, m_Bandage);
+
+                        if (BandageContext.BeginHeal(from, (Mobile)targeted, m_Bandage is EnhancedBandage) != null)
+                        {
                             NegativeAttributes.OnCombatAction(from);
-							m_Bandage.Consume();
-						}
-					}
+                            Server.Custom.Systems.Health.OSUBandageUtility.DropBloodyBandage(from, (Mobile)targeted, m_Bandage);
+                            m_Bandage.Consume();
+                        }
+                        else
+                        {
+                            Server.Custom.Systems.Health.OSUBandageUtility.ClearPending(from);
+                        }
+                    }
 					else
 					{
 						from.SendLocalizedMessage(500295); // You are too far away to do that.
@@ -285,6 +292,7 @@ namespace Server.Items
                 double healing = m_Healer.Skills[SkillName.Healing].Value;
                 double anatomy = m_Healer.Skills[SkillName.Anatomy].Value;
                 double chance = ((healing + anatomy) - 120) * 25;
+                chance += Server.Custom.Systems.Health.OSUBandageUtility.PullPoisonBleedBonus(m_Healer);
 
                 if (poisoned)
                     chance /= m_Patient.Poison.RealLevel * 20;
@@ -499,6 +507,8 @@ namespace Server.Items
                 if (item is Asclepius || item is GargishAsclepius)
                     m_HealingBonus += 15;
 
+                m_HealingBonus += Server.Custom.Systems.Health.OSUBandageUtility.PullHealBonus(m_Healer);
+
                 if (m_HealingBonus > 0)
                     healing += m_HealingBonus;
 
@@ -597,6 +607,8 @@ namespace Server.Items
                 BuffInfo.RemoveBuff(m_Healer, BuffIcon.Healing);
             else
                 BuffInfo.RemoveBuff(m_Healer, BuffIcon.Veterinary);
+
+            Server.Custom.Systems.Health.OSUBandageUtility.ClearPending(m_Healer);
         }
 
 		private class InternalTimer : Timer

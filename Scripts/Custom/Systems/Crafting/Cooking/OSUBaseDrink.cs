@@ -3,6 +3,7 @@ using Server.Items;
 using Server.Mobiles;
 using Server.Custom.Systems.WorldTime;
 using Server.Custom.Systems.Needs;
+using Server.Custom.Systems.Health;
 
 namespace Server.Custom.Systems.Crafting.Cooking
 {
@@ -110,6 +111,9 @@ namespace Server.Custom.Systems.Crafting.Cooking
                 var duration = TimeSpan.FromMinutes(_fillFactor);
                 new HotTimer(pm, duration, _hotHpPerTick, _hotStamPerTick, _hotManaPerTick).Start();
             }
+
+            if (OSUHealthSystem.IsContaminated(this))
+                OSUHealthSystem.TryExposeFromItem(pm, this);
 
             pm.SendMessage("Você bebe.");
             Consume();

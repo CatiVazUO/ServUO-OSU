@@ -1339,6 +1339,7 @@ namespace Server.Mobiles
                         if (OSULives > 0)
                         {
                             OSULives--;
+                            Server.Custom.Systems.Health.OSUHealthSystem.OnPlayerKnockoutLostLife(this);
                             _OSUKnockoutPending = true;
                             OSUConsumeLifeAndStartRegenIfNeeded();
                         }
@@ -5411,8 +5412,12 @@ namespace Server.Mobiles
             {
                 PlayerMobile listener = hears[i] as PlayerMobile;
 
-                if (listener != null && OSUDefQualDispatcher.BlocksHearingSpeech(listener, this))
+                if (listener != null &&
+                 (OSUDefQualDispatcher.BlocksHearingSpeech(listener, this) ||
+                  Server.Custom.Systems.Health.OSUHealthSystem.BlocksHearingSpeech(listener, this)))
+                {
                     hears.RemoveAt(i);
+                }
             }
 
             if (Alive)
@@ -5443,6 +5448,12 @@ namespace Server.Mobiles
 
         public override void DoSpeech(string text, int[] keywords, MessageType type, int hue)
         {
+            if (Server.Custom.Systems.Health.OSUHealthSystem.BlocksOwnSpeech(this) && type != MessageType.Emote)
+            {
+                SendMessage("Você está em coma e não consegue falar. Só consegue se expressar por emotes.");
+                return;
+            }
+
             if (OSUDefQualDispatcher.BlocksOwnSpeech(this) && type != MessageType.Emote)
             {
                 SendMessage("Você não consegue falar. Só consegue se expressar por emotes.");

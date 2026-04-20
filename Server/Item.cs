@@ -677,12 +677,60 @@ namespace Server
         #region OSU Props
 
         private string _OlharTxt;
+        private bool _OSUContaminated;
+        private int _OSUContamination;
+        private DateTime _OSUContaminationEndsUtc;
+        private string _OSUContaminationSource;
 
         [CommandProperty(AccessLevel.GameMaster)]
         public string OlharTxt
         {
             get => _OlharTxt;
             set => _OlharTxt = value;
+        }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public bool OSUContaminated
+        {
+            get => _OSUContaminated;
+            set
+            {
+                _OSUContaminated = value;
+                InvalidateProperties();
+            }
+        }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUContamination
+        {
+            get => _OSUContamination;
+            set
+            {
+                _OSUContamination = value;
+                InvalidateProperties();
+            }
+        }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public DateTime OSUContaminationEndsUtc
+        {
+            get => _OSUContaminationEndsUtc;
+            set
+            {
+                _OSUContaminationEndsUtc = value;
+                InvalidateProperties();
+            }
+        }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public string OSUContaminationSource
+        {
+            get => _OSUContaminationSource;
+            set
+            {
+                _OSUContaminationSource = value;
+                InvalidateProperties();
+            }
         }
 
         #endregion
@@ -2631,7 +2679,13 @@ namespace Server
 
         public virtual void Serialize(GenericWriter writer)
         {
-            writer.Write(15); // version
+            writer.Write(16); // version
+
+            //16
+            writer.Write(_OSUContaminated);
+            writer.Write(_OSUContamination);
+            writer.Write(_OSUContaminationEndsUtc);
+            writer.Write(_OSUContaminationSource);
 
             //15
             writer.Write(_OlharTxt);
@@ -3141,6 +3195,13 @@ namespace Server
 
             switch (version)
             {
+                case 16:
+                    _OSUContaminated = reader.ReadBool();
+                    _OSUContamination = reader.ReadInt();
+                    _OSUContaminationEndsUtc = reader.ReadDateTime();
+                    _OSUContaminationSource = reader.ReadString();
+                    goto case 15;
+
                 case 15:
                     _OlharTxt = reader.ReadString();
                     goto case 14;

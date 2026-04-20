@@ -8,6 +8,7 @@ using Server.Gumps;
 using Server.ContextMenus;
 using System.Collections.Generic;
 using Server.Items;
+using Server.Custom.Reinos;
 
 namespace Server.Items
 {
@@ -96,6 +97,18 @@ namespace Server.Items
         }
         #endregion
 
+        private void SendGoldToKingdomTreasury(int goldAmount)
+        {
+            if (goldAmount <= 0 || Deleted || Map == null || Map == Map.Internal)
+                return;
+
+            int cityId = ReinoMilitarySystem.ResolveCityIdAt(this.Location, this.Map);
+
+            if (cityId < 0)
+                return;
+
+            ReinoTreasurySystem.RecordDonationToKingdom(cityId, goldAmount, 0, 0, 0);
+        }
         public override void OnDoubleClick(Mobile from)
         {
             if (from.InRange(GetWorldLocation(), 2))
@@ -296,6 +309,7 @@ namespace Server.Items
             }
 
             bank.ConsumeTotal(typeof(Gold), goldCost);
+            SendGoldToKingdomTreasury(goldCost);
             BaseCreature c = (BaseCreature)target;
             c.ControlMaster = this.Owner;
             c.Home = this.Owner.Location;
@@ -405,6 +419,7 @@ namespace Server.Items
                                 }
 
                                 bank.ConsumeTotal(typeof(Gold), goldCostStable);
+                                m_Post.SendGoldToKingdomTreasury(goldCostStable);
                                 m_Post.Owner = c.ControlMaster;
                                 m_Post.Controlled = c;
                                 c.Home = m_Post.Location;

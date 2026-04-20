@@ -590,6 +590,7 @@ namespace Server.Custom.Reinos
 
             AddCosts(list, info.Definition.MaintenanceCosts);
             ReinoMilitarySystem.AddDynamicWeeklyCosts(info, list);
+            Server.Custom.Systems.Health.OSUHealthSystem.AddDynamicWeeklyCosts(info, list);
 
             int npcCost = GetNpcCount(info) * Math.Max(0, info.Definition.NpcWeeklySalaryGold);
             if (npcCost > 0)

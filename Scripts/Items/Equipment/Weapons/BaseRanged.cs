@@ -60,6 +60,14 @@ namespace Server.Items
 
 		public override TimeSpan OnSwing(Mobile attacker, IDamageable damageable)
 		{
+            PlayerMobile pm = attacker as PlayerMobile;
+
+            if (pm != null && Server.Custom.Systems.Health.OSUHealthSystem.HasLeftArmArcheryBlock(pm))
+            {
+                pm.SendMessage("Seu braço esquerdo está ferido. Você não consegue pegar flechas.");
+                return TimeSpan.FromSeconds(0.25);
+            }
+
             long nextShoot;
 
             if (attacker is PlayerMobile)

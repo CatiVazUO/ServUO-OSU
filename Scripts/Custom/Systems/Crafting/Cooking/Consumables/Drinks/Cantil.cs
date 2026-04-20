@@ -4,6 +4,7 @@ using Server.Mobiles;
 using Server.Targeting;
 using Server.Custom.Systems.Needs;
 using Server.Custom.Systems.Needs.Gumps;
+using Server.Custom.Systems.Health;
 
 namespace Server.Custom.Systems.Crafting.Cooking.Consumables.Drinks
 {
@@ -56,6 +57,18 @@ namespace Server.Custom.Systems.Crafting.Cooking.Consumables.Drinks
 
             Content = BeverageType.Water;
             Quantity = MaxQuantity;
+
+            Item item = targ as Item;
+            if (item != null && OSUHealthSystem.IsContaminated(item))
+                OSUHealthSystem.CopyContamination(item, this);
+            else
+            {
+                OSUDiseaseType disease;
+                if (!OSUHealthSystem.TryGetAreaDiseaseAt(map, p.X, p.Y, out disease))
+                    OSUHealthSystem.ClearContaminatedItem(this);
+                else
+                    OSUHealthSystem.ContaminateItem(this, disease, TimeSpan.FromHours(12), "água contaminada");
+            }
 
             from.PlaySound(0x240);
             from.SendMessage("Você enche o cantil com água.");
@@ -123,6 +136,9 @@ namespace Server.Custom.Systems.Crafting.Cooking.Consumables.Drinks
                     pm.SendMessage("Você está satisfeito demais para beber agora.");
                     return;
                 }
+
+                if (OSUHealthSystem.IsContaminated(this))
+                    OSUHealthSystem.TryExposeFromItem(pm, this);
 
                 pm.PlaySound(Utility.RandomList(0x30, 0x31, 0x2D6));
                 pm.SendMessage("Você toma um gole de água.");

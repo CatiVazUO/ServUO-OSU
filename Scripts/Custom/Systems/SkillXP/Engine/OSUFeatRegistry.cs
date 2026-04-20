@@ -20,6 +20,8 @@ namespace Server.Custom.Systems.SkillXP.Engine
 
             // Register profession feats (Systems/Feats/Profissoes)
             Register(new Custom.Systems.Skills.Profissoes.MiningProficiencyFeat());
+            Register(new Custom.Systems.Skills.Profissoes.ExameMedicoFeat());
+            Register(new Custom.Systems.Skills.Profissoes.CirurgiaFeat());
         }
 
         public static IOSUFeat GetById(int id)
