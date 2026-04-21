@@ -202,6 +202,11 @@ namespace Server.Custom.Systems.Health
             AddDisease(d, OSUDiseaseType.LoveDisease, "Sífilis", "O paciente sofre de lesões indolores nas mãos, rosto e outras áreas sensíveis, além de estar debilitado.",
                 "Você se sente tonto...", RandomBetweenMinutes(100, 200), RandomBetweenMinutes(200, 400), 250, false);
 
+            AddDisease(d, OSUDiseaseType.Infeccao, "Infecção", "O paciente apresenta febre, mal estar, vômitos e enfraquecimento progressivo.",
+                "O ferimento começa a arder e latejar...", TimeSpan.FromDays(1.0), RandomBetweenMinutes(20, 40), 200, true);
+
+            AddDisease(d, OSUDiseaseType.InfeccaoGeneralizada, "Infecção Generalizada", "O paciente apresenta febre alta, vômitos, fraqueza intensa e sinais de infecção espalhada pelo corpo.",
+                "Seu corpo inteiro parece queimar por dentro...", TimeSpan.Zero, RandomBetweenMinutes(15, 30), 500, true);
 
             return d;
         }
@@ -1431,12 +1436,37 @@ namespace Server.Custom.Systems.Health
 
             OSUHealthProfile profile = GetProfile(patient, true);
             profile.SurgeryFailureCount++;
-            TimeSpan coma = GetComaDurationForFailures(profile.SurgeryFailureCount);
-            EnterComa(patient, coma);
 
-            if (surgeon != null)
-                surgeon.SendMessage(reason + " O paciente entrou em coma por " + ((int)coma.TotalHours) + " horas.");
-            patient.SendMessage("Seu corpo entra em coma após a cirurgia falhar.");
+            if (profile.SurgeryFailureCount == 1)
+            {
+                bool gotInfection = Utility.RandomDouble() < 0.30;
+
+                if (gotInfection)
+                {
+                    ApplyDisease(patient, OSUDiseaseType.Infeccao, true);
+
+                    if (surgeon != null)
+                        surgeon.SendMessage(reason + " A falha cirúrgica infeccionou o ferimento do paciente.");
+
+                    patient.SendMessage("O ferimento infeccionou após a cirurgia falhar.");
+                }
+                else
+                {
+                    if (surgeon != null)
+                        surgeon.SendMessage(reason + " O paciente resistiu à falha, mas o procedimento não teve sucesso.");
+
+                    patient.SendMessage("Seu corpo resiste à falha da cirurgia, mas o procedimento não teve sucesso.");
+                }
+            }
+            else
+            {
+                TimeSpan coma = GetComaDurationForFailures(profile.SurgeryFailureCount);
+                EnterComa(patient, coma);
+
+                if (surgeon != null)
+                    surgeon.SendMessage(reason + " O paciente entrou em coma por " + ((int)coma.TotalHours) + " horas.");
+                patient.SendMessage("Seu corpo entra em coma após a cirurgia falhar.");
+            }
 
             IncrementWeeklySurgeryCount(state.SourceCityId);
             if (surgeon != null)
@@ -1797,6 +1827,14 @@ namespace Server.Custom.Systems.Health
 
                     if (disease.RecoveryCount > def.RecoveryTarget)
                     {
+                        if (disease.Type == OSUDiseaseType.Infeccao && Utility.RandomDouble() < 0.20)
+                        {
+                            profile.Diseases.RemoveAt(i);
+                            ApplyDisease(pm, OSUDiseaseType.InfeccaoGeneralizada, true);
+                            pm.SendMessage("A infecção piorou e se espalhou pelo corpo.");
+                            continue;
+                        }
+
                         pm.SendMessage("Você se sente mais saudável.");
                         AddTimedImmunity(pm, disease.Type, "recuperacao_natural", 0.10, TimeSpan.FromHours(12));
                         profile.Diseases.RemoveAt(i);
@@ -1919,6 +1957,19 @@ namespace Server.Custom.Systems.Health
                     pm.Emote("*parece debilitado*");
                     pm.AddStatMod(new StatMod(StatType.Str, "[OSU][LoveDisease][Str]", -3, TimeSpan.FromMinutes(5)));
                     pm.AddStatMod(new StatMod(StatType.Dex, "[OSU][LoveDisease][Dex]", -3, TimeSpan.FromMinutes(5)));
+                    break;
+                case OSUDiseaseType.Infeccao:
+                    pm.Emote("*treme de febre e vomita*");
+                    pm.Damage(Utility.RandomMinMax(1, 2), pm);
+                    pm.AddStatMod(new StatMod(StatType.Str, "[OSU][Infeccao][Str]", -2, TimeSpan.FromMinutes(5)));
+                    pm.AddStatMod(new StatMod(StatType.Dex, "[OSU][Infeccao][Dex]", -2, TimeSpan.FromMinutes(5)));
+                    break;
+                case OSUDiseaseType.InfeccaoGeneralizada:
+                    pm.Emote("*queima de febre e vomita sem parar*");
+                    pm.Damage(Utility.RandomMinMax(2, 4), pm);
+                    pm.Stam = Math.Max(0, pm.Stam - 3);
+                    pm.AddStatMod(new StatMod(StatType.Str, "[OSU][InfeccaoGeneralizada][Str]", -4, TimeSpan.FromMinutes(5)));
+                    pm.AddStatMod(new StatMod(StatType.Dex, "[OSU][InfeccaoGeneralizada][Dex]", -4, TimeSpan.FromMinutes(5)));
                     break;
             }
         }

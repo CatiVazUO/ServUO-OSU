@@ -10,6 +10,7 @@ using Server.Network;
 using Server.Engines.Despise;
 using Server.Services.Virtues;
 using Server.Items;
+using Server.Custom.Systems.Health;
 
 #endregion
 
@@ -141,10 +142,16 @@ namespace Server.Custom.Systems.Crafting.Tailoring.Fabrics.Bandages
                 {
                     if (from.InRange(m_SkinBandage.GetWorldLocation(), SkinBandage.Range))
                     {
+                        OSUBandageUtility.PrepareBandageUse(from, (Mobile)targeted, m_SkinBandage);
+
                         if (BandageContext.BeginHeal(from, (Mobile)targeted, false) != null)
                         {
                             NegativeAttributes.OnCombatAction(from);
                             m_SkinBandage.Consume();
+                        }
+                        else
+                        {
+                            OSUBandageUtility.ClearPending(from);
                         }
                     }
                     else
@@ -286,6 +293,7 @@ namespace Server.Custom.Systems.Crafting.Tailoring.Fabrics.Bandages
                 double healing = m_Healer.Skills[SkillName.Healing].Value;
                 double anatomy = m_Healer.Skills[SkillName.Anatomy].Value;
                 double chance = (healing + anatomy - 120) * 25;
+                chance += OSUBandageUtility.PullPoisonBleedBonus(m_Healer);
 
                 if (poisoned)
                     chance /= m_Patient.Poison.RealLevel * 20;
@@ -500,6 +508,8 @@ namespace Server.Custom.Systems.Crafting.Tailoring.Fabrics.Bandages
                 if (item is Asclepius || item is GargishAsclepius)
                     m_HealingBonus += 15;
 
+                m_HealingBonus += OSUBandageUtility.PullHealBonus(m_Healer);
+
                 if (m_HealingBonus > 0)
                     healing += m_HealingBonus;
 
@@ -598,6 +608,8 @@ namespace Server.Custom.Systems.Crafting.Tailoring.Fabrics.Bandages
                 BuffInfo.RemoveBuff(m_Healer, BuffIcon.Healing);
             else
                 BuffInfo.RemoveBuff(m_Healer, BuffIcon.Veterinary);
+
+            OSUBandageUtility.ClearPending(m_Healer);
         }
 
         private class InternalTimer : Timer
@@ -758,6 +770,18 @@ namespace Server.Custom.Systems.Crafting.Tailoring.Fabrics.Bandages
             else
             {
                 seconds = 5.0 + resDelay;
+            }
+
+            double osuSpeedBonus = OSUBandageUtility.PullSpeedBonusSeconds(healer);
+
+            if (osuSpeedBonus != 0.0)
+            {
+                seconds -= osuSpeedBonus;
+
+                if (healer == patient)
+                    seconds = Math.Max(seconds, 3.5);
+                else
+                    seconds = Math.Max(seconds, 1.5);
             }
 
             return TimeSpan.FromSeconds(seconds);

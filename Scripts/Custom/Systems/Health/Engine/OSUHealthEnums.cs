@@ -44,7 +44,9 @@ namespace Server.Custom.Systems.Health
         WesternFever = 6,
         Bile = 7,
         Leprosy = 8,
-        LoveDisease = 9
+        LoveDisease = 9,
+        Infeccao = 10,
+        InfeccaoGeneralizada = 11
     }
 
     public enum OSUInjurySeverity

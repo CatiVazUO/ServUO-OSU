@@ -1,3 +1,4 @@
+using Server;
 using Server.Items;
 using System;
 
@@ -18,6 +19,12 @@ namespace Server.Custom.Systems.Crafting.Tailoring.Fabrics.Bandages
 
         public WoolBandage(Serial serial) : base(serial)
         {
+        }
+
+        public override void GetProperties(ObjectPropertyList list)
+        {
+            base.GetProperties(list);
+            list.Add("Bandagem espessa: cura mais, mas age mais devagar.");
         }
 
         public override void Serialize(GenericWriter writer)

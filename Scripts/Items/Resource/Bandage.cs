@@ -770,8 +770,20 @@ namespace Server.Items
             {
                 seconds = 5.0 + resDelay;
             }
-			
-			return TimeSpan.FromSeconds(seconds);
+
+            double osuSpeedBonus = Server.Custom.Systems.Health.OSUBandageUtility.PullSpeedBonusSeconds(healer);
+
+            if (osuSpeedBonus > 0.0)
+            {
+                seconds -= osuSpeedBonus;
+
+                if (healer == patient)
+                    seconds = Math.Max(seconds, 3.5);
+                else
+                    seconds = Math.Max(seconds, 1.5);
+            }
+
+            return TimeSpan.FromSeconds(seconds);
 		}
 	}
 

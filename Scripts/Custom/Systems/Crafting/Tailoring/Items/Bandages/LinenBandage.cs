@@ -1,3 +1,4 @@
+using Server;
 using Server.Items;
 using System;
 
@@ -18,6 +19,12 @@ namespace Server.Custom.Systems.Crafting.Tailoring.Fabrics.Bandages
 
         public LinenBandage(Serial serial) : base(serial)
         {
+        }
+
+        public override void GetProperties(ObjectPropertyList list)
+        {
+            base.GetProperties(list);
+            list.Add("Cura em etapas: aplica uma parte da cura agora e o resto ao longo de 20 segundos.");
         }
 
         public override void Serialize(GenericWriter writer)

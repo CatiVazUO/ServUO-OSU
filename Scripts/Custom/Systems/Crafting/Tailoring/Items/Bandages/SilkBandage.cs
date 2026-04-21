@@ -1,3 +1,4 @@
+using Server;
 using Server.Items;
 using System;
 
@@ -18,6 +19,12 @@ namespace Server.Custom.Systems.Crafting.Tailoring.Fabrics.Bandages
 
         public SilkBandage(Serial serial) : base(serial)
         {
+        }
+
+        public override void GetProperties(ObjectPropertyList list)
+        {
+            base.GetProperties(list);
+            list.Add("Bandagem leve: cura menos, mas age mais rápido.");
         }
 
         public override void Serialize(GenericWriter writer)
