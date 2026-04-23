@@ -26,6 +26,8 @@ namespace Server.Custom.Reinos
             Register(TribunalAuroraDefinition.Create());
             Register(TemploAuroraDefinition.Create());
             Register(HospitalAuroraDefinition.Create());
+            Register(TeatroAuroraDefinition.Create());
+            Register(CircoAuroraDefinition.Create());
             // Adicione novas construções aqui conforme for criando novos arquivos.
         }
 

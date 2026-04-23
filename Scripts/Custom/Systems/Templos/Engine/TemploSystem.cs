@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Server;
 using Server.Items;
+using Server.Custom.Systems.Common.Engine;
 using Server.Mobiles;
 using Server.Network;
 using Server.Custom.Reinos;
@@ -1014,13 +1015,9 @@ namespace Server.Custom.Systems.Templos
 
                 int oldLevel;
                 if (!restore.TryGetValue(pm.Serial.Value, out oldLevel))
-                    restore[pm.Serial.Value] = pm.LightLevel;
+                    restore[pm.Serial.Value] = 1;
 
-                if (pm.LightLevel != 15)
-                {
-                    pm.LightLevel = 15;
-                    pm.CheckLightLevels(true);
-                }
+                OSULightOverrideSystem.SetOverride(pm, 26, 0);
             }
 
             List<int> restoreKeys = new List<int>(restore.Keys);
@@ -1035,8 +1032,7 @@ namespace Server.Custom.Systems.Templos
                     PlayerMobile pm = mob as PlayerMobile;
                     if (pm != null && !pm.Deleted)
                     {
-                        pm.LightLevel = restore[restoreKeys[i]];
-                        pm.CheckLightLevels(true);
+                        OSULightOverrideSystem.ClearOverride(pm);
                     }
                 }
 
@@ -1069,8 +1065,7 @@ namespace Server.Custom.Systems.Templos
                     PlayerMobile pm = mob as PlayerMobile;
                     if (pm != null && !pm.Deleted)
                     {
-                        pm.LightLevel = ev.FuneralLightRestore[keys[i]];
-                        pm.CheckLightLevels(true);
+                        OSULightOverrideSystem.ClearOverride(pm);
                     }
                 }
             }

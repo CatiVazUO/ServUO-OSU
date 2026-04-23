@@ -3,6 +3,7 @@ using Server.Accounting;
 using Server.Commands;
 using Server.ContextMenus;
 using Server.Custom.Systems.Creation.Engine;
+using Server.Custom.Systems.Common.Engine;
 using Server.Engines.BulkOrders;
 using Server.Engines.CannedEvil;
 using Server.Engines.CityLoyalty;
@@ -2521,6 +2522,11 @@ namespace Server.Mobiles
 
         public override void ComputeBaseLightLevels(out int global, out int personal)
         {
+            if (OSULightOverrideSystem.TryGetOverride(this, out global, out personal))
+            {
+                return;
+            }
+
             global = LightCycle.ComputeLevelFor(this);
 
             bool racialNightSight = (Core.ML && Race == Race.Elf);
