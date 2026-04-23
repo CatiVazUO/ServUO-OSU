@@ -222,9 +222,9 @@ namespace Server.Mobiles
         }
         public virtual StatuePoseDefinition[] StatueAllowedPoses { get { return new StatuePoseDefinition[0]; } }
 
-        public virtual int StatueSuccessChance { get { return 0; }}
+        public virtual int StatueSuccessChance { get { return 0; } }
 
-        public virtual SculptorRequirement[] StatueExtraRequirements{  get { return new SculptorRequirement[0]; }}
+        public virtual SculptorRequirement[] StatueExtraRequirements { get { return new SculptorRequirement[0]; } }
 
         // osu lives
         public int OSULivesMax { get; set; } = 0;
@@ -235,75 +235,46 @@ namespace Server.Mobiles
         public bool OSUSuppressSpawnLoot { get; set; } = false;
 
         // OSU Stable Pets
-        public bool OSUPetInitialized { get; set; }
-        public int OSUPetLevel { get; set; }
-        public int OSUPetXP { get; set; }
-        public int OSUPetNextLevelXP { get; set; }
-        public int OSUPetLastGainStr { get; set; }
-        public int OSUPetLastGainDex { get; set; }
-        public int OSUPetLastGainInt { get; set; }
-        public int OSUPetLastGainLevel { get; set; }
-        public int OSUPetLevelOneStr { get; set; }
-        public int OSUPetLevelOneDex { get; set; }
-        public int OSUPetLevelOneInt { get; set; }
-        public bool OSUPetCastrated { get; set; }
-        public bool OSUPetSterile { get; set; }
-        public bool OSUPetMarked { get; set; }
-        public int OSUPetBrandOwnerSerial { get; set; }
-        public string OSUPetBrandOwnerName { get; set; }
-        public int OSUPetLivesRemaining { get; set; }
-        public int OSUPetLivesMax { get; set; }
-        public bool OSUPetAwaitingResurrection { get; set; }
-        public DateTime OSUPetDownedUntilUtc { get; set; }
-        public DateTime OSUPetLastCommandUtc { get; set; }
-        public int OSUPetBreedCount { get; set; }
-        public int OSUPetBreedCountMax { get; set; }
-        public string OSUPetBreedGroup { get; set; }
-        public string OSUPetAbilitySlot5 { get; set; }
-        public string OSUPetAbilitySlot10 { get; set; }
-        public int OSUPetServiceOwnerSerial { get; set; }
-        public int OSUPetServiceKind { get; set; }
-        public int OSUPetServiceCityId { get; set; }
-        public DateTime OSUPetServiceReadyUtc { get; set; }
-        public DateTime OSUPetServiceClaimFromUtc { get; set; }
-        public int OSUPetServicePartnerSerial { get; set; }
-        public string OSUPetPendingOffspringTypeName { get; set; }
-        public bool OSUPetPendingOffspringFemale { get; set; }
-        public int OSUPetPendingOffspringStr { get; set; }
-        public int OSUPetPendingOffspringDex { get; set; }
-        public int OSUPetPendingOffspringInt { get; set; }
-        public int OSUPetPendingOffspringBreedMax { get; set; }
-        public string OSUPetPendingOffspringGroup { get; set; }
-        public int OSUPetStoredControlSlots { get; set; }
-        public int OSUPetServiceRoomIndex { get; set; }
-        public int OSUPetServiceStage { get; set; }
-        public int OSUPetLastTrainedLevel { get; set; }
-        public DateTime OSUPetPastureAtUtc { get; set; }
-
-
-        [CommandProperty(AccessLevel.GameMaster)]
-        public int OSUPetDebugLevel { get { return OSUPetLevel; } set { OSUPetLevel = value; } }
-
-        [CommandProperty(AccessLevel.GameMaster)]
-        public int OSUPetDebugXP { get { return OSUPetXP; } set { OSUPetXP = value; } }
-
-        [CommandProperty(AccessLevel.GameMaster)]
-        public int OSUPetDebugNextLevelXP { get { return OSUPetNextLevelXP; } set { OSUPetNextLevelXP = value; } }
-
-        [CommandProperty(AccessLevel.GameMaster)]
-        public bool OSUPetDebugMarked { get { return OSUPetMarked; } set { OSUPetMarked = value; } }
-
-        [CommandProperty(AccessLevel.GameMaster)]
-        public bool OSUPetDebugCastrated { get { return OSUPetCastrated; } set { OSUPetCastrated = value; } }
-
-        [CommandProperty(AccessLevel.GameMaster)]
-        public int OSUPetDebugLives { get { return OSUPetLivesRemaining; } set { OSUPetLivesRemaining = value; } }
-
-        [CommandProperty(AccessLevel.GameMaster)]
-        public int OSUPetDebugBreedCount { get { return OSUPetBreedCount; } set { OSUPetBreedCount = value; } }
-
-        [CommandProperty(AccessLevel.GameMaster)]
-        public int OSUPetDebugBreedMax { get { return OSUPetBreedCountMax; } set { OSUPetBreedCountMax = value; } }
+        [CommandProperty(AccessLevel.GameMaster)] public bool OSUPetInitialized { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetLevel { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetXP { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetNextLevelXP { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetLastGainStr { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetLastGainDex { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetLastGainInt { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetLastGainLevel { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetLevelOneStr { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetLevelOneDex { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetLevelOneInt { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public bool OSUPetCastrated { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public bool OSUPetSterile { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public bool OSUPetMarked { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetBrandOwnerSerial { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public string OSUPetBrandOwnerName { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetLivesRemaining { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetLivesMax { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public bool OSUPetAwaitingResurrection { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public DateTime OSUPetDownedUntilUtc { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public DateTime OSUPetLastCommandUtc { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetBreedCount { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetBreedCountMax { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public string OSUPetBreedGroup { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public string OSUPetAbilitySlot5 { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public string OSUPetAbilitySlot10 { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetServiceOwnerSerial { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetServiceKind { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetServiceCityId { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public DateTime OSUPetServiceReadyUtc { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public DateTime OSUPetServiceClaimFromUtc { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetServicePartnerSerial { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public string OSUPetPendingOffspringTypeName { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public bool OSUPetPendingOffspringFemale { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetPendingOffspringStr { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetPendingOffspringDex { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetPendingOffspringInt { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetPendingOffspringBreedMax { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public string OSUPetPendingOffspringGroup { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetStoredControlSlots { get; set; }
 
         #endregion
 
@@ -657,7 +628,7 @@ namespace Server.Mobiles
 
         public virtual Faction FactionAllegiance { get { return null; } }
 
-        public virtual int DefaultHitsRegen 
+        public virtual int DefaultHitsRegen
         {
             get
             {
@@ -1040,23 +1011,23 @@ namespace Server.Mobiles
         private SkillName _Mastery;
 
         [CommandProperty(AccessLevel.GameMaster)]
-		public SkillName Mastery 
-		{
-			get { return _Mastery; } 
-			set
-			{
-				var old = _Mastery;
-				_Mastery = value;
+        public SkillName Mastery
+        {
+            get { return _Mastery; }
+            set
+            {
+                var old = _Mastery;
+                _Mastery = value;
 
                 if (old != _Mastery)
                 {
                     UpdateMasteryInfo();
                 }
-			}
-		}
-		
-		public virtual MasteryInfo[] Masteries { get; set; }
-		public DateTime NextMastery { get; set; }
+            }
+        }
+
+        public virtual MasteryInfo[] Masteries { get; set; }
+        public DateTime NextMastery { get; set; }
 
         public void UpdateMasteryInfo()
         {
@@ -1201,28 +1172,28 @@ namespace Server.Mobiles
 
         [CommandProperty(AccessLevel.GameMaster)]
         public bool IsParagon
-		{
-			get{ return m_Paragon; }
-			set
-			{
-				if (m_Paragon == value)
-				{
-					return;
-				}
-				else if (value)
-				{
-					Paragon.Convert(this);
-				}
-				else
-				{
-					Paragon.UnConvert(this);
-				}
+        {
+            get { return m_Paragon; }
+            set
+            {
+                if (m_Paragon == value)
+                {
+                    return;
+                }
+                else if (value)
+                {
+                    Paragon.Convert(this);
+                }
+                else
+                {
+                    Paragon.UnConvert(this);
+                }
 
-				m_Paragon = value;
+                m_Paragon = value;
 
-				InvalidateProperties();
-			}
-		}
+                InvalidateProperties();
+            }
+        }
 
         [CommandProperty(AccessLevel.GameMaster)]
         public bool IsChampionSpawn
@@ -1230,15 +1201,15 @@ namespace Server.Mobiles
             get { return m_IsChampionSpawn; }
             set
             {
-				if (m_IsChampionSpawn != value)
-				{
-	                if (!m_IsChampionSpawn && value)
-	                    SetToChampionSpawn();
-	
-	                m_IsChampionSpawn = value;
+                if (m_IsChampionSpawn != value)
+                {
+                    if (!m_IsChampionSpawn && value)
+                        SetToChampionSpawn();
+
+                    m_IsChampionSpawn = value;
 
                     OnChampionSpawnChange();
-				}
+                }
             }
         }
 
@@ -1278,11 +1249,11 @@ namespace Server.Mobiles
                         InitialFocus = (Mobile)value;
                     }
                 }
-                else if (AttacksFocus && 
-                        initialFocus != null && 
-                        value != initialFocus && 
-                        !initialFocus.Hidden &&  
-                        Map == initialFocus.Map && 
+                else if (AttacksFocus &&
+                        initialFocus != null &&
+                        value != initialFocus &&
+                        !initialFocus.Hidden &&
+                        Map == initialFocus.Map &&
                         InRange(initialFocus.Location, RangePerception))
                 {
                     //Keeps focus
@@ -1345,21 +1316,21 @@ namespace Server.Mobiles
         public virtual bool CanFly { get { return false; } }
 
         public virtual bool CanAutoStable
-		{ 
-			get 
-			{
-				if(!(ControlMaster is PlayerMobile))
-					return false;
+        {
+            get
+            {
+                if (!(ControlMaster is PlayerMobile))
+                    return false;
 
-				if(Allured || Summoned)
-					return false;
+                if (Allured || Summoned)
+                    return false;
 
-				if(this is IMount && ((IMount)this).Rider != null)
-					return false;
+                if (this is IMount && ((IMount)this).Rider != null)
+                    return false;
 
-				return true;
-			}
-		}
+                return true;
+            }
+        }
 
         public virtual bool TaintedLifeAura { get { return false; } }
         public virtual bool BreathImmune { get { return false; } }
@@ -1460,7 +1431,7 @@ namespace Server.Mobiles
         public virtual OppositionGroup OppositionGroup { get { return null; } }
 
         // Tribe Opposition stuff
-        public virtual TribeType Tribe{ get{ return TribeType.None ; } } // What opposition list am I in?
+        public virtual TribeType Tribe { get { return TribeType.None; } } // What opposition list am I in?
 
         public virtual bool IsTribeEnemy(Mobile m)
         {
@@ -1472,7 +1443,7 @@ namespace Server.Mobiles
 
             BaseCreature c = (BaseCreature)m;
 
-            switch(Tribe)
+            switch (Tribe)
             {
                 case TribeType.Terathan: return (c.Tribe == TribeType.Ophidian);
                 case TribeType.Ophidian: return (c.Tribe == TribeType.Terathan);
@@ -1514,44 +1485,44 @@ namespace Server.Mobiles
             }
         }
 
-		public virtual bool IsFriend(Mobile m)
-		{
-			if (Core.TOL)
-			{
-				if (Tribe != TribeType.None && IsTribeEnemy(m))
-				{
-					return false;
-				}
-			}
-			else
-			{
-				OppositionGroup g = OppositionGroup;
+        public virtual bool IsFriend(Mobile m)
+        {
+            if (Core.TOL)
+            {
+                if (Tribe != TribeType.None && IsTribeEnemy(m))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                OppositionGroup g = OppositionGroup;
 
-				if (g != null && g.IsEnemy(this, m))
-				{
-					return false;
-				}
-			}
+                if (g != null && g.IsEnemy(this, m))
+                {
+                    return false;
+                }
+            }
 
-			if (!(m is BaseCreature))
-			{
-				return false;
-			}
+            if (!(m is BaseCreature))
+            {
+                return false;
+            }
 
-			BaseCreature c = (BaseCreature)m;
+            BaseCreature c = (BaseCreature)m;
 
-			if (m_iTeam != c.m_iTeam)
-			{
-				return false;
-			}
-/*
-			if (c.Combatant == this)
-			{
-				return false;
-			}
-*/
-			return ((m_bSummoned || m_bControlled) == (c.m_bSummoned || c.m_bControlled));
-		}
+            if (m_iTeam != c.m_iTeam)
+            {
+                return false;
+            }
+            /*
+                        if (c.Combatant == this)
+                        {
+                            return false;
+                        }
+            */
+            return ((m_bSummoned || m_bControlled) == (c.m_bSummoned || c.m_bControlled));
+        }
         #endregion
 
         #region Allegiance
@@ -1599,22 +1570,22 @@ namespace Server.Mobiles
         }
         #endregion
 
-		public virtual bool IsEnemy(Mobile m)
-		{
-			XmlIsEnemy a = (XmlIsEnemy)XmlAttach.FindAttachment(this, typeof(XmlIsEnemy));
+        public virtual bool IsEnemy(Mobile m)
+        {
+            XmlIsEnemy a = (XmlIsEnemy)XmlAttach.FindAttachment(this, typeof(XmlIsEnemy));
 
-			if (a != null)
-			{
-				return a.IsEnemy(m);
-			}
+            if (a != null)
+            {
+                return a.IsEnemy(m);
+            }
 
-			if (m is BaseGuard)
-			{
-				return false;
-			}
+            if (m is BaseGuard)
+            {
+                return false;
+            }
 
-			if (Combatant != m)
-			{
+            if (Combatant != m)
+            {
                 if (m is PlayerMobile && ((PlayerMobile)m).HonorActive)
                 {
                     return false;
@@ -1624,24 +1595,24 @@ namespace Server.Mobiles
                 {
                     return false;
                 }
-			}
+            }
 
-			if (Core.TOL)
-			{
-				if (Tribe != TribeType.None && IsTribeEnemy(m))
-				{
-					return true;
-				}
-			}
-			else
-			{
-				OppositionGroup g = OppositionGroup;
+            if (Core.TOL)
+            {
+                if (Tribe != TribeType.None && IsTribeEnemy(m))
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                OppositionGroup g = OppositionGroup;
 
-				if (g != null && g.IsEnemy(this, m))
-				{
-					return true;
-				}
-			}
+                if (g != null && g.IsEnemy(this, m))
+                {
+                    return true;
+                }
+            }
 
             BaseCreature c = m as BaseCreature;
 
@@ -1687,20 +1658,20 @@ namespace Server.Mobiles
                 return false;
             }
 
-			// Faction Allied Players/Pets are not my enemies
-			if (GetFactionAllegiance(m) == Allegiance.Ally)
-			{
-				return false;
-			}
+            // Faction Allied Players/Pets are not my enemies
+            if (GetFactionAllegiance(m) == Allegiance.Ally)
+            {
+                return false;
+            }
 
-			Ethic ourEthic = EthicAllegiance;
-			Player pl = Ethics.Player.Find(m, true);
+            Ethic ourEthic = EthicAllegiance;
+            Player pl = Ethics.Player.Find(m, true);
 
-			// Ethic Allied Players/Pets are not my enemies
-			if (pl != null && pl.IsShielded && (ourEthic == null || ourEthic == pl.Ethic))
-			{
-				return false;
-			}
+            // Ethic Allied Players/Pets are not my enemies
+            if (pl != null && pl.IsShielded && (ourEthic == null || ourEthic == pl.Ethic))
+            {
+                return false;
+            }
 
             if (c == null)
             {
@@ -1717,36 +1688,36 @@ namespace Server.Mobiles
             }
 
             if (c is Server.Engines.Quests.Haven.MilitiaFighter)
-			{
-				return true;
-			}
+            {
+                return true;
+            }
 
-			BaseCreature t = this;
+            BaseCreature t = this;
 
-			// Summons should have same rules as their master
-			if (c.m_bSummoned && c.SummonMaster != null && c.SummonMaster is BaseCreature)
-			{
-				c = c.SummonMaster as BaseCreature;
-			}
+            // Summons should have same rules as their master
+            if (c.m_bSummoned && c.SummonMaster != null && c.SummonMaster is BaseCreature)
+            {
+                c = c.SummonMaster as BaseCreature;
+            }
 
-			// Summons should have same rules as their master
-			if (t.m_bSummoned && t.SummonMaster != null && t.SummonMaster is BaseCreature)
-			{
-				t = t.SummonMaster as BaseCreature;
-			}
+            // Summons should have same rules as their master
+            if (t.m_bSummoned && t.SummonMaster != null && t.SummonMaster is BaseCreature)
+            {
+                t = t.SummonMaster as BaseCreature;
+            }
 
-			// Creatures on other teams are my enemies
-			if (t.m_iTeam != c.m_iTeam)
-			{
-				return true;
-			}
+            // Creatures on other teams are my enemies
+            if (t.m_iTeam != c.m_iTeam)
+            {
+                return true;
+            }
 
-			// If I'm summoned/controlled and they aren't summoned/controlled, they are my enemy
-			// If I'm not summoned/controlled and they are summoned/controlled, they are my enemy
+            // If I'm summoned/controlled and they aren't summoned/controlled, they are my enemy
+            // If I'm not summoned/controlled and they are summoned/controlled, they are my enemy
             // Summoned creatures must have masters to count as summoned here
-			return (((t.m_bSummoned && t.SummonMaster != null) || t.m_bControlled) !=
+            return (((t.m_bSummoned && t.SummonMaster != null) || t.m_bControlled) !=
                 ((c.m_bSummoned && c.SummonMaster != null) || c.m_bControlled));
-		}
+        }
 
         public override string ApplyNameSuffix(string suffix)
         {
@@ -1758,7 +1729,7 @@ namespace Server.Mobiles
                 }
                 else
                 {
-                    suffix = String.Concat( suffix, " (Paragon)" );
+                    suffix = String.Concat(suffix, " (Paragon)");
                 }
             }
 
@@ -1822,7 +1793,7 @@ namespace Server.Mobiles
             }
 
             int taming = (int)((useBaseSkill ? m.Skills[SkillName.AnimalTaming].Base : m.Skills[SkillName.AnimalTaming].Value) * 10);
-            int lore =   (int)((useBaseSkill ? m.Skills[SkillName.AnimalLore].Base : m.Skills[SkillName.AnimalLore].Value) * 10);
+            int lore = (int)((useBaseSkill ? m.Skills[SkillName.AnimalLore].Base : m.Skills[SkillName.AnimalLore].Value) * 10);
             int bonus = 0, chance = 700;
 
             if (Core.ML)
@@ -2037,7 +2008,7 @@ namespace Server.Mobiles
         {
             get
             {
-                if(_NavPoints == null)
+                if (_NavPoints == null)
                     _NavPoints = new Dictionary<Map, List<Point2D>>();
 
                 return _NavPoints;
@@ -2730,7 +2701,7 @@ namespace Server.Mobiles
         {
             base.Serialize(writer);
 
-            writer.Write(31); // version
+            writer.Write(30); // version
 
             writer.Write(IsSoulbound);
             OSUStablePetSystem.WriteStableData(writer, this);
@@ -2918,10 +2889,6 @@ namespace Server.Mobiles
 
             switch (version)
             {
-                case 31:
-                    IsSoulbound = reader.ReadBool();
-                    OSUStablePetSystem.ReadStableData(reader, this);
-                    goto case 28;
                 case 30:
                     IsSoulbound = reader.ReadBool();
                     OSUStablePetSystem.ReadStableData(reader, this);
@@ -2935,13 +2902,13 @@ namespace Server.Mobiles
                     goto case 27;
                 case 27: // Pet Slot Fix
                 case 26:
-                {
-                    CanMove = reader.ReadBool();
-                    _LockDirection = reader.ReadBool();
+                    {
+                        CanMove = reader.ReadBool();
+                        _LockDirection = reader.ReadBool();
 
-                    ApproachWait = reader.ReadBool();
-                    ApproachRange = reader.ReadInt();
-                }
+                        ApproachWait = reader.ReadBool();
+                        ApproachRange = reader.ReadInt();
+                    }
                     break;
             }
 
@@ -3481,7 +3448,7 @@ namespace Server.Mobiles
                  dropped is LeftLeg || dropped is Torso || dropped is RightArm || dropped is RightLeg || dropped is IronIngot ||
                  dropped is DullCopperIngot || dropped is ShadowIronIngot || dropped is CopperIngot || dropped is BronzeIngot ||
                  dropped is GoldIngot || dropped is AgapiteIngot || dropped is VeriteIngot || dropped is ValoriteIngot))*/
-                // Why do we need all this crap, when its checked in CheckFootPreference?
+            // Why do we need all this crap, when its checked in CheckFootPreference?
             {
                 Item f = dropped;
 
@@ -3619,10 +3586,10 @@ namespace Server.Mobiles
                 return true;
             }
 
-	        if (!from.InRange(Location, 2))
+            if (!from.InRange(Location, 2))
                 return base.OnDragDrop(from, dropped);
 
-	        bool gainedPath = false;
+            bool gainedPath = false;
 
             var honestySocket = dropped.GetSocket<HonestyItemSocket>();
 
@@ -3635,10 +3602,10 @@ namespace Server.Mobiles
                 return false;
             }
 
-	        from.SendMessage(gainedPath ? "You have gained a path in Honesty!" : "You have gained in Honesty.");
-	        SayTo(from, 1074582); //Ah!  You found my property.  Thank you for your honesty in returning it to me.
-	        dropped.Delete();
-	        return true;
+            from.SendMessage(gainedPath ? "You have gained a path in Honesty!" : "You have gained in Honesty.");
+            SayTo(from, 1074582); //Ah!  You found my property.  Thank you for your honesty in returning it to me.
+            dropped.Delete();
+            return true;
         }
 
         protected virtual BaseAI ForcedAI { get { return null; } }
@@ -4089,7 +4056,7 @@ namespace Server.Mobiles
         public DateTime BardEndTime { get; set; }
 
         [CommandProperty(AccessLevel.GameMaster)]
-        public double MinTameSkill 
+        public double MinTameSkill
         {
             get { return m_dMinTameSkill; }
             set
@@ -4110,7 +4077,7 @@ namespace Server.Mobiles
                         m_CurrentTameSkill = value;
                     }
                 }
-            } 
+            }
         }
 
         [CommandProperty(AccessLevel.GameMaster)]
@@ -4298,13 +4265,13 @@ namespace Server.Mobiles
                 level = 2;
             else if (total > 35)
                 level = 1;
-                
+
             return Poison.GetPoison(Math.Max(current, level));
         }
 
         private bool TryHitPoison()
         {
-            if(!PetTrainingHelper.Enabled || !Controlled)
+            if (!PetTrainingHelper.Enabled || !Controlled)
                 return HitPoisonChance >= Utility.RandomDouble();
 
             var profile = AbilityProfile;
@@ -5509,16 +5476,16 @@ namespace Server.Mobiles
                 Skills[name].Cap = Skills[name].Base;
             }
 
-            if (name == SkillName.Poisoning && Skills[name].Base > 0 && 
+            if (name == SkillName.Poisoning && Skills[name].Base > 0 &&
                 !Controlled &&
                 (AbilityProfile == null || !AbilityProfile.HasAbility(MagicalAbility.Poisoning)))
             {
                 SetMagicalAbility(MagicalAbility.Poisoning);
             }
 
-            if (!Controlled && name == SkillName.Magery && 
-                (AbilityProfile == null || !AbilityProfile.HasAbility(MagicalAbility.Magery)) && 
-                Skills[SkillName.Magery].Base > 0 && 
+            if (!Controlled && name == SkillName.Magery &&
+                (AbilityProfile == null || !AbilityProfile.HasAbility(MagicalAbility.Magery)) &&
+                Skills[SkillName.Magery].Base > 0 &&
                 (AI == AIType.AI_Mage || AI == AIType.AI_Necro || AI == AIType.AI_NecroMage || AI == AIType.AI_Mystic || AI == AIType.AI_Spellweaving))
 
             {
@@ -5545,7 +5512,7 @@ namespace Server.Mobiles
                 Skills[name].Cap = Skills[name].Base;
             }
 
-            if (name == SkillName.Poisoning && Skills[name].Base > 0 && 
+            if (name == SkillName.Poisoning && Skills[name].Base > 0 &&
                 !Controlled &&
                 (AbilityProfile == null || !AbilityProfile.HasAbility(MagicalAbility.Poisoning)))
             {
@@ -5553,8 +5520,8 @@ namespace Server.Mobiles
             }
 
             if (!Controlled && name == SkillName.Magery &&
-                (AbilityProfile == null || !AbilityProfile.HasAbility(MagicalAbility.Magery)) && 
-                Skills[SkillName.Magery].Base > 0 && 
+                (AbilityProfile == null || !AbilityProfile.HasAbility(MagicalAbility.Magery)) &&
+                Skills[SkillName.Magery].Base > 0 &&
                 (AI == AIType.AI_Mage || AI == AIType.AI_Necro || AI == AIType.AI_NecroMage || AI == AIType.AI_Mystic || AI == AIType.AI_Spellweaving))
 
             {
@@ -6102,6 +6069,11 @@ namespace Server.Mobiles
                 list.Add(1157315, EngravedText); // <BASEFONT COLOR=#668cff>Branded: ~1_VAL~<BASEFONT COLOR=#FFFFFF>
             }
 
+            if (OSUPetMarked && !String.IsNullOrWhiteSpace(OSUPetBrandOwnerName))
+            {
+                list.Add("Marcado para " + OSUPetBrandOwnerName);
+            }
+
             if (Core.ML)
             {
                 if (DisplayWeight)
@@ -6246,10 +6218,10 @@ namespace Server.Mobiles
             {
                 if (treasureLevel >= 0)
                 {
-					if (m_Paragon && Paragon.ChestChance > Utility.RandomDouble())
-					{
-						PackItem( new ParagonChest( this.Name, treasureLevel ) );
-					}
+                    if (m_Paragon && Paragon.ChestChance > Utility.RandomDouble())
+                    {
+                        PackItem(new ParagonChest(this.Name, treasureLevel));
+                    }
                     else if (TreasureMapChance >= Utility.RandomDouble())
                     {
                         Map map = Map;
@@ -6573,11 +6545,11 @@ namespace Server.Mobiles
         private bool m_Allured;
 
         [CommandProperty(AccessLevel.GameMaster)]
-        public bool Allured 
-        { 
-            get { return m_Allured; } 
-            set 
-            { 
+        public bool Allured
+        {
+            get { return m_Allured; }
+            set
+            {
                 m_Allured = value;
 
                 if (value && Backpack != null)
@@ -7165,7 +7137,7 @@ namespace Server.Mobiles
             creature.Hits = creature.HitsMaxSeed;
 
             return true;
-        }        
+        }
 
         private static bool EnableRummaging = true;
 
@@ -7431,17 +7403,17 @@ namespace Server.Mobiles
         private long m_NextPeace;
         private long m_NextProvoke;
 
-        public virtual bool CanDiscord 
-        { 
-            get 
+        public virtual bool CanDiscord
+        {
+            get
             {
                 if (Controlled && AbilityProfile != null)
                 {
                     return AbilityProfile.HasAbility(MagicalAbility.Discordance);
                 }
 
-                return false; 
-            } 
+                return false;
+            }
         }
 
         public virtual bool CanPeace { get { return false; } }
@@ -7651,16 +7623,16 @@ namespace Server.Mobiles
         public virtual bool TeleportsPets { get { return false; } }
 
         private static int[] m_Offsets = new int[]
-			{
-				-1, -1,
-				-1,  0,
-				-1,  1,
-				0, -1,
-				0,  1,
-				1, -1,
-				1,  0,
-				1,  1
-			};
+            {
+                -1, -1,
+                -1,  0,
+                -1,  1,
+                0, -1,
+                0,  1,
+                1, -1,
+                1,  0,
+                1,  1
+            };
 
         public void TryTeleport()
         {
@@ -7791,6 +7763,8 @@ namespace Server.Mobiles
 
         public virtual void OnThink()
         {
+            OSUStablePetSystem.OnCreatureThink(this);
+
             long tc = Core.TickCount;
 
             if (Paralyzed || Frozen)
