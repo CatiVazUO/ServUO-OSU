@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Server.Commands;
 using Server.Mobiles;
 using Server.Custom.Systems.SkillXP;
+using Server.Custom.Systems.Skills.Profissoes;
 
 
 
@@ -19,9 +20,15 @@ namespace Server.Custom.Systems.SkillXP.Engine
             Register(new Custom.Systems.Skills.Combate.DisarmeFeat());
 
             // Register profession feats (Systems/Feats/Profissoes)
-            Register(new Custom.Systems.Skills.Profissoes.MiningProficiencyFeat());
-            Register(new Custom.Systems.Skills.Profissoes.ExameMedicoFeat());
-            Register(new Custom.Systems.Skills.Profissoes.CirurgiaFeat());
+            Register(new MiningProficiencyFeat());
+            Register(new ExameMedicoFeat());
+            Register(new CirurgiaFeat());
+
+            // Register stable feats (Systems/Stables/Feats)
+            Register(new AnimalTrainingFeat());
+            Register(new AnimalBreedingFeat());
+            Register(new CastrationFeat());
+            Register(new BrandingFeat());
         }
 
         public static IOSUFeat GetById(int id)

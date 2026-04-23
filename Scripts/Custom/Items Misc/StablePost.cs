@@ -44,6 +44,7 @@ namespace Server.Items
         private double m_Hours = 72.0;
         private DateTime m_AuctionStart;
         private DateTime m_StabledDate = DateTime.MinValue;
+        private int m_GovernmentCityId = -1;
 
         public BaseCreature Controlled { get { return m_Controlled; } set { m_Controlled = value; } }
         public Mobile Owner { get { return m_Owner; } set { m_Owner = value; } }
@@ -59,6 +60,9 @@ namespace Server.Items
         public DateTime BondingBegin { get { return m_BondingBegin; } set { m_BondingBegin = value; } }
         [CommandProperty(AccessLevel.GameMaster)]
         public DateTime StabledDate { get { return m_StabledDate; } set { m_StabledDate = value; } }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int GovernmentCityId { get { return m_GovernmentCityId; } set { m_GovernmentCityId = value; InvalidateProperties(); } }
 
         #region Auction Stuff
         public int InstaSell { get { return m_InstaSell; } set { m_InstaSell = value; } }
@@ -102,7 +106,7 @@ namespace Server.Items
             if (goldAmount <= 0 || Deleted || Map == null || Map == Map.Internal)
                 return;
 
-            int cityId = ReinoMilitarySystem.ResolveCityIdAt(this.Location, this.Map);
+            int cityId = m_GovernmentCityId >= 0 ? m_GovernmentCityId : ReinoMilitarySystem.ResolveCityIdAt(this.Location, this.Map);
 
             if (cityId < 0)
                 return;
@@ -206,9 +210,10 @@ namespace Server.Items
         {
             base.Serialize(writer);
 
-            writer.Write((int)3); // version
+            writer.Write((int)4); // version
 
             writer.Write((DateTime)m_StabledDate);
+            writer.Write((int)m_GovernmentCityId);
             writer.Write((int)m_InstaSell);
             writer.Write((int)m_LastBid);
             writer.Write((int)m_CurrentBid);
@@ -243,9 +248,16 @@ namespace Server.Items
 
             switch (version)
             {
+                case 4:
+                    {
+                        m_StabledDate = reader.ReadDateTime();
+                        m_GovernmentCityId = reader.ReadInt();
+                        goto case 2;
+                    }
                 case 3:
                     {
                         m_StabledDate = reader.ReadDateTime();
+                        m_GovernmentCityId = -1;
                         goto case 2;
                     }
                 case 2:
@@ -333,7 +345,10 @@ namespace Server.Items
             this.MinTameSkill = 0.0;
             this.Controlled = null;
             this.Owner = null;
+            if (c.ControlSlots <= 0 && c.OSUPetStoredControlSlots > 0)
+                c.ControlSlots = c.OSUPetStoredControlSlots;
             c.Frozen = false;
+            c.AddFollowers();
             this.StabledDate = DateTime.MinValue;
 
             from.SendMessage("Foram retiradas " + goldCost + " moedas de ouro do seu banco para pagar as despesas da sua criatura.");
@@ -422,6 +437,9 @@ namespace Server.Items
                                 m_Post.SendGoldToKingdomTreasury(goldCostStable);
                                 m_Post.Owner = c.ControlMaster;
                                 m_Post.Controlled = c;
+                                c.RemoveFollowers();
+                                if (c.OSUPetStoredControlSlots <= 0)
+                                    c.OSUPetStoredControlSlots = Math.Max(1, c.ControlSlots);
                                 c.Home = m_Post.Location;
                                 c.RangeHome = m_Post.HomeRange;
                                 m_Post.Loyal = c.Loyalty;

@@ -32,6 +32,7 @@ using Server.Spells.Spellweaving;
 using Server.Targeting;
 using Server.Custom.Systems.DefQual;
 using Server.Custom.Systems.PlayerMadeStatues;
+using Server.Custom.Systems.Stables.Engine;
 #endregion
 
 namespace Server.Mobiles
@@ -232,6 +233,77 @@ namespace Server.Mobiles
 
         // usado para evitar loot novo no spawn do revive
         public bool OSUSuppressSpawnLoot { get; set; } = false;
+
+        // OSU Stable Pets
+        public bool OSUPetInitialized { get; set; }
+        public int OSUPetLevel { get; set; }
+        public int OSUPetXP { get; set; }
+        public int OSUPetNextLevelXP { get; set; }
+        public int OSUPetLastGainStr { get; set; }
+        public int OSUPetLastGainDex { get; set; }
+        public int OSUPetLastGainInt { get; set; }
+        public int OSUPetLastGainLevel { get; set; }
+        public int OSUPetLevelOneStr { get; set; }
+        public int OSUPetLevelOneDex { get; set; }
+        public int OSUPetLevelOneInt { get; set; }
+        public bool OSUPetCastrated { get; set; }
+        public bool OSUPetSterile { get; set; }
+        public bool OSUPetMarked { get; set; }
+        public int OSUPetBrandOwnerSerial { get; set; }
+        public string OSUPetBrandOwnerName { get; set; }
+        public int OSUPetLivesRemaining { get; set; }
+        public int OSUPetLivesMax { get; set; }
+        public bool OSUPetAwaitingResurrection { get; set; }
+        public DateTime OSUPetDownedUntilUtc { get; set; }
+        public DateTime OSUPetLastCommandUtc { get; set; }
+        public int OSUPetBreedCount { get; set; }
+        public int OSUPetBreedCountMax { get; set; }
+        public string OSUPetBreedGroup { get; set; }
+        public string OSUPetAbilitySlot5 { get; set; }
+        public string OSUPetAbilitySlot10 { get; set; }
+        public int OSUPetServiceOwnerSerial { get; set; }
+        public int OSUPetServiceKind { get; set; }
+        public int OSUPetServiceCityId { get; set; }
+        public DateTime OSUPetServiceReadyUtc { get; set; }
+        public DateTime OSUPetServiceClaimFromUtc { get; set; }
+        public int OSUPetServicePartnerSerial { get; set; }
+        public string OSUPetPendingOffspringTypeName { get; set; }
+        public bool OSUPetPendingOffspringFemale { get; set; }
+        public int OSUPetPendingOffspringStr { get; set; }
+        public int OSUPetPendingOffspringDex { get; set; }
+        public int OSUPetPendingOffspringInt { get; set; }
+        public int OSUPetPendingOffspringBreedMax { get; set; }
+        public string OSUPetPendingOffspringGroup { get; set; }
+        public int OSUPetStoredControlSlots { get; set; }
+        public int OSUPetServiceRoomIndex { get; set; }
+        public int OSUPetServiceStage { get; set; }
+        public int OSUPetLastTrainedLevel { get; set; }
+        public DateTime OSUPetPastureAtUtc { get; set; }
+
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetDebugLevel { get { return OSUPetLevel; } set { OSUPetLevel = value; } }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetDebugXP { get { return OSUPetXP; } set { OSUPetXP = value; } }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetDebugNextLevelXP { get { return OSUPetNextLevelXP; } set { OSUPetNextLevelXP = value; } }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public bool OSUPetDebugMarked { get { return OSUPetMarked; } set { OSUPetMarked = value; } }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public bool OSUPetDebugCastrated { get { return OSUPetCastrated; } set { OSUPetCastrated = value; } }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetDebugLives { get { return OSUPetLivesRemaining; } set { OSUPetLivesRemaining = value; } }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetDebugBreedCount { get { return OSUPetBreedCount; } set { OSUPetBreedCount = value; } }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetDebugBreedMax { get { return OSUPetBreedCountMax; } set { OSUPetBreedCountMax = value; } }
 
         #endregion
 
@@ -643,7 +715,7 @@ namespace Server.Mobiles
         #region Bonding
         public const bool BondingEnabled = true;
 
-        public virtual bool IsBondable { get { return (BondingEnabled && !Summoned && !m_Allured && !IsGolem); } }
+        public virtual bool IsBondable { get { return false; } }
         public virtual TimeSpan BondingDelay { get { return TimeSpan.FromDays(7.0); } }
         public virtual TimeSpan BondingAbandonDelay { get { return TimeSpan.FromDays(1.0); } }
 
@@ -1695,6 +1767,15 @@ namespace Server.Mobiles
 
         public virtual bool CheckControlChance(Mobile m)
         {
+            bool osuStableResult = false;
+            if (OSUStablePetSystem.CheckCommandGate(this, m, ref osuStableResult))
+            {
+                if (osuStableResult)
+                    Loyalty += 1;
+
+                return osuStableResult;
+            }
+
             if (GetControlChance(m) > Utility.RandomDouble())
             {
                 Loyalty += 1;
@@ -2649,9 +2730,10 @@ namespace Server.Mobiles
         {
             base.Serialize(writer);
 
-            writer.Write(29); // version
+            writer.Write(31); // version
 
             writer.Write(IsSoulbound);
+            OSUStablePetSystem.WriteStableData(writer, this);
 
             writer.Write(m_ForceActiveSpeed);
             writer.Write(m_ForcePassiveSpeed);
@@ -2836,6 +2918,14 @@ namespace Server.Mobiles
 
             switch (version)
             {
+                case 31:
+                    IsSoulbound = reader.ReadBool();
+                    OSUStablePetSystem.ReadStableData(reader, this);
+                    goto case 28;
+                case 30:
+                    IsSoulbound = reader.ReadBool();
+                    OSUStablePetSystem.ReadStableData(reader, this);
+                    goto case 28;
                 case 29:
                     IsSoulbound = reader.ReadBool();
                     goto case 28;
@@ -3224,6 +3314,8 @@ namespace Server.Mobiles
             {
                 AdjustTameRequirements();
             }
+
+            OSUStablePetSystem.AfterDeserialize(this);
         }
 
         public virtual bool IsHumanInTown()
@@ -6074,6 +6166,7 @@ namespace Server.Mobiles
                 PrivateOverheadMessage(MessageType.Regular, 0x3B2, number, from.NetState);
             }
 
+            OSUStablePetSystem.AppendSingleClickInfo(this, from);
             base.OnSingleClick(from);
         }
 
@@ -6089,6 +6182,14 @@ namespace Server.Mobiles
         {
             int treasureLevel = TreasureMapInfo.ConvertLevel(TreasureMapLevel);
             GetLootingRights();
+
+            if (Controlled && ControlMaster != null && Tamable)
+            {
+                OSUStablePetSystem.EnsureInitialized(this);
+
+                if (OSUStablePetSystem.TryCreateKnockoutState(this))
+                    return false;
+            }
 
             #region OSU
 
@@ -6545,6 +6646,9 @@ namespace Server.Mobiles
                 return;
             }
 
+            if (Controlled && Tamable)
+                CorpseNameOverride = OSUStablePetSystem.BuildMarkedCorpseName(this);
+
             MeerMage.StopEffect(this, false);
 
             if (IsBonded)
@@ -6630,6 +6734,8 @@ namespace Server.Mobiles
                         totalFame += ((totalFame / 10) * 3);
                         totalKarma += ((totalKarma / 10) * 3);
                     }
+
+                    OSUStablePetSystem.HandleKillXP(this, totalFame);
 
                     var list = GetLootingRights();
                     var titles = new List<Mobile>();

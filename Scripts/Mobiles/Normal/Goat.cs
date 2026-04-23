@@ -1,4 +1,5 @@
 using System;
+using Server.Custom.Systems.Stables.Engine;
 
 namespace Server.Mobiles
 {
@@ -11,6 +12,7 @@ namespace Server.Mobiles
         {
             this.Name = "a goat";
             this.Body = 0xD1;
+            this.Female = Utility.RandomBool();
             this.BaseSoundID = 0x99;
 
             this.SetStr(19);
@@ -45,6 +47,63 @@ namespace Server.Mobiles
         {
         }
 
+
+        private DateTime m_MilkedOn;
+        private int m_Milk;
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public DateTime MilkedOn
+        {
+            get { return m_MilkedOn; }
+            set { m_MilkedOn = value; }
+        }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int Milk
+        {
+            get { return m_Milk; }
+            set { m_Milk = value; }
+        }
+
+        public bool TryMilk(Mobile from)
+        {
+            string reason;
+            if (!OSUStablePetSystem.CanTakeFarmResources(this, from, out reason))
+            {
+                from.SendMessage(reason);
+                return false;
+            }
+
+            if (!from.InLOS(this) || !from.InRange(Location, 2))
+            {
+                from.SendLocalizedMessage(1080400);
+                return false;
+            }
+
+            bool authorizedMarkedOwner = OSUPetMarked && OSUPetBrandOwnerSerial == from.Serial.Value;
+
+            if (Controlled && ControlMaster != from && !authorizedMarkedOwner)
+            {
+                from.SendLocalizedMessage(1071182);
+                return false;
+            }
+
+            if (m_Milk == 0 && m_MilkedOn + TimeSpan.FromDays(1) > DateTime.UtcNow)
+            {
+                from.SendLocalizedMessage(1080198);
+                return false;
+            }
+
+            if (m_Milk == 0)
+                m_Milk = 4;
+
+            m_MilkedOn = DateTime.UtcNow;
+            m_Milk--;
+
+            OSUStablePetSystem.OnFarmResourceProduced(this, from, 1);
+            return true;
+        }
+
         public override int Meat
         {
             get
@@ -70,7 +129,9 @@ namespace Server.Mobiles
         {
             base.Serialize(writer);
 
-            writer.Write((int)0);
+            writer.Write((int)1);
+            writer.Write((DateTime)m_MilkedOn);
+            writer.Write((int)m_Milk);
         }
 
         public override void Deserialize(GenericReader reader)
@@ -78,6 +139,12 @@ namespace Server.Mobiles
             base.Deserialize(reader);
 
             int version = reader.ReadInt();
+
+            if (version >= 1)
+            {
+                m_MilkedOn = reader.ReadDateTime();
+                m_Milk = reader.ReadInt();
+            }
         }
     }
 }

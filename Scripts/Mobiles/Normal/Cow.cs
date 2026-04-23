@@ -1,4 +1,5 @@
 using System;
+using Server.Custom.Systems.Stables.Engine;
 
 namespace Server.Mobiles
 {
@@ -13,6 +14,7 @@ namespace Server.Mobiles
         {
             Name = "a cow";
             Body = Utility.RandomList(0xD8, 0xE7);
+            Female = (Body == 0xD8);
             BaseSoundID = 0x78;
 
             SetStr(30);
@@ -117,24 +119,41 @@ namespace Server.Mobiles
 
         public bool TryMilk(Mobile from)
         {
-            if (!from.InLOS(this) || !from.InRange(Location, 2))
-                from.SendLocalizedMessage(1080400); // You can not milk the cow from this location.
-            if (Controlled && ControlMaster != from)
-                from.SendLocalizedMessage(1071182); // The cow nimbly escapes your attempts to milk it.
-            if (m_Milk == 0 && m_MilkedOn + TimeSpan.FromDays(1) > DateTime.UtcNow)
-                from.SendLocalizedMessage(1080198); // This cow can not be milked now. Please wait for some time.
-            else
+            string reason;
+            if (!OSUStablePetSystem.CanTakeFarmResources(this, from, out reason))
             {
-                if (m_Milk == 0)
-                    m_Milk = 4;
-
-                m_MilkedOn = DateTime.UtcNow;
-                m_Milk--;
-
-                return true;
+                from.SendMessage(reason);
+                return false;
             }
 
-            return false;
+            if (!from.InLOS(this) || !from.InRange(Location, 2))
+            {
+                from.SendLocalizedMessage(1080400); // You can not milk the cow from this location.
+                return false;
+            }
+
+            bool authorizedMarkedOwner = OSUPetMarked && OSUPetBrandOwnerSerial == from.Serial.Value;
+
+            if (Controlled && ControlMaster != from && !authorizedMarkedOwner)
+            {
+                from.SendLocalizedMessage(1071182); // The cow nimbly escapes your attempts to milk it.
+                return false;
+            }
+
+            if (m_Milk == 0 && m_MilkedOn + TimeSpan.FromDays(1) > DateTime.UtcNow)
+            {
+                from.SendLocalizedMessage(1080198); // This cow can not be milked now. Please wait for some time.
+                return false;
+            }
+
+            if (m_Milk == 0)
+                m_Milk = 4;
+
+            m_MilkedOn = DateTime.UtcNow;
+            m_Milk--;
+
+            OSUStablePetSystem.OnFarmResourceProduced(this, from, 1);
+            return true;
         }
 
         public override void Serialize(GenericWriter writer)

@@ -14,6 +14,7 @@ using Server.Misc;
 using Server.Custom.Reinos;
 using Server.Mobiles;
 using Server.Network;
+using Server.Custom.Systems.Stables.Engine;
 #endregion
 
 namespace Server.Items
@@ -441,6 +442,11 @@ namespace Server.Items
 
         public override void OnAfterDelete()
         {
+            if (OSUKnockoutCorpse)
+            {
+                OSUStablePetSystem.OnKnockoutCorpseDeleted(this);
+            }
+
             if (m_DecayTimer != null)
             {
                 m_DecayTimer.Stop();
@@ -1422,6 +1428,9 @@ namespace Server.Items
 
         public override void OnDoubleClick(Mobile from)
         {
+            if (OSUStablePetSystem.TryResurrectFromCorpse(this, from))
+                return;
+
             Open(from, Core.AOS);
 
             if (m_Owner == from)
@@ -1507,6 +1516,11 @@ namespace Server.Items
 
         public bool Carve(Mobile from, Item item)
         {
+
+// ===== OSU Stable Pets: não deixa esfolar pet caído que ainda pode ser salvo =====
+        BaseCreature osuPet = Owner as BaseCreature;
+        if (osuPet != null && OSUStablePetSystem.BlockCarveIfProtected(osuPet, this, from))
+            return false;
 
 // ===== OSU Lives (mobs): se este corpse está "pulsando", bloqueia carving/skin e força revive =====
         if (this != null && from != null && Server.Mobiles.BaseCreature.OSUTryForceReviveFromCorpse(this, from))

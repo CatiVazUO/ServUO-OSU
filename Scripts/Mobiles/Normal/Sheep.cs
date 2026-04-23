@@ -4,6 +4,7 @@ using Server.Network;
 using Server.Engines.Quests;
 using Server.Custom.Systems.Crafting.Tailoring.Fabrics;
 using Server.Items.Resource;
+using Server.Custom.Systems.Stables.Engine;
 
 namespace Server.Mobiles
 {
@@ -94,6 +95,13 @@ namespace Server.Mobiles
         }
         public bool Carve(Mobile from, Item item)
         {
+            string reason;
+            if (!OSUStablePetSystem.CanTakeFarmResources(this, from, out reason))
+            {
+                from.SendMessage(reason);
+                return false;
+            }
+
             if (DateTime.UtcNow < m_NextWoolTime)
             {
                 // This sheep is not yet ready to be shorn.
@@ -122,7 +130,7 @@ namespace Server.Mobiles
             }
 
             NextWoolTime = DateTime.UtcNow + TimeSpan.FromHours(2.0); // TODO: Proper time delay
-
+            OSUStablePetSystem.OnFarmResourceProduced(this, from, 1);
             return true;
         }
 

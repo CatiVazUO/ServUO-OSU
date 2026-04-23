@@ -171,51 +171,51 @@ namespace Server.Custom.Systems.Espetaculos.Gumps
             AddImageTiled(435, 234, 335, 13, 630);
 
             AddButton(449, 268, audienceDimmed ? 536 : 437, 536, ButtonAudienceOff, GumpButtonType.Reply, 0);
-            AddLabel(473, 265, 0, "Apagar Luzes Plateia");
+            AddLabel(473, 265, 1152, "Apagar Luzes Plateia");
 
             AddButton(449, 291, !audienceDimmed ? 536 : 437, 536, ButtonAudienceOn, GumpButtonType.Reply, 0);
-            AddLabel(473, 288, 0, "Acender Luzes Plateia");
+            AddLabel(473, 288, 1152, "Acender Luzes Plateia");
 
             AddImageTiled(435, 372, 335, 13, 630);
 
             if (m_VenueType == EspetaculoVenueType.Theater)
             {
                 AddButton(449, 314, piece1 && piece2 ? 536 : 437, 536, ButtonSetPiece1, GumpButtonType.Reply, 0);
-                AddLabel(473, 311, 0, "Abrir Cortinas");
+                AddLabel(473, 311, 1152, "Abrir Cortinas");
                 AddButton(449, 338, !(piece1 || piece2) ? 536 : 437, 536, ButtonSetPiece2, GumpButtonType.Reply, 0);
-                AddLabel(473, 335, 0, "Fechar Cortinas");
+                AddLabel(473, 335, 1152, "Fechar Cortinas");
             }
             else
             {
                 AddButton(449, 314, piece1 ? 536 : 437, 536, ButtonSetPiece1, GumpButtonType.Reply, 0);
-                AddLabel(473, 311, 0, piece1 ? "Fechar Jaula 1" : "Abrir Jaula 1");
+                AddLabel(473, 311, 1152, piece1 ? "Fechar Jaula 1" : "Abrir Jaula 1");
                 AddButton(449, 338, piece2 ? 536 : 437, 536, ButtonSetPiece2, GumpButtonType.Reply, 0);
-                AddLabel(473, 335, 0, piece2 ? "Fechar Jaula 2" : "Abrir Jaula 2");
+                AddLabel(473, 335, 1152, piece2 ? "Fechar Jaula 2" : "Abrir Jaula 2");
             }
 
             AddButton(449, 404, stageOn ? 536 : 437, 536, ButtonStageOn, GumpButtonType.Reply, 0);
-            AddLabel(473, 401, 0, "Acender Palco");
+            AddLabel(473, 401, 1152, "Acender Palco");
 
             AddButton(651, 405, !stageOn ? 536 : 437, 536, ButtonStageOff, GumpButtonType.Reply, 0);
-            AddLabel(675, 402, 0, "Apagar Palco");
+            AddLabel(675, 402, 1152, "Apagar Palco");
 
             AddButton(461, 438, color == EspetaculoLightColor.Blue ? 536 : 437, 536, ButtonColorBlue, GumpButtonType.Reply, 0);
-            AddLabel(485, 435, 0, "Azul");
+            AddLabel(485, 435, 1152, "Azul");
 
             AddButton(461, 461, color == EspetaculoLightColor.Red ? 536 : 437, 536, ButtonColorRed, GumpButtonType.Reply, 0);
-            AddLabel(485, 458, 0, "Vermelho");
+            AddLabel(485, 458, 1152, "Vermelho");
 
             AddButton(461, 484, color == EspetaculoLightColor.Green ? 536 : 437, 536, ButtonColorGreen, GumpButtonType.Reply, 0);
-            AddLabel(485, 481, 0, "Verde");
+            AddLabel(485, 481, 1152, "Verde");
 
             AddButton(563, 438, color == EspetaculoLightColor.Purple ? 536 : 437, 536, ButtonColorPurple, GumpButtonType.Reply, 0);
-            AddLabel(587, 435, 0, "Roxo");
+            AddLabel(587, 435, 1152, "Roxo");
 
             AddButton(563, 461, color == EspetaculoLightColor.White ? 536 : 437, 536, ButtonColorWhite, GumpButtonType.Reply, 0);
-            AddLabel(587, 458, 0, "Branco");
+            AddLabel(587, 458, 1152, "Branco");
 
             AddButton(563, 484, color == EspetaculoLightColor.Yellow ? 536 : 437, 536, ButtonColorYellow, GumpButtonType.Reply, 0);
-            AddLabel(587, 481, 0, "Amarelo");
+            AddLabel(587, 481, 1152, "Amarelo");
         }
 
         private static void StartRangeTimer(PlayerMobile pm, int controlSerial)

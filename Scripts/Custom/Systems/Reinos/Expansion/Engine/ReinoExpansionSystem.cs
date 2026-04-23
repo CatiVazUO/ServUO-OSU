@@ -1327,6 +1327,10 @@ namespace Server.Custom.Reinos
             placed.MoveToWorld(anchor, lot.Map);
             state.MultiSerial = placed.Serial.Value;
 
+            Server.Custom.Systems.Reinos.Expansion.Multis.ReinoEstabuloMulti stableMulti = placed as Server.Custom.Systems.Reinos.Expansion.Multis.ReinoEstabuloMulti;
+            if (stableMulti != null)
+                stableMulti.EnsureStablePosts();
+
             if (!abandoned && def.UseMultiDoors && def.FinishedDoors != null && def.FinishedDoors.Length > 0)
                 SpawnDoors(anchor, state.DoorSerials, def.FinishedDoors, lot.Map);
 

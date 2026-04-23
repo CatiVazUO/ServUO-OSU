@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Server.Mobiles;
 
-namespace Server.Custom.Systems.Common.Engine
+namespace Server.Custom
 {
     public static class OSULightOverrideSystem
     {
