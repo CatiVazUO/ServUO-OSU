@@ -40,6 +40,9 @@ namespace Server.Mobiles
             SetSkill(SkillName.SpiritSpeak, 20.0);
 
             Tamable = true;
+            OSUPetBreedGroup = "sheep";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 6;
             ControlSlots = 2;
             MinTameSkill = 72.0;
 

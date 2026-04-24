@@ -102,6 +102,9 @@ namespace Server.Mobiles
             Karma = 300;
 
             Tamable = true;
+            OSUPetBreedGroup = "triton";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 3;
             ControlSlots = 2;
             MinTameSkill = 96.0;
 

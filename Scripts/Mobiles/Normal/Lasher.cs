@@ -81,6 +81,9 @@ namespace Server.Mobiles
             this.Karma = 300;
 
             this.Tamable = true;
+            OSUPetBreedGroup = "lasher";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 4;
             this.ControlSlots = 1;
         }
 

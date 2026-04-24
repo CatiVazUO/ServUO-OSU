@@ -1,4 +1,5 @@
 using System;
+using Server.Custom.Systems.Stables.Engine;
 
 namespace Server.Mobiles
 {
@@ -36,6 +37,9 @@ namespace Server.Mobiles
             VirtualArmor = 2;
 
             Tamable = true;
+            OSUPetBreedGroup = "chicken";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 8;
             ControlSlots = 1;
             MinTameSkill = -0.9;
         }
@@ -49,7 +53,7 @@ namespace Server.Mobiles
         {
             get
             {
-                return 1;
+                return OSUStablePetSystem.ScaleFarmDeathResource(this, 1, "meat");
             }
         }
         public override MeatType MeatType
@@ -77,7 +81,7 @@ namespace Server.Mobiles
         {
             get
             {
-                return 25;
+                return OSUStablePetSystem.ScaleFarmDeathResource(this, 25, "feathers");
             }
         }
         public override void Serialize(GenericWriter writer)

@@ -42,6 +42,9 @@ namespace Server.Mobiles
             this.Karma = 0;
 
             this.Tamable = true;
+            OSUPetBreedGroup = "llama";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 7;
             this.ControlSlots = 1;
             this.MinTameSkill = 29.1;
         }

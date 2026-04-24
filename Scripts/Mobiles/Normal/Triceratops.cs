@@ -40,6 +40,9 @@ namespace Server.Mobiles
             SetSkill(SkillName.Parry, 0.0, 105.0);
 
             Tamable = true;
+            OSUPetBreedGroup = "triceratops";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 3;
             ControlSlots = 3;
             MinTameSkill = 102.0;
 

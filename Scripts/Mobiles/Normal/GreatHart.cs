@@ -1,4 +1,5 @@
 using System;
+using Server.Custom.Systems.Stables.Engine;
 
 namespace Server.Mobiles
 {
@@ -37,6 +38,9 @@ namespace Server.Mobiles
             VirtualArmor = 24;
 
             Tamable = true;
+            OSUPetBreedGroup = "deer";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 6;
             ControlSlots = 1;
             MinTameSkill = 59.1;
         }
@@ -50,14 +54,14 @@ namespace Server.Mobiles
         {
             get
             {
-                return 6;
+                return OSUStablePetSystem.ScaleFarmDeathResource(this, 6, "meat");
             }
         }
         public override int Hides
         {
             get
             {
-                return 15;
+                return OSUStablePetSystem.ScaleFarmDeathResource(this, 15, "hides");
             }
         }
         public override FoodType FavoriteFood

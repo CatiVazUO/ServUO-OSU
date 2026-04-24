@@ -57,6 +57,9 @@ namespace Server.Mobiles
                 PackItem(Engines.Plants.Seed.RandomPeculiarSeed(Utility.RandomList(1, 1, 1, 1, 2, 2, 2, 3, 3, 4)));
 
             Tamable = true;
+            OSUPetBreedGroup = "feline";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 5;
             ControlSlots = 2;
             MinTameSkill = 95.1;
 

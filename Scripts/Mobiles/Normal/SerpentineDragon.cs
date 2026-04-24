@@ -47,6 +47,9 @@ namespace Server.Mobiles
                 PackItem(Engines.Plants.Seed.RandomPeculiarSeed(3));
 
             Tamable = true;
+            OSUPetBreedGroup = "dragon";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 3;
             ControlSlots = 3;
             MinTameSkill = 108.0;
 

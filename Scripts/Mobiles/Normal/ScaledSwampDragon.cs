@@ -41,6 +41,9 @@ namespace Server.Mobiles
             Karma = -2000;
 
             Tamable = true;
+            OSUPetBreedGroup = "swamp_dragon";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 4;
             ControlSlots = 1;
             MinTameSkill = 93.9;
         }

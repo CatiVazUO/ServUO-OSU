@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Server;
 using Server.Gumps;
@@ -97,25 +98,110 @@ namespace Server.Custom.Systems.Stables.Engine
                 mountAnimal: true,
                 allowedTypes: new Type[]
                 {
-                typeof(HorseFrisio),
-                typeof(HorseMustang),
-                typeof(HorsePuroSangue),
-                typeof(HorseMangaLarga),
-                typeof(HorseAndaluz),
-                typeof(HorseShire),
-                typeof(HorseArdennes),
-                typeof(HorseClaydesdale),
-                typeof(HorseGypsy),
-                typeof(HorseBelga)
+                    typeof(Horse),
+                    typeof(PackHorse),
+                    typeof(Palomino),
+                    typeof(DreadWarhorse),
+                    typeof(FireSteed),
+                    typeof(Nightmare),
+                    typeof(HorseFrisio),
+                    typeof(HorseMustang),
+                    typeof(HorsePuroSangue),
+                    typeof(HorseMangaLarga),
+                    typeof(HorseAndaluz),
+                    typeof(HorseShire),
+                    typeof(HorseArdennes),
+                    typeof(HorseClaydesdale),
+                    typeof(HorseGypsy),
+                    typeof(HorseBelga),
+                    typeof(HorseFrisioCarga)
                 }));
 
             Register(new OSUStableBreedGroup(
-                id: "cow",
+                id: "llama",
+                displayName: "Lhamas",
+                defaultMaxBreeds: 7,
+                farmAnimal: false,
+                mountAnimal: true,
+                allowedTypes: new Type[]
+                {
+                    typeof(Llama),
+                    typeof(PackLlama),
+                    typeof(RidableLlama)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "ostard",
+                displayName: "Ostards",
+                defaultMaxBreeds: 7,
+                farmAnimal: false,
+                mountAnimal: true,
+                allowedTypes: new Type[]
+                {
+                    typeof(DesertOstard),
+                    typeof(ForestOstard),
+                    typeof(FrenziedOstard)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "ridgeback",
+                displayName: "Ridgebacks",
+                defaultMaxBreeds: 5,
+                farmAnimal: false,
+                mountAnimal: true,
+                allowedTypes: new Type[]
+                {
+                    typeof(Ridgeback),
+                    typeof(SavageRidgeback)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "swamp_dragon",
+                displayName: "Dragões do Pântano",
+                defaultMaxBreeds: 4,
+                farmAnimal: false,
+                mountAnimal: true,
+                allowedTypes: new Type[]
+                {
+                    typeof(SwampDragon),
+                    typeof(ScaledSwampDragon)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "kirin_unicorn",
+                displayName: "Unicórnios e Kirins",
+                defaultMaxBreeds: 4,
+                farmAnimal: false,
+                mountAnimal: true,
+                allowedTypes: new Type[]
+                {
+                    typeof(Kirin),
+                    typeof(Unicorn)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "bovine",
                 displayName: "Bovinos",
                 defaultMaxBreeds: 6,
                 farmAnimal: true,
                 mountAnimal: false,
-                allowedTypes: new Type[] { typeof(Cow) }));
+                allowedTypes: new Type[]
+                {
+                    typeof(Cow),
+                    typeof(Bull)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "goat",
+                displayName: "Caprinos",
+                defaultMaxBreeds: 6,
+                farmAnimal: true,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Goat),
+                    typeof(MountainGoat)
+                }));
 
             Register(new OSUStableBreedGroup(
                 id: "sheep",
@@ -123,7 +209,411 @@ namespace Server.Custom.Systems.Stables.Engine
                 defaultMaxBreeds: 6,
                 farmAnimal: true,
                 mountAnimal: false,
-                allowedTypes: new Type[] { typeof(Sheep) }));
+                allowedTypes: new Type[]
+                {
+                    typeof(Sheep),
+                    typeof(OsseinRam)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "pig",
+                displayName: "Suínos",
+                defaultMaxBreeds: 6,
+                farmAnimal: true,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Pig),
+                    typeof(Boar)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "chicken",
+                displayName: "Aves de terreiro",
+                defaultMaxBreeds: 8,
+                farmAnimal: true,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Chicken)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "chicken_lizard",
+                displayName: "Lagartos-galinha",
+                defaultMaxBreeds: 5,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(BattleChickenLizard),
+                    typeof(ChickenLizard)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "deer",
+                displayName: "Cervídeos",
+                defaultMaxBreeds: 6,
+                farmAnimal: true,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Hind),
+                    typeof(GreatHart)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "bear",
+                displayName: "Ursos",
+                defaultMaxBreeds: 5,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(BlackBear),
+                    typeof(BrownBear),
+                    typeof(GrizzlyBear),
+                    typeof(PolarBear)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "canine",
+                displayName: "Caninos",
+                defaultMaxBreeds: 5,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Dog),
+                    typeof(GreyWolf),
+                    typeof(TimberWolf),
+                    typeof(WhiteWolf),
+                    typeof(DireWolf),
+                    typeof(TsukiWolf),
+                    typeof(HellHound),
+                    typeof(IceHound),
+                    typeof(DragonWolf),
+                    typeof(CuSidhe),
+                    typeof(BloodFox)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "feline",
+                displayName: "Felinos",
+                defaultMaxBreeds: 5,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Cat),
+                    typeof(HellCat),
+                    typeof(PredatorHellCat),
+                    typeof(Cougar),
+                    typeof(Panther),
+                    typeof(SnowLeopard),
+                    typeof(Lion),
+                    typeof(SabertoothedTiger),
+                    typeof(WildTiger),
+                    typeof(SkeletalCat)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "dragon",
+                displayName: "Dragões e dracos",
+                defaultMaxBreeds: 3,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Dragon),
+                    typeof(GreaterDragon),
+                    typeof(Drake),
+                    typeof(ColdDrake),
+                    typeof(CrimsonDrake),
+                    typeof(FrostDragon),
+                    typeof(PlatinumDrake),
+                    typeof(StygianDrake),
+                    typeof(ShadowWyrm),
+                    typeof(WhiteWyrm),
+                    typeof(SerpentineDragon),
+                    typeof(Reptalon),
+                    typeof(Hiryu),
+                    typeof(LesserHiryu),
+                    typeof(Skree)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "beetle",
+                displayName: "Besouros",
+                defaultMaxBreeds: 5,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Beetle),
+                    typeof(DeathwatchBeetle),
+                    typeof(FireBeetle),
+                    typeof(IronBeetle),
+                    typeof(RuneBeetle)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "spider",
+                displayName: "Aranhas",
+                defaultMaxBreeds: 5,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(DreadSpider),
+                    typeof(FrostSpider),
+                    typeof(GiantSpider),
+                    typeof(WolfSpider)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "bird",
+                displayName: "Aves",
+                defaultMaxBreeds: 6,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Bird),
+                    typeof(TropicalBird),
+                    typeof(Eagle),
+                    typeof(Parrot),
+                    typeof(Phoenix)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "rodent",
+                displayName: "Roedores e pequenos mamíferos",
+                defaultMaxBreeds: 8,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(GiantRat),
+                    typeof(Rat),
+                    typeof(Sewerrat),
+                    typeof(Rabbit),
+                    typeof(JackRabbit),
+                    typeof(Squirrel),
+                    typeof(Ferret)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "frog",
+                displayName: "Rãs e sapos",
+                defaultMaxBreeds: 6,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(BullFrog),
+                    typeof(GiantToad)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "reptile",
+                displayName: "Répteis",
+                defaultMaxBreeds: 5,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Alligator),
+                    typeof(LavaLizard),
+                    typeof(Slith),
+                    typeof(StoneSlith),
+                    typeof(Snake)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "bat",
+                displayName: "Mongbats",
+                defaultMaxBreeds: 5,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Mongbat),
+                    typeof(GreaterMongbat),
+                    typeof(StrongMongbat)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "boura",
+                displayName: "Bouras",
+                defaultMaxBreeds: 5,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(LowlandBoura),
+                    typeof(RuddyBoura),
+                    typeof(HighPlainsBoura)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "crab",
+                displayName: "Caranguejos",
+                defaultMaxBreeds: 5,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(CoconutCrab),
+                    typeof(HungryCoconutCrab)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "ooze",
+                displayName: "Limos",
+                defaultMaxBreeds: 8,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Slime),
+                    typeof(CorrosiveSlime)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "scorpion",
+                displayName: "Escorpiões",
+                defaultMaxBreeds: 5,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Scorpion)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "worm_mite",
+                displayName: "Vermes e ácaros",
+                defaultMaxBreeds: 5,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(GiantIceWorm),
+                    typeof(FrostMite)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "daemon",
+                displayName: "Criaturas infernais",
+                defaultMaxBreeds: 3,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Imp),
+                    typeof(BakeKitsune)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "gaman",
+                displayName: "Gaman",
+                defaultMaxBreeds: 5,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Gaman)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "gorilla",
+                displayName: "Gorilas",
+                defaultMaxBreeds: 5,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Gorilla)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "eowmu",
+                displayName: "Eowmus",
+                defaultMaxBreeds: 4,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Eowmu)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "lasher",
+                displayName: "Lashers",
+                defaultMaxBreeds: 4,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Lasher)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "skittering_hopper",
+                displayName: "Skittering Hoppers",
+                defaultMaxBreeds: 5,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(SkitteringHopper)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "triceratops",
+                displayName: "Triceratops",
+                defaultMaxBreeds: 3,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Triceratops)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "triton",
+                displayName: "Tritões",
+                defaultMaxBreeds: 3,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Triton)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "walrus",
+                displayName: "Morsas",
+                defaultMaxBreeds: 5,
+                farmAnimal: false,
+                mountAnimal: false,
+                allowedTypes: new Type[]
+                {
+                    typeof(Walrus)
+                }));
+
+            Register(new OSUStableBreedGroup(
+                id: "windrunner",
+                displayName: "Windrunners",
+                defaultMaxBreeds: 4,
+                farmAnimal: false,
+                mountAnimal: true,
+                allowedTypes: new Type[]
+                {
+                    typeof(Windrunner)
+                }));
+
         }
 
         private static void Register(OSUStableBreedGroup group)
@@ -172,6 +662,14 @@ namespace Server.Custom.Systems.Stables.Engine
         public static readonly TimeSpan DownedLifetime = TimeSpan.FromHours(24.0);
         public static readonly TimeSpan CommandCooldownWhenLowInt = TimeSpan.FromSeconds(3.0);
         public static readonly TimeSpan FarmPastureDelay = TimeSpan.FromMinutes(1.0);
+        public static readonly TimeSpan FarmPassiveXPDelay = TimeSpan.FromDays(1.0);
+
+        private static readonly Dictionary<int, DateTime> m_FarmPassiveXPNextUtc = new Dictionary<int, DateTime>();
+
+        private static string FarmPassiveXPFilePath
+        {
+            get { return Path.Combine(Core.BaseDirectory, "Saves", "OSU_FarmPassiveXP.bin"); }
+        }
 
         private static readonly string[] m_AbilityPool = new string[]
         {
@@ -189,6 +687,8 @@ namespace Server.Custom.Systems.Stables.Engine
             EventSink.Login += OnLogin;
             EventSink.CharacterCreated += OnCharacterCreated;
             EventSink.WorldLoad += OnWorldLoad;
+            EventSink.WorldSave += OnWorldSave;
+            LoadFarmPassiveXP();
             Timer.DelayCall(TimeSpan.FromMinutes(1.0), TimeSpan.FromMinutes(1.0), PulseWorldState);
         }
 
@@ -223,6 +723,164 @@ namespace Server.Custom.Systems.Stables.Engine
             Timer.DelayCall(TimeSpan.FromSeconds(1.0), PulseWorldState);
         }
 
+
+        private static void OnWorldSave(WorldSaveEventArgs e)
+        {
+            SaveFarmPassiveXP();
+        }
+
+        private static void LoadFarmPassiveXP()
+        {
+            m_FarmPassiveXPNextUtc.Clear();
+
+            try
+            {
+                if (!File.Exists(FarmPassiveXPFilePath))
+                    return;
+
+                using (FileStream fs = File.OpenRead(FarmPassiveXPFilePath))
+                using (BinaryReader br = new BinaryReader(fs))
+                {
+                    int version = br.ReadInt32();
+                    int count = br.ReadInt32();
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        int serial = br.ReadInt32();
+                        long ticks = br.ReadInt64();
+
+                        if (serial != 0 && ticks > 0)
+                            m_FarmPassiveXPNextUtc[serial] = new DateTime(ticks, DateTimeKind.Utc);
+                    }
+                }
+            }
+            catch
+            {
+                m_FarmPassiveXPNextUtc.Clear();
+            }
+        }
+
+        private static void SaveFarmPassiveXP()
+        {
+            try
+            {
+                string dir = Path.GetDirectoryName(FarmPassiveXPFilePath);
+                if (!Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+
+                using (FileStream fs = File.Create(FarmPassiveXPFilePath))
+                using (BinaryWriter bw = new BinaryWriter(fs))
+                {
+                    bw.Write(1);
+                    bw.Write(m_FarmPassiveXPNextUtc.Count);
+
+                    foreach (KeyValuePair<int, DateTime> kv in m_FarmPassiveXPNextUtc)
+                    {
+                        bw.Write(kv.Key);
+                        bw.Write(kv.Value.ToUniversalTime().Ticks);
+                    }
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        private static bool HasSkillToCommand(BaseCreature pet, Mobile from)
+        {
+            if (pet == null || from == null)
+                return false;
+
+            if (from.AccessLevel >= AccessLevel.GameMaster)
+                return true;
+
+            double required = pet.CurrentTameSkill;
+
+            if (required <= 0.0)
+                return true;
+
+            return from.Skills[SkillName.AnimalTaming].Value >= required
+                || from.Skills[SkillName.AnimalLore].Value >= required;
+        }
+
+        private static void ProcessFarmPassiveXP(BaseCreature pet)
+        {
+            if (pet == null || pet.Deleted || !pet.Controlled || !IsFarmAnimal(pet))
+                return;
+
+            if (pet.ControlMaster == null && !pet.OSUPetMarked)
+                return;
+
+            EnsureInitialized(pet);
+
+            int serial = pet.Serial.Value;
+            DateTime now = DateTime.UtcNow;
+
+            DateTime next;
+            if (!m_FarmPassiveXPNextUtc.TryGetValue(serial, out next) || next == DateTime.MinValue)
+            {
+                m_FarmPassiveXPNextUtc[serial] = now + FarmPassiveXPDelay;
+                return;
+            }
+
+            int safety = 0;
+
+            while (now >= next && safety < 60)
+            {
+                int required = Math.Max(1, pet.OSUPetNextLevelXP);
+                int xp = Math.Max(1, (int)Math.Ceiling(required / 30.0));
+
+                AddPetXP(pet, xp, false);
+
+                next = next + FarmPassiveXPDelay;
+                safety++;
+            }
+
+            m_FarmPassiveXPNextUtc[serial] = next;
+        }
+
+        public static TimeSpan GetFarmProductionDelay(BaseCreature pet, TimeSpan baseDelay)
+        {
+            if (pet == null || baseDelay <= TimeSpan.Zero)
+                return baseDelay;
+
+            EnsureInitialized(pet);
+
+            int level = Math.Max(1, Math.Min(10, pet.OSUPetLevel));
+            double t = (level - 1) / 9.0;
+
+            // Nível 1 = tempo normal. Nível 10 = metade do tempo.
+            double factor = 1.0 - (0.50 * t);
+
+            return TimeSpan.FromSeconds(Math.Max(60.0, baseDelay.TotalSeconds * factor));
+        }
+
+        public static int ScaleFarmDeathResource(BaseCreature pet, int baseAmount, string resourceKind)
+        {
+            if (pet == null || baseAmount <= 0)
+                return baseAmount;
+
+            EnsureInitialized(pet);
+
+            if (!IsFarmAnimal(pet))
+                return baseAmount;
+
+            int level = Math.Max(1, Math.Min(10, pet.OSUPetLevel));
+            double t = (level - 1) / 9.0;
+
+            if ((pet is Pig || pet is Boar) && String.Equals(resourceKind, "meat", StringComparison.OrdinalIgnoreCase))
+                return Math.Max(baseAmount, (int)Math.Round(2.0 + (28.0 * t)));
+
+            if (pet is Chicken && String.Equals(resourceKind, "meat", StringComparison.OrdinalIgnoreCase))
+                return Math.Max(baseAmount, (int)Math.Round(2.0 + (8.0 * t)));
+
+            if (pet is Chicken && String.Equals(resourceKind, "feathers", StringComparison.OrdinalIgnoreCase))
+                return Math.Max(baseAmount, (int)Math.Round(baseAmount * (1.0 + (2.0 * t))));
+
+            double multiplier = 1.0 + (2.5 * t); // Nível 10 = 3.5x nos recursos de carcaça.
+            return Math.Max(baseAmount, (int)Math.Round(baseAmount * multiplier));
+        }
+
         private static void PulseWorldState()
         {
             foreach (Mobile m in World.Mobiles.Values)
@@ -233,6 +891,7 @@ namespace Server.Custom.Systems.Stables.Engine
 
                 EnsureInitialized(pet);
                 ProcessPastureState(pet);
+                ProcessFarmPassiveXP(pet);
             }
         }
 
@@ -312,7 +971,12 @@ namespace Server.Custom.Systems.Stables.Engine
             PlayerMobile owner = pet.ControlMaster as PlayerMobile;
 
             if (owner == null)
+            {
+                if (IsFarmAnimal(pet) && pet.OSUPetMarked)
+                    return pet.OSUPetLevel < 10;
+
                 return false;
+            }
 
             if (owner.AccessLevel <= AccessLevel.Player && !owner.HasOSUFeat(TrainingFeatId))
                 cap = 7;
@@ -562,6 +1226,13 @@ namespace Server.Custom.Systems.Stables.Engine
 
             if (pet.ControlMaster != from)
                 return false;
+
+            if (!HasSkillToCommand(pet, from))
+            {
+                from.SendMessage(0x22, "Você possui este animal, mas não tem Animal Taming ou Animal Lore suficiente para que ele obedeça.");
+                result = false;
+                return true;
+            }
 
             if (pet.OSUPetMarked && IsFarmAnimal(pet))
             {
@@ -1086,12 +1757,6 @@ public static string BuildMarkedCorpseName(BaseCreature pet)
                 return false;
             }
 
-            if (!String.Equals(a.Id, "horse", StringComparison.OrdinalIgnoreCase))
-            {
-                reason = "Nesse primeiro patch, o cruzamento foi habilitado somente para o grupo de horse/equinos.";
-                return false;
-            }
-
             if (!WithdrawGoldAndDeposit(pm, cityId, BreedingCostGold, out reason))
                 return false;
 
@@ -1211,6 +1876,9 @@ public static string BuildMarkedCorpseName(BaseCreature pet)
         private static void ConfigurePendingOffspring(BaseCreature female, BaseCreature male, OSUStableBreedGroup group)
         {
             Type offspringType = group != null ? group.ChooseOffspringType(female, male) : female.GetType();
+
+            if (offspringType == typeof(HorseFrisioCarga))
+                offspringType = typeof(HorseFrisio);
             int str = (female.OSUPetLevelOneStr + male.OSUPetLevelOneStr) / 2;
             int dex = (female.OSUPetLevelOneDex + male.OSUPetLevelOneDex) / 2;
             int intel = (female.OSUPetLevelOneInt + male.OSUPetLevelOneInt) / 2;

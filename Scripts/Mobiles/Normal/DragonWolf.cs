@@ -39,6 +39,9 @@ namespace Server.Mobiles
             Karma = -8500;
             
             Tamable = true;
+            OSUPetBreedGroup = "canine";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 5;
             ControlSlots = 4;
             MinTameSkill = 102.0;
 

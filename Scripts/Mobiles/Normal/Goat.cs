@@ -38,6 +38,9 @@ namespace Server.Mobiles
             this.VirtualArmor = 10;
 
             this.Tamable = true;
+            OSUPetBreedGroup = "goat";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 6;
             this.ControlSlots = 1;
             this.MinTameSkill = 11.1;
         }
@@ -74,14 +77,15 @@ namespace Server.Mobiles
                 return;
             }
 
+            TimeSpan delay = OSUStablePetSystem.GetFarmProductionDelay(this, TimeSpan.FromHours(12.0));
             TimeSpan elapsed = DateTime.UtcNow - m_MilkedOn;
-            int produced = (int)(elapsed.TotalHours / 12.0);
+            int produced = (int)(elapsed.TotalSeconds / Math.Max(1.0, delay.TotalSeconds));
 
             if (produced <= 0)
                 return;
 
             m_Milk = Math.Min(5, m_Milk + produced);
-            m_MilkedOn = m_MilkedOn + TimeSpan.FromHours(produced * 12.0);
+            m_MilkedOn = m_MilkedOn + TimeSpan.FromSeconds(delay.TotalSeconds * produced);
         }
 
         public bool TryMilk(Mobile from)
@@ -125,14 +129,14 @@ namespace Server.Mobiles
         {
             get
             {
-                return 2;
+                return OSUStablePetSystem.ScaleFarmDeathResource(this, 2, "meat");
             }
         }
         public override int Hides
         {
             get
             {
-                return 8;
+                return OSUStablePetSystem.ScaleFarmDeathResource(this, 8, "hides");
             }
         }
         public override FoodType FavoriteFood

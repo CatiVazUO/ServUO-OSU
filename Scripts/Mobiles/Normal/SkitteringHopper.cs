@@ -35,6 +35,9 @@ namespace Server.Mobiles
             this.Karma = 0;
 
             this.Tamable = true;
+            OSUPetBreedGroup = "skittering_hopper";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 5;
             this.ControlSlots = 1;
             this.MinTameSkill = -12.9;
 

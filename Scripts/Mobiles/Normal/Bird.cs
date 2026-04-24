@@ -53,6 +53,9 @@ namespace Server.Mobiles
             this.Karma = 0;
 
             this.Tamable = true;
+            OSUPetBreedGroup = "bird";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 6;
             this.ControlSlots = 1;
             this.MinTameSkill = -6.9;
         }
@@ -134,6 +137,9 @@ namespace Server.Mobiles
             this.Karma = 0;
 
             this.Tamable = true;
+            OSUPetBreedGroup = "bird";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 6;
             this.ControlSlots = 1;
             this.MinTameSkill = -6.9;
         }

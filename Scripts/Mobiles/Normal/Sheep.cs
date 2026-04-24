@@ -43,6 +43,9 @@ namespace Server.Mobiles
             VirtualArmor = 6;
 
             Tamable = true;
+            OSUPetBreedGroup = "sheep";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 6;
             ControlSlots = 1;
             MinTameSkill = 11.1;
         }
@@ -69,7 +72,7 @@ namespace Server.Mobiles
         {
             get
             {
-                return 3;
+                return OSUStablePetSystem.ScaleFarmDeathResource(this, 3, "meat");
             }
         }
         public override MeatType MeatType
@@ -90,7 +93,7 @@ namespace Server.Mobiles
         {
             get
             {
-                return (Body == 0xCF ? 3 : 0);
+                return OSUStablePetSystem.ScaleFarmDeathResource(this, (Body == 0xCF ? 3 : 0), "wool");
             }
         }
         public bool Carve(Mobile from, Item item)
@@ -129,7 +132,7 @@ namespace Server.Mobiles
                 }
             }
 
-            NextWoolTime = DateTime.UtcNow + TimeSpan.FromHours(2.0); // TODO: Proper time delay
+            NextWoolTime = DateTime.UtcNow + OSUStablePetSystem.GetFarmProductionDelay(this, TimeSpan.FromHours(2.0));
             OSUStablePetSystem.OnFarmResourceProduced(this, from, 1);
             return true;
         }

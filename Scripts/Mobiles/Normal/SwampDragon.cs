@@ -52,6 +52,9 @@ namespace Server.Mobiles
             Hue = 0x851;
 
             Tamable = true;
+            OSUPetBreedGroup = "swamp_dragon";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 4;
             ControlSlots = 1;
             MinTameSkill = 93.9;
         }

@@ -42,6 +42,9 @@ namespace Server.Mobiles
             Karma = 0;
 
             Tamable = true;
+            OSUPetBreedGroup = "ridgeback";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 5;
             ControlSlots = 1;
             MinTameSkill = 83.1;
         }

@@ -65,6 +65,9 @@ namespace Server.Mobiles
                 PackItem(Engines.Plants.Seed.RandomBonsaiSeed());
 
             Tamable = true;
+            OSUPetBreedGroup = "beetle";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 5;
             MinTameSkill = 41.1;
             ControlSlots = 1;
 

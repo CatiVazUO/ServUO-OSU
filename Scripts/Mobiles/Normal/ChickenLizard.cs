@@ -38,6 +38,9 @@ namespace Server.Mobiles
             SetSkill(SkillName.Wrestling, 26.2, 38.2);
 
             Tamable = true;
+            OSUPetBreedGroup = "chicken_lizard";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 5;
             ControlSlots = 1;
             MinTameSkill = 0.0;
 

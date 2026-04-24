@@ -23,6 +23,9 @@ namespace Server.Mobiles
             this.Karma = Utility.Random(0, -624);
 
             this.Tamable = true;
+            OSUPetBreedGroup = "bird";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 6;
             this.ControlSlots = 1;
             this.MinTameSkill = 0.0;
         }

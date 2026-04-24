@@ -10,6 +10,28 @@ namespace Server.Mobiles
     {
         private readonly int[] _possibleHues;
 
+        private static int ClampInt(int value, int min, int max)
+        {
+            if (value < min)
+                return min;
+
+            if (value > max)
+                return max;
+
+            return value;
+        }
+
+        private static double ClampDouble(double value, double min, double max)
+        {
+            if (value < min)
+                return min;
+
+            if (value > max)
+                return max;
+
+            return value;
+        }
+
         public override int Meat { get { return 3; } }
         public override int Hides { get { return 10; } }
         public override FoodType FavoriteFood { get { return FoodType.FruitsAndVegies | FoodType.GrainsAndHay; } }
@@ -51,11 +73,18 @@ namespace Server.Mobiles
             SetDamage(damageMin, damageMax);
 
             SetDamageType(ResistanceType.Physical, 100);
-            SetResistance(ResistanceType.Physical, 15, 25);
 
-            SetSkill(SkillName.MagicResist, 25.1, 35.0);
-            SetSkill(SkillName.Tactics, 29.3, 49.0);
-            SetSkill(SkillName.Wrestling, 29.3, 49.0);
+            int resistBonus = ClampInt((int)((minTameSkill - 29.1) / 10.0), 0, 8);
+
+            SetResistance(ResistanceType.Physical, ClampInt(15 + resistBonus, 10, 35), ClampInt(25 + resistBonus, 20, 45));
+            SetResistance(ResistanceType.Fire, ClampInt(5 + (resistBonus / 2), 0, 18), ClampInt(10 + resistBonus, 5, 25));
+            SetResistance(ResistanceType.Cold, ClampInt(5 + (resistBonus / 2), 0, 18), ClampInt(10 + resistBonus, 5, 25));
+            SetResistance(ResistanceType.Poison, ClampInt(5 + (resistBonus / 2), 0, 18), ClampInt(10 + resistBonus, 5, 25));
+            SetResistance(ResistanceType.Energy, ClampInt(5 + (resistBonus / 2), 0, 18), ClampInt(10 + resistBonus, 5, 25));
+
+            SetSkill(SkillName.MagicResist, ClampDouble(minTameSkill - 14.0, 15.0, 70.0), ClampDouble(minTameSkill + 6.0, 25.0, 85.0));
+            SetSkill(SkillName.Tactics, ClampDouble(35.0 + resistBonus, 29.3, 75.0), ClampDouble(50.0 + resistBonus, 49.0, 90.0));
+            SetSkill(SkillName.Wrestling, ClampDouble(35.0 + resistBonus, 29.3, 75.0), ClampDouble(50.0 + resistBonus, 49.0, 90.0));
 
             Fame = 300;
             Karma = 300;
@@ -362,9 +391,7 @@ namespace Server.Mobiles
 
         [Constructable]
         public HorseFrisioCarga()
-            // Body 0x123 = visual de pack horse no mundo.
-            // ItemID 0x3E9F = visual de montaria do frísio quando o jogador monta.
-            : base("um frisio de carga", 0x123, 0x3EE8, OSUHorseNaturalHues.DarkFrisio, 70, 90, 55, 70, 8, 14, 42, 55, 4, 5, 39.1)
+            : base("um frisio de carga", 0x123, 0x3E9F, OSUHorseNaturalHues.DarkFrisio, 70, 90, 55, 70, 8, 14, 42, 55, 4, 5, 39.1)
         {
             EnsureCargoBackpack();
             m_CargoBagUsesRemaining = 50;

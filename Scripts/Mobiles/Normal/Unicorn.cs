@@ -46,6 +46,9 @@ namespace Server.Mobiles
             Karma = 9000;
 
             Tamable = true;
+            OSUPetBreedGroup = "kirin_unicorn";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 4;
             ControlSlots = 2;
             MinTameSkill = 95.1;
 

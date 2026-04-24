@@ -2071,88 +2071,73 @@ namespace Server.Mobiles
 			}
 		}
 
-		public virtual bool DoOrderTransfer()
-		{
-			if (m_Mobile.IsDeadPet)
-			{
-				return true;
-			}
+        public virtual bool DoOrderTransfer()
+        {
+            if (m_Mobile.IsDeadPet)
+            {
+                return true;
+            }
 
-			var from = m_Mobile.ControlMaster;
-			var to = m_Mobile.ControlTarget as Mobile;
+            var from = m_Mobile.ControlMaster;
+            var to = m_Mobile.ControlTarget as Mobile;
 
-			if (from != to && from != null && !from.Deleted && to != null && !to.Deleted && to.Player)
-			{
-				m_Mobile.DebugSay("Begin transfer with {0}", to.Name);
+            if (from != to && from != null && !from.Deleted && to != null && !to.Deleted && to.Player)
+            {
+                m_Mobile.DebugSay("Transferindo diretamente para {0}", to.Name);
 
-				var youngFrom = from is PlayerMobile ? ((PlayerMobile)from).Young : false;
-				var youngTo = to is PlayerMobile ? ((PlayerMobile)to).Young : false;
+                var youngFrom = from is PlayerMobile ? ((PlayerMobile)from).Young : false;
+                var youngTo = to is PlayerMobile ? ((PlayerMobile)to).Young : false;
 
-				if (youngFrom && !youngTo)
-				{
-					from.SendLocalizedMessage(502051); // As a young player, you may not transfer pets to older players.
-				}
-				else if (!youngFrom && youngTo)
-				{
-					from.SendLocalizedMessage(502052); // As an older player, you may not transfer pets to young players.
-				}
-				else if (!m_Mobile.CanBeControlledBy(to))
-				{
-					var args = String.Format("{0}\t{1}\t ", to.Name, from.Name);
+                if (youngFrom && !youngTo)
+                {
+                    from.SendLocalizedMessage(502051); // As a young player, you may not transfer pets to older players.
+                }
+                else if (!youngFrom && youngTo)
+                {
+                    from.SendLocalizedMessage(502052); // As an older player, you may not transfer pets to young players.
+                }
+                else if (TransferItem.IsInCombat(m_Mobile))
+                {
+                    from.SendMessage("Você não pode transferir um animal que esteve em combate recentemente.");
+                    to.SendMessage("Esse animal não pode ser transferido para você porque esteve em combate recentemente.");
+                }
+                else if ((to.Followers + m_Mobile.ControlSlots) > to.FollowersMax)
+                {
+                    to.SendLocalizedMessage(1049607); // You have too many followers to control that creature.
+                }
+                else if (m_Mobile.CanTransfer(from))
+                {
+                    if (m_Mobile.SetControlMaster(to))
+                    {
+                        if (m_Mobile.Summoned)
+                        {
+                            m_Mobile.SummonMaster = to;
+                        }
 
-					from.SendLocalizedMessage(1043248, args);
-					// The pet refuses to be transferred because it will not obey ~1_NAME~.~3_BLANK~
-					to.SendLocalizedMessage(1043249, args);
-					// The pet will not accept you as a master because it does not trust you.~3_BLANK~
-				}
-				else if (!m_Mobile.CanBeControlledBy(from))
-				{
-					var args = String.Format("{0}\t{1}\t ", to.Name, from.Name);
+                        m_Mobile.ControlTarget = to;
+                        m_Mobile.ControlOrder = OrderType.Follow;
 
-					from.SendLocalizedMessage(1043250, args);
-					// The pet refuses to be transferred because it will not obey you sufficiently.~3_BLANK~
-					to.SendLocalizedMessage(1043251, args);
-					// The pet will not accept you as a master because it does not trust ~2_NAME~.~3_BLANK~
-				}
-				else if (TransferItem.IsInCombat(m_Mobile))
-				{
-					from.SendMessage("You may not transfer a pet that has recently been in combat.");
-					to.SendMessage("The pet may not be transfered to you because it has recently been in combat.");
-				}
-				else if (m_Mobile.CanTransfer(from))
-				{
-					NetState fromState = from.NetState, toState = to.NetState;
+                        m_Mobile.BondingBegin = DateTime.MinValue;
+                        m_Mobile.OwnerAbandonTime = DateTime.MinValue;
+                        m_Mobile.IsBonded = false;
 
-					if (fromState != null && toState != null)
-					{
-						if (from.HasTrade)
-						{
-							from.SendLocalizedMessage(1010507); // You cannot transfer a pet with a trade pending
-						}
-						else if (to.HasTrade)
-						{
-							to.SendLocalizedMessage(1010507); // You cannot transfer a pet with a trade pending
-						}
-						else if (to is PlayerMobile && ((PlayerMobile)to).RefuseTrades)
-						{
-							from.SendLocalizedMessage(1154111, to.Name); // ~1_NAME~ is refusing all trades.
-						}
-						else
-						{
-							Container c = fromState.AddTrade(toState);
-							c.DropItem(new TransferItem(m_Mobile));
-						}
-					}
-				}
-			}
+                        m_Mobile.PlaySound(m_Mobile.GetIdleSound());
 
-			m_Mobile.ControlTarget = null;
-			m_Mobile.ControlOrder = OrderType.Stay;
+                        var args = String.Format("{0}\t{1}\t{2}", from.Name, m_Mobile.Name, to.Name);
 
-			return true;
-		}
+                        from.SendLocalizedMessage(1043253, args); // You have transferred your pet to ~3_GETTER~.
+                        to.SendLocalizedMessage(1043252, args); // ~1_NAME~ has transferred the allegiance of ~2_PET_NAME~ to you.
+                    }
+                }
+            }
 
-		public virtual bool DoBardPacified()
+            m_Mobile.ControlTarget = null;
+            m_Mobile.ControlOrder = OrderType.Stay;
+
+            return true;
+        }
+
+        public virtual bool DoBardPacified()
 		{
 			if (DateTime.UtcNow < m_Mobile.BardEndTime)
 			{
@@ -2370,10 +2355,17 @@ namespace Server.Mobiles
 
 				var blocked = true;
 
-				var canOpenDoors = m_Mobile.CanOpenDoors;
-				var canDestroyObstacles = m_Mobile.CanDestroyObstacles;
+                var canOpenDoors = m_Mobile.CanOpenDoors;
+                var canDestroyObstacles = m_Mobile.CanDestroyObstacles;
 
-				if (canOpenDoors || canDestroyObstacles)
+                // OSU: animais, criaturas domadas e criaturas invocadas não abrem portas sozinhos.
+                // Isso impede cavalo, vaca, pack horse, frísio, pet e summon de abrir porta para seguir alguém.
+                if (m_Mobile.Controlled || m_Mobile.Summoned || m_Mobile.Body.IsAnimal)
+                {
+                    canOpenDoors = false;
+                }
+
+                if (canOpenDoors || canDestroyObstacles)
 				{
 					m_Mobile.DebugSay("My movement was blocked, I will try to clear some obstacles.");
 

@@ -43,6 +43,9 @@ namespace Server.Mobiles
             VirtualArmor = 30;
 
             Tamable = true;
+            OSUPetBreedGroup = "feline";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 5;
             ControlSlots = 2;
             MinTameSkill = 90.0;
 

@@ -81,6 +81,9 @@ namespace Server.Mobiles
             Karma = 300;
 
             Tamable = true;
+            OSUPetBreedGroup = "windrunner";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 4;
             ControlSlots = 1;
         }
 

@@ -39,6 +39,9 @@ namespace Server.Mobiles
             SetSkill(SkillName.Wrestling, 86.6, 87.9);
 
             Tamable = true;
+            OSUPetBreedGroup = "boura";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 5;
             ControlSlots = 2;
             MinTameSkill = 19.1;
 

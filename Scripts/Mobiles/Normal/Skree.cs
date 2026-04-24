@@ -40,6 +40,9 @@ namespace Server.Mobiles
             SetSkill(SkillName.Parry, 75, 85);
 
             Tamable = true;
+            OSUPetBreedGroup = "dragon";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 3;
             ControlSlots = 4;
             MinTameSkill = 95.1;
         }

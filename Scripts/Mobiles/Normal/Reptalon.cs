@@ -36,6 +36,9 @@ namespace Server.Mobiles
             SetSkill(SkillName.Anatomy, 56.4, 59.7);
 			
             Tamable = true;
+            OSUPetBreedGroup = "dragon";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 3;
             ControlSlots = 4;
             MinTameSkill = 101.1;
 

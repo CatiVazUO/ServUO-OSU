@@ -41,6 +41,9 @@ namespace Server.Mobiles
             Karma = -8000;
 
             Tamable = true;
+            OSUPetBreedGroup = "daemon";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 3;
             ControlSlots = 2;
             MinTameSkill = 80.7;
 

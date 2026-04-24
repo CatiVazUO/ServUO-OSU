@@ -39,6 +39,9 @@ namespace Server.Mobiles
             this.VirtualArmor = 24;
 
             this.Tamable = true;
+            OSUPetBreedGroup = "frog";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 6;
             this.ControlSlots = 1;
             this.MinTameSkill = 77.1;
             

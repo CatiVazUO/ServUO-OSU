@@ -37,6 +37,9 @@ namespace Server.Mobiles
             SetSkill(SkillName.Anatomy, 0.0, 2.9);
 
             Tamable = true;
+            OSUPetBreedGroup = "reptile";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 5;
             ControlSlots = 2;
             MinTameSkill = 65.1;
             SetWeaponAbility(WeaponAbility.BleedAttack);

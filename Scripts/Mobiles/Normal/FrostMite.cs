@@ -38,6 +38,9 @@ namespace Server.Mobiles
             SetSkill(SkillName.Focus, 100.0, 115.0);
 
             Tamable = true;
+            OSUPetBreedGroup = "worm_mite";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 5;
             ControlSlots = 3;
             MinTameSkill = 102.0;
 

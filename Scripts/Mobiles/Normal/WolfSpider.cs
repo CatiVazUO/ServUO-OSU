@@ -42,6 +42,9 @@ namespace Server.Mobiles
             SetSkill(SkillName.Stealth, 105.0, 110.0);
 
             Tamable = true;
+            OSUPetBreedGroup = "spider";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 5;
             ControlSlots = 2;
             MinTameSkill = 59.1;
         }

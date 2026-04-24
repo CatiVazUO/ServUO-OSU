@@ -50,6 +50,9 @@ namespace Server.Mobiles
             PackItem(new SpidersSilk(8));
 
             Tamable = true;
+            OSUPetBreedGroup = "spider";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 5;
             ControlSlots = 3;
             MinTameSkill = 96.0;
         }

@@ -35,6 +35,9 @@ namespace Server.Mobiles
             SetSkill(SkillName.DetectHidden, 50.0, 60.0);
 
             Tamable = true;
+            OSUPetBreedGroup = "canine";
+            if (OSUPetBreedCountMax <= 0)
+                OSUPetBreedCountMax = 5;
             ControlSlots = 2;
             MinTameSkill = 72.0;
 
