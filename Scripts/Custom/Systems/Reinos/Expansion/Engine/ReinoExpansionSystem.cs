@@ -1329,7 +1329,14 @@ namespace Server.Custom.Reinos
 
             Server.Custom.Systems.Reinos.Expansion.Multis.ReinoEstabuloMulti stableMulti = placed as Server.Custom.Systems.Reinos.Expansion.Multis.ReinoEstabuloMulti;
             if (stableMulti != null)
-                stableMulti.EnsureStablePosts();
+            {
+                stableMulti.EnsureStablePostsForCity(lot.CityId);
+                Timer.DelayCall(TimeSpan.FromSeconds(1.0), delegate
+                {
+                    if (stableMulti != null && !stableMulti.Deleted)
+                        stableMulti.EnsureStablePostsForCity(lot.CityId);
+                });
+            }
 
             if (!abandoned && def.UseMultiDoors && def.FinishedDoors != null && def.FinishedDoors.Length > 0)
                 SpawnDoors(anchor, state.DoorSerials, def.FinishedDoors, lot.Map);

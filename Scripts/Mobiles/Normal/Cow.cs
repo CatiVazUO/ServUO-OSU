@@ -117,6 +117,25 @@ namespace Server.Mobiles
             Animate(8, 0, 3, true, false, 0);
         }
 
+        private void RefreshMilk()
+        {
+            if (m_MilkedOn == DateTime.MinValue)
+            {
+                m_Milk = Math.Max(m_Milk, 5);
+                m_MilkedOn = DateTime.UtcNow;
+                return;
+            }
+
+            TimeSpan elapsed = DateTime.UtcNow - m_MilkedOn;
+            int produced = (int)(elapsed.TotalHours / 12.0);
+
+            if (produced <= 0)
+                return;
+
+            m_Milk = Math.Min(5, m_Milk + produced);
+            m_MilkedOn = m_MilkedOn + TimeSpan.FromHours(produced * 12.0);
+        }
+
         public bool TryMilk(Mobile from)
         {
             string reason;
@@ -140,16 +159,14 @@ namespace Server.Mobiles
                 return false;
             }
 
-            if (m_Milk == 0 && m_MilkedOn + TimeSpan.FromDays(1) > DateTime.UtcNow)
+            RefreshMilk();
+
+            if (m_Milk <= 0)
             {
-                from.SendLocalizedMessage(1080198); // This cow can not be milked now. Please wait for some time.
+                from.SendLocalizedMessage(1080198);
                 return false;
             }
 
-            if (m_Milk == 0)
-                m_Milk = 4;
-
-            m_MilkedOn = DateTime.UtcNow;
             m_Milk--;
 
             OSUStablePetSystem.OnFarmResourceProduced(this, from, 1);

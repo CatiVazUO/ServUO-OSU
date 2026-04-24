@@ -97,9 +97,16 @@ namespace Server.Custom.Systems.Stables.Engine
                 mountAnimal: true,
                 allowedTypes: new Type[]
                 {
-                    typeof(Horse),
-                    typeof(PackHorse),
-                    typeof(Palomino)
+                typeof(HorseFrisio),
+                typeof(HorseMustang),
+                typeof(HorsePuroSangue),
+                typeof(HorseMangaLarga),
+                typeof(HorseAndaluz),
+                typeof(HorseShire),
+                typeof(HorseArdennes),
+                typeof(HorseClaydesdale),
+                typeof(HorseGypsy),
+                typeof(HorseBelga)
                 }));
 
             Register(new OSUStableBreedGroup(
@@ -158,13 +165,13 @@ namespace Server.Custom.Systems.Stables.Engine
         public const int BrandingCostGold = 600;
         public const int LateClaimFeeGold = 50;
 
-        public static readonly TimeSpan BreedingParentsDuration = TimeSpan.FromSeconds(10.0);
-        public static readonly TimeSpan BreedingOffspringDuration = TimeSpan.FromSeconds(20.0);
+        public static readonly TimeSpan BreedingParentsDuration = TimeSpan.FromSeconds(30.0);
+        public static readonly TimeSpan BreedingOffspringDuration = TimeSpan.FromSeconds(30.0);
         public static readonly TimeSpan CastrationDuration = TimeSpan.FromSeconds(15.0);
         public static readonly TimeSpan OffspringGraceWindow = TimeSpan.FromSeconds(20.0);
         public static readonly TimeSpan DownedLifetime = TimeSpan.FromHours(24.0);
         public static readonly TimeSpan CommandCooldownWhenLowInt = TimeSpan.FromSeconds(3.0);
-        public static readonly TimeSpan FarmPastureDelay = TimeSpan.FromMinutes(10.0);
+        public static readonly TimeSpan FarmPastureDelay = TimeSpan.FromMinutes(1.0);
 
         private static readonly string[] m_AbilityPool = new string[]
         {
@@ -917,8 +924,21 @@ public static string BuildMarkedCorpseName(BaseCreature pet)
 
             if (IsFarmAnimal(pet))
             {
+                if (pet.ControlMaster != null)
+                    pet.RemoveFollowers();
+
+                if (pet.OSUPetStoredControlSlots <= 0)
+                    pet.OSUPetStoredControlSlots = Math.Max(1, pet.ControlSlots);
+
+                pet.ControlSlots = 0;
                 pet.OSUPetPastureAtUtc = DateTime.UtcNow + FarmPastureDelay;
+
+                pm.Emote("*marca o animal com cuidado*");
                 pm.SendMessage(0x59, "Esse animal foi marcado. Em 10 minutos ele vai se soltar para começar a pastar.");
+            }
+            else
+            {
+                pm.Emote("*marca o animal*");
             }
 
             pet.InvalidateProperties();
@@ -1088,9 +1108,7 @@ public static string BuildMarkedCorpseName(BaseCreature pet)
             female.OSUPetBreedCount++;
             male.OSUPetBreedCount++;
 
-            BaseCreature baby;
-            if (!TryCreateBreedingOffspring(pm, stableNpc, female, male, cityId, roomIndex, out baby, out reason))
-                return false;
+            ConfigurePendingOffspring(female, male, a);
 
             StartService(female, pm, OSUStableServiceKind.Breeding, cityId, BreedingParentsDuration);
             StartService(male, pm, OSUStableServiceKind.Breeding, cityId, BreedingParentsDuration);
@@ -1143,69 +1161,6 @@ public static string BuildMarkedCorpseName(BaseCreature pet)
             }
 
             return false;
-        }
-
-        private static bool TryCreateBreedingOffspring(PlayerMobile owner, Mobile stableNpc, BaseCreature female, BaseCreature male, int cityId, int roomIndex, out BaseCreature baby, out string reason)
-        {
-            reason = null;
-            baby = null;
-
-            OSUStableBreedGroup group = OSUStableBreedRegistry.GetGroup(female);
-            ConfigurePendingOffspring(female, male, group);
-
-            Type babyType = ResolveMobileType(female.OSUPetPendingOffspringTypeName);
-            if (babyType == null || !typeof(BaseCreature).IsAssignableFrom(babyType))
-            {
-                reason = "O tipo do filhote não pôde ser resolvido.";
-                return false;
-            }
-
-            baby = Activator.CreateInstance(babyType) as BaseCreature;
-            if (baby == null)
-            {
-                reason = "Não foi possível criar o filhote.";
-                return false;
-            }
-
-            baby.Female = female.OSUPetPendingOffspringFemale;
-            baby.RawStr = Math.Max(1, female.OSUPetPendingOffspringStr);
-            baby.RawDex = Math.Max(1, female.OSUPetPendingOffspringDex);
-            baby.RawInt = Math.Max(1, female.OSUPetPendingOffspringInt);
-            baby.Hits = baby.HitsMax;
-            baby.Stam = baby.StamMax;
-            baby.Mana = baby.ManaMax;
-            baby.Tamable = false;
-            baby.Controlled = false;
-            baby.ControlMaster = null;
-            baby.ControlTarget = null;
-            baby.ControlOrder = OrderType.None;
-            baby.Frozen = true;
-            baby.Blessed = true;
-            baby.OSUPetInitialized = true;
-            baby.OSUPetLevel = 1;
-            baby.OSUPetXP = 0;
-            baby.OSUPetNextLevelXP = GetRequiredXPForLevel(1);
-            baby.OSUPetLevelOneStr = baby.RawStr;
-            baby.OSUPetLevelOneDex = baby.RawDex;
-            baby.OSUPetLevelOneInt = baby.RawInt;
-            baby.OSUPetBreedCount = 0;
-            baby.OSUPetBreedCountMax = Math.Max(0, female.OSUPetPendingOffspringBreedMax);
-            baby.OSUPetSterile = baby.OSUPetBreedCountMax <= 0;
-            baby.OSUPetBreedGroup = female.OSUPetPendingOffspringGroup ?? String.Empty;
-            baby.OSUPetLivesMax = DefaultPetLives;
-            baby.OSUPetLivesRemaining = DefaultPetLives;
-            baby.OSUPetServiceKind = (int)OSUStableServiceKind.Breeding;
-            baby.OSUPetServiceStage = (int)OSUStableServiceStage.BreedingOffspring;
-            baby.OSUPetServiceOwnerSerial = owner.Serial.Value;
-            baby.OSUPetServiceCityId = cityId;
-            baby.OSUPetServiceReadyUtc = DateTime.UtcNow + BreedingOffspringDuration;
-            baby.OSUPetServiceClaimFromUtc = baby.OSUPetServiceReadyUtc;
-            baby.OSUPetServiceRoomIndex = roomIndex;
-            Point3D babyLoc = GetBreedingOffspringLocation(stableNpc, roomIndex);
-            Map map = stableNpc.Map;
-            baby.MoveToWorld(babyLoc, map);
-
-            return true;
         }
 
         private static void MovePetToBreedingRoom(BaseCreature pet, PlayerMobile owner, Mobile stableNpc, int roomIndex, bool female)
@@ -1321,16 +1276,16 @@ public static string BuildMarkedCorpseName(BaseCreature pet)
             return 0;
         }
 
-        public static List<BaseCreature> GetReadyServicePets(PlayerMobile pm, int cityId)
+        public static List<BaseMount> GetReadyServicePets(PlayerMobile pm, int cityId)
         {
-            List<BaseCreature> list = new List<BaseCreature>();
+            List<BaseMount> list = new List<BaseMount>();
 
             if (pm == null)
                 return list;
 
             foreach (Mobile m in World.Mobiles.Values)
             {
-                BaseCreature pet = m as BaseCreature;
+                BaseMount pet = m as BaseMount;
                 if (pet == null || pet.Deleted)
                     continue;
 
@@ -1376,7 +1331,7 @@ public static string BuildMarkedCorpseName(BaseCreature pet)
             return steps * LateClaimFeeGold;
         }
 
-        public static bool TryClaimReadyService(PlayerMobile pm, Mobile stableNpc, BaseCreature pet, out string reason)
+        public static bool TryClaimReadyService(PlayerMobile pm, Mobile stableNpc, BaseMount pet, out string reason)
         {
             reason = null;
 
@@ -1433,11 +1388,78 @@ public static string BuildMarkedCorpseName(BaseCreature pet)
             return true;
         }
 
-        private static bool ClaimBreedingParents(PlayerMobile pm, Mobile stableNpc, BaseCreature female, out string reason)
+        private static bool SpawnBreedingOffspringFromPending
+            (PlayerMobile owner, Mobile stableNpc, BaseMount female, BaseMount male, int cityId,
+            int roomIndex, out BaseMount baby, out string reason)
+        {
+            reason = null;
+            baby = null;
+
+            Type babyType = ResolveMobileType(female.OSUPetPendingOffspringTypeName);
+            if (babyType == null || !typeof(BaseCreature).IsAssignableFrom(babyType))
+            {
+                reason = "O tipo do filhote não pôde ser resolvido.";
+                return false;
+            }
+
+            baby = Activator.CreateInstance(babyType) as BaseMount;
+            if (baby == null)
+            {
+                reason = "Não foi possível criar o filhote.";
+                return false;
+            }
+
+            CopyHorseVisualFromParent(baby, female, male);
+
+            baby.Female = female.OSUPetPendingOffspringFemale;
+            baby.RawStr = Math.Max(1, female.OSUPetPendingOffspringStr);
+            baby.RawDex = Math.Max(1, female.OSUPetPendingOffspringDex);
+            baby.RawInt = Math.Max(1, female.OSUPetPendingOffspringInt);
+            baby.Hits = baby.HitsMax;
+            baby.Stam = baby.StamMax;
+            baby.Mana = baby.ManaMax;
+
+            baby.Tamable = false;
+            baby.Controlled = false;
+            baby.ControlMaster = null;
+            baby.ControlTarget = null;
+            baby.ControlOrder = OrderType.None;
+            baby.Frozen = true;
+            baby.Blessed = true;
+
+            baby.OSUPetInitialized = true;
+            baby.OSUPetLevel = 1;
+            baby.OSUPetXP = 0;
+            baby.OSUPetNextLevelXP = GetRequiredXPForLevel(1);
+            baby.OSUPetLevelOneStr = baby.RawStr;
+            baby.OSUPetLevelOneDex = baby.RawDex;
+            baby.OSUPetLevelOneInt = baby.RawInt;
+            baby.OSUPetBreedCount = 0;
+            baby.OSUPetBreedCountMax = Math.Max(0, female.OSUPetPendingOffspringBreedMax);
+            baby.OSUPetSterile = baby.OSUPetBreedCountMax <= 0;
+            baby.OSUPetBreedGroup = female.OSUPetPendingOffspringGroup ?? String.Empty;
+            baby.OSUPetLivesMax = DefaultPetLives;
+            baby.OSUPetLivesRemaining = DefaultPetLives;
+
+            baby.OSUPetServiceKind = (int)OSUStableServiceKind.Breeding;
+            baby.OSUPetServiceStage = (int)OSUStableServiceStage.BreedingOffspring;
+            baby.OSUPetServiceOwnerSerial = owner.Serial.Value;
+            baby.OSUPetServiceCityId = cityId;
+            baby.OSUPetServiceReadyUtc = DateTime.UtcNow + BreedingOffspringDuration;
+            baby.OSUPetServiceClaimFromUtc = baby.OSUPetServiceReadyUtc;
+            baby.OSUPetServiceRoomIndex = roomIndex;
+
+            Point3D babyLoc = GetBreedingOffspringLocation(stableNpc, roomIndex);
+            baby.MoveToWorld(babyLoc, stableNpc.Map);
+
+            return true;
+        }
+
+        private static bool ClaimBreedingParents(PlayerMobile pm, Mobile stableNpc, BaseMount female, out string reason)
         {
             reason = null;
 
-            BaseCreature male = World.FindMobile((Serial)female.OSUPetServicePartnerSerial) as BaseCreature;
+            BaseMount male = World.FindMobile((Serial)female.OSUPetServicePartnerSerial) as BaseMount;
             if (male == null || male.Deleted)
             {
                 reason = "O parceiro desse cruzamento não foi encontrado.";
@@ -1445,33 +1467,45 @@ public static string BuildMarkedCorpseName(BaseCreature pet)
             }
 
             int roomIndex = female.OSUPetServiceRoomIndex;
+            int cityId = female.OSUPetServiceCityId;
+
+            BaseMount baby;
+            if (!SpawnBreedingOffspringFromPending(pm, stableNpc, female, male, cityId, roomIndex, out baby, out reason))
+                return false;
 
             ResetServiceFlags(male);
             RestoreFollowerSlots(male);
-            male.ControlMaster = pm;
             male.Controlled = true;
             male.ControlTarget = pm;
             male.ControlOrder = OrderType.Follow;
-            male.AddFollowers();
+            male.Frozen = false;
+            male.Blessed = false;
+
+            if (male.ControlMaster != pm)
+                male.ControlMaster = pm;
+            else
+                male.AddFollowers();
+
             ReleasePetFromBreedingRoom(male, stableNpc, pm, roomIndex);
 
-            female.OSUPetServiceKind = 0;
-            female.OSUPetServiceOwnerSerial = 0;
-            female.OSUPetServiceCityId = -1;
-            female.OSUPetServiceReadyUtc = DateTime.MinValue;
-            female.OSUPetServiceClaimFromUtc = DateTime.MinValue;
-            female.OSUPetServicePartnerSerial = 0;
-            female.OSUPetServiceRoomIndex = -1;
-            female.OSUPetServiceStage = (int)OSUStableServiceStage.None;
+            ResetServiceFlags(female);
             RestoreFollowerSlots(female);
-            female.ControlMaster = pm;
             female.Controlled = true;
             female.ControlTarget = pm;
             female.ControlOrder = OrderType.Follow;
-            female.AddFollowers();
+            female.Frozen = false;
+            female.Blessed = false;
+
+            if (female.ControlMaster != pm)
+                female.ControlMaster = pm;
+            else
+                female.AddFollowers();
+
             ReleasePetFromBreedingRoom(female, stableNpc, pm, roomIndex);
 
-            reason = "Os pais foram liberados do quartinho. O filhote continua no estábulo.";
+            OpenBreedingRoomDoorsForClaim(stableNpc, roomIndex);
+
+            reason = "Os pais foram liberados. O filhote agora está no quartinho aguardando o segundo prazo.";
             return true;
         }
 
@@ -1496,12 +1530,68 @@ public static string BuildMarkedCorpseName(BaseCreature pet)
             baby.Blessed = false;
             baby.Hidden = false;
             RestoreFollowerSlots(baby);
-            baby.AddFollowers();
             ResetServiceFlags(baby);
             ReleasePetFromBreedingRoom(baby, stableNpc, pm, roomIndex);
 
+            OpenBreedingRoomDoorsForClaim(stableNpc, roomIndex);
             reason = "O filhote foi entregue para você.";
             return true;
+        }
+
+        private static void OpenBreedingRoomDoorsForClaim(Mobile stableNpc, int roomIndex)
+        {
+            if (stableNpc == null || stableNpc.Map == null || stableNpc.Map == Map.Internal)
+                return;
+
+            SetBreedingRoomDoors(stableNpc, roomIndex, false, true);
+
+            Timer.DelayCall(TimeSpan.FromMinutes(10.0), delegate
+            {
+                bool occupied = false;
+
+                foreach (Mobile m in World.Mobiles.Values)
+                {
+                    BaseCreature pet = m as BaseCreature;
+                    if (pet == null || pet.Deleted)
+                        continue;
+
+                    if (pet.OSUPetServiceKind == (int)OSUStableServiceKind.Breeding &&
+                        pet.OSUPetServiceRoomIndex == roomIndex &&
+                        pet.OSUPetServiceCityId >= 0 &&
+                        stableNpc.Map == pet.Map)
+                    {
+                        occupied = true;
+                        break;
+                    }
+                }
+
+                SetBreedingRoomDoors(stableNpc, roomIndex, occupied, false);
+            });
+        }
+
+        private static void SetBreedingRoomDoors(Mobile stableNpc, int roomIndex, bool locked, bool open)
+        {
+            if (stableNpc == null || stableNpc.Map == null || stableNpc.Map == Map.Internal)
+                return;
+
+            Point3D center = GetBreedingOffspringLocation(stableNpc, roomIndex);
+            IPooledEnumerable eable = stableNpc.Map.GetItemsInRange(center, 3);
+
+            foreach (object obj in eable)
+            {
+                BaseDoor door = obj as BaseDoor;
+                if (door == null || door.Deleted)
+                    continue;
+
+                door.Locked = locked;
+
+                if (open && !door.Open)
+                    door.Open = true;
+                else if (!open && door.Open)
+                    door.Open = false;
+            }
+
+            eable.Free();
         }
 
         private static void ResetServiceFlags(BaseCreature pet)
@@ -1519,6 +1609,48 @@ public static string BuildMarkedCorpseName(BaseCreature pet)
             pet.OSUPetServiceStage = (int)OSUStableServiceStage.None;
         }
 
+        private static bool IsCustomHorseBreed(BaseCreature pet)
+        {
+            return pet is HorseFrisio
+                || pet is HorseMustang
+                || pet is HorsePuroSangue
+                || pet is HorseMangaLarga
+                || pet is HorseAndaluz
+                || pet is HorseShire
+                || pet is HorseArdennes
+                || pet is HorseClaydesdale
+                || pet is HorseGypsy
+                || pet is HorseBelga;
+        }
+
+        private static void CopyHorseVisualFromParent(BaseMount baby, BaseMount female, BaseMount male)
+        {
+            if (baby == null || female == null || male == null)
+                return;
+
+            if (!IsCustomHorseBreed(female) || !IsCustomHorseBreed(male))
+                return;
+
+            BaseMount source = null;
+
+            if (female.GetType() == baby.GetType() && male.GetType() == baby.GetType())
+                source = Utility.RandomBool() ? female : male;
+            else if (female.GetType() == baby.GetType())
+                source = female;
+            else if (male.GetType() == baby.GetType())
+                source = male;
+            else
+                source = Utility.RandomBool() ? female : male;
+
+            if (source == null)
+                return;
+
+            baby.Body = source.Body;
+            baby.ItemID = source.ItemID;
+            baby.Hue = source.Hue;
+            baby.BaseSoundID = source.BaseSoundID;
+        }
+
         private static void ReleasePetFromBreedingRoom(BaseCreature pet, Mobile stableNpc, PlayerMobile owner, int roomIndex)
         {
             if (pet == null || stableNpc == null)
@@ -1534,35 +1666,6 @@ public static string BuildMarkedCorpseName(BaseCreature pet)
             pet.OSUPetAwaitingResurrection = false;
             pet.OSUPetDownedUntilUtc = DateTime.MinValue;
             pet.CorpseNameOverride = BuildMarkedCorpseName(pet);
-        }
-
-        private static void InitializeNewOffspring(BaseCreature baby, PlayerMobile owner, BaseCreature mother, Mobile stableNpc)
-        {
-            baby.Female = mother.OSUPetPendingOffspringFemale;
-            baby.RawStr = mother.OSUPetPendingOffspringStr;
-            baby.RawDex = mother.OSUPetPendingOffspringDex;
-            baby.RawInt = mother.OSUPetPendingOffspringInt;
-            baby.Hits = baby.HitsMax;
-            baby.Stam = baby.StamMax;
-            baby.Mana = baby.ManaMax;
-            baby.OSUPetInitialized = true;
-            baby.OSUPetLevel = 1;
-            baby.OSUPetXP = 0;
-            baby.OSUPetNextLevelXP = GetRequiredXPForLevel(1);
-            baby.OSUPetLevelOneStr = baby.RawStr;
-            baby.OSUPetLevelOneDex = baby.RawDex;
-            baby.OSUPetLevelOneInt = baby.RawInt;
-            baby.OSUPetBreedCount = 0;
-            baby.OSUPetBreedCountMax = Math.Max(0, mother.OSUPetPendingOffspringBreedMax);
-            baby.OSUPetSterile = baby.OSUPetBreedCountMax <= 0;
-            baby.OSUPetBreedGroup = mother.OSUPetPendingOffspringGroup ?? String.Empty;
-            baby.OSUPetLivesMax = DefaultPetLives;
-            baby.OSUPetLivesRemaining = DefaultPetLives;
-            baby.IsBonded = false;
-            baby.Tamable = true;
-            baby.SetControlMaster(owner);
-            baby.ControlOrder = OrderType.Follow;
-            ReleasePetNearNpc(baby, stableNpc, owner);
         }
 
         private static void ReleasePetNearNpc(BaseCreature pet, Mobile stableNpc, PlayerMobile owner)
@@ -1592,7 +1695,6 @@ public static string BuildMarkedCorpseName(BaseCreature pet)
                 pet.ControlTarget = owner;
                 pet.ControlOrder = OrderType.Follow;
                 RestoreFollowerSlots(pet);
-                pet.AddFollowers();
             }
         }
 
@@ -1628,9 +1730,6 @@ public static string BuildMarkedCorpseName(BaseCreature pet)
             if (pet.OSUPetPastureAtUtc == DateTime.MinValue || DateTime.UtcNow < pet.OSUPetPastureAtUtc)
                 return;
 
-            if (pet.ControlMaster != null)
-                pet.RemoveFollowers();
-
             if (pet.OSUPetStoredControlSlots <= 0)
                 pet.OSUPetStoredControlSlots = Math.Max(1, pet.ControlSlots);
 
@@ -1642,6 +1741,7 @@ public static string BuildMarkedCorpseName(BaseCreature pet)
             pet.Home = pet.Location;
             pet.RangeHome = 10;
             pet.OSUPetPastureAtUtc = DateTime.MinValue;
+            pet.InvalidateProperties();
         }
 
         private static Type ResolveMobileType(string typeName)
@@ -1704,7 +1804,7 @@ public static string BuildMarkedCorpseName(BaseCreature pet)
             writer.Write(pet.OSUPetPastureAtUtc);
         }
 
-        public static void ReadStableData(GenericReader reader, BaseCreature pet)
+        public static void ReadStableDataV31(GenericReader reader, BaseCreature pet)
         {
             pet.OSUPetInitialized = reader.ReadBool();
             pet.OSUPetLevel = reader.ReadInt();
@@ -1750,6 +1850,55 @@ public static string BuildMarkedCorpseName(BaseCreature pet)
             pet.OSUPetServiceStage = reader.ReadInt();
             pet.OSUPetLastTrainedLevel = reader.ReadInt();
             pet.OSUPetPastureAtUtc = reader.ReadDateTime();
+        }
+
+        public static void ReadStableDataV30(GenericReader reader, BaseCreature pet)
+        {
+            pet.OSUPetInitialized = reader.ReadBool();
+            pet.OSUPetLevel = reader.ReadInt();
+            pet.OSUPetXP = reader.ReadInt();
+            pet.OSUPetNextLevelXP = reader.ReadInt();
+            pet.OSUPetLastGainStr = reader.ReadInt();
+            pet.OSUPetLastGainDex = reader.ReadInt();
+            pet.OSUPetLastGainInt = reader.ReadInt();
+            pet.OSUPetLastGainLevel = reader.ReadInt();
+            pet.OSUPetLevelOneStr = reader.ReadInt();
+            pet.OSUPetLevelOneDex = reader.ReadInt();
+            pet.OSUPetLevelOneInt = reader.ReadInt();
+            pet.OSUPetCastrated = reader.ReadBool();
+            pet.OSUPetSterile = reader.ReadBool();
+            pet.OSUPetMarked = reader.ReadBool();
+            pet.OSUPetBrandOwnerSerial = reader.ReadInt();
+            pet.OSUPetBrandOwnerName = reader.ReadString();
+            pet.OSUPetLivesRemaining = reader.ReadInt();
+            pet.OSUPetLivesMax = reader.ReadInt();
+            pet.OSUPetAwaitingResurrection = reader.ReadBool();
+            pet.OSUPetDownedUntilUtc = reader.ReadDateTime();
+            pet.OSUPetLastCommandUtc = reader.ReadDateTime();
+            pet.OSUPetBreedCount = reader.ReadInt();
+            pet.OSUPetBreedCountMax = reader.ReadInt();
+            pet.OSUPetBreedGroup = reader.ReadString();
+            pet.OSUPetAbilitySlot5 = reader.ReadString();
+            pet.OSUPetAbilitySlot10 = reader.ReadString();
+            pet.OSUPetServiceOwnerSerial = reader.ReadInt();
+            pet.OSUPetServiceKind = reader.ReadInt();
+            pet.OSUPetServiceCityId = reader.ReadInt();
+            pet.OSUPetServiceReadyUtc = reader.ReadDateTime();
+            pet.OSUPetServiceClaimFromUtc = reader.ReadDateTime();
+            pet.OSUPetServicePartnerSerial = reader.ReadInt();
+            pet.OSUPetPendingOffspringTypeName = reader.ReadString();
+            pet.OSUPetPendingOffspringFemale = reader.ReadBool();
+            pet.OSUPetPendingOffspringStr = reader.ReadInt();
+            pet.OSUPetPendingOffspringDex = reader.ReadInt();
+            pet.OSUPetPendingOffspringInt = reader.ReadInt();
+            pet.OSUPetPendingOffspringBreedMax = reader.ReadInt();
+            pet.OSUPetPendingOffspringGroup = reader.ReadString();
+            pet.OSUPetStoredControlSlots = reader.ReadInt();
+
+            pet.OSUPetServiceRoomIndex = -1;
+            pet.OSUPetServiceStage = 0;
+            pet.OSUPetLastTrainedLevel = 0;
+            pet.OSUPetPastureAtUtc = DateTime.MinValue;
         }
     }
 }

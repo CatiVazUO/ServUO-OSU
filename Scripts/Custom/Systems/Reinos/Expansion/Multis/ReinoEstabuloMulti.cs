@@ -36,6 +36,43 @@ namespace Server.Custom.Systems.Reinos.Expansion.Multis
             }
         }
 
+        public void EnsureStablePostsForCity(int cityId)
+        {
+            if (Deleted || Map == null || Map == Map.Internal)
+                return;
+
+            if (m_StablePostSerials == null || m_StablePostSerials.Length != EstabuloAuroraDefinition.StablePostOffsets.Length)
+                m_StablePostSerials = new int[EstabuloAuroraDefinition.StablePostOffsets.Length];
+
+            for (int i = 0; i < EstabuloAuroraDefinition.StablePostOffsets.Length; i++)
+            {
+                Point3D off = EstabuloAuroraDefinition.StablePostOffsets[i];
+                Point3D loc = new Point3D(Location.X + off.X, Location.Y + off.Y, Location.Z + off.Z);
+
+                StablePost post = World.FindItem((Serial)m_StablePostSerials[i]) as StablePost;
+
+                if (post == null || post.Deleted)
+                {
+                    post = new StablePost();
+                    post.GovernmentCityId = cityId;
+                    post.Movable = false;
+                    post.Visible = true;
+                    post.Name = "poste do estábulo";
+                    post.MoveToWorld(loc, Map);
+                    m_StablePostSerials[i] = post.Serial.Value;
+                }
+                else
+                {
+                    post.GovernmentCityId = cityId;
+                    post.Movable = false;
+                    post.Visible = true;
+
+                    if (post.Location != loc || post.Map != Map)
+                        post.MoveToWorld(loc, Map);
+                }
+            }
+        }
+
         private static void RepairStableLotStates()
         {
             for (int cityId = 0; cityId < ReinoElectionsSystem.CityNames.Length; cityId++)
@@ -73,7 +110,7 @@ namespace Server.Custom.Systems.Reinos.Expansion.Multis
         {
             Name = "Estábulo Aurora";
             Movable = false;
-            Timer.DelayCall(TimeSpan.Zero, EnsureStablePosts);
+            Timer.DelayCall(TimeSpan.FromSeconds(1.0), EnsureStablePosts);
         }
 
         public ReinoEstabuloMulti(Serial serial) : base(serial)
@@ -100,40 +137,7 @@ namespace Server.Custom.Systems.Reinos.Expansion.Multis
 
         public void EnsureStablePosts()
         {
-            if (Deleted || Map == null || Map == Map.Internal)
-                return;
-
-            RepairMaintenanceRegistration();
-
-            int cityId = ResolveGovernmentCityId();
-
-            if (m_StablePostSerials == null || m_StablePostSerials.Length != EstabuloAuroraDefinition.StablePostOffsets.Length)
-                m_StablePostSerials = new int[EstabuloAuroraDefinition.StablePostOffsets.Length];
-
-            for (int i = 0; i < EstabuloAuroraDefinition.StablePostOffsets.Length; i++)
-            {
-                Point3D off = EstabuloAuroraDefinition.StablePostOffsets[i];
-                int x = Location.X + off.X;
-                int y = Location.Y + off.Y;
-                int z = Map != null ? Map.GetAverageZ(x, y) + off.Z : Location.Z + off.Z;
-                Point3D loc = new Point3D(x, y, z);
-                StablePost post = World.FindItem((Serial)m_StablePostSerials[i]) as StablePost;
-
-                if (post == null || post.Deleted)
-                {
-                    post = new StablePost();
-                    post.GovernmentCityId = cityId;
-                    post.MoveToWorld(loc, Map);
-                    m_StablePostSerials[i] = post.Serial.Value;
-                }
-                else
-                {
-                    post.GovernmentCityId = cityId;
-
-                    if (post.Location != loc || post.Map != Map)
-                        post.MoveToWorld(loc, Map);
-                }
-            }
+            EnsureStablePostsForCity(ResolveGovernmentCityId());
         }
 
         private int ResolveGovernmentCityId()
@@ -195,7 +199,7 @@ namespace Server.Custom.Systems.Reinos.Expansion.Multis
                     m_StablePostSerials[i] = reader.ReadInt();
             }
 
-            Timer.DelayCall(TimeSpan.Zero, EnsureStablePosts);
+            Timer.DelayCall(TimeSpan.FromSeconds(1.0), EnsureStablePosts);
         }
     }
 }

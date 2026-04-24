@@ -39,8 +39,8 @@ namespace Server.Custom.Reinos
 
         public static readonly Point3D[] StablePostOffsets = new Point3D[]
         {
-            new Point3D(3, 3, 0), new Point3D(5, 3, 0), new Point3D(7, 3, 0), new Point3D(9, 3, 0), new Point3D(11, 3, 0),
-            new Point3D(3, 6, 0), new Point3D(5, 6, 0), new Point3D(7, 6, 0), new Point3D(9, 6, 0), new Point3D(11, 6, 0)
+            new Point3D(3, 3, 22), new Point3D(5, 3, 22), new Point3D(7, 3, 22), new Point3D(9, 3, 22), new Point3D(11, 3, 22),
+            new Point3D(3, 6, 22), new Point3D(5, 6, 22), new Point3D(7, 6, 22), new Point3D(9, 6, 22), new Point3D(11, 6, 22)
         };
 
         // Ajuste esses offsets conforme o layout visual final do seu multi.

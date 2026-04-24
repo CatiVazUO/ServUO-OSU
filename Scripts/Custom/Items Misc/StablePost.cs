@@ -348,7 +348,6 @@ namespace Server.Items
             if (c.ControlSlots <= 0 && c.OSUPetStoredControlSlots > 0)
                 c.ControlSlots = c.OSUPetStoredControlSlots;
             c.Frozen = false;
-            c.AddFollowers();
             this.StabledDate = DateTime.MinValue;
 
             from.SendMessage("Foram retiradas " + goldCost + " moedas de ouro do seu banco para pagar as despesas da sua criatura.");
@@ -437,7 +436,6 @@ namespace Server.Items
                                 m_Post.SendGoldToKingdomTreasury(goldCostStable);
                                 m_Post.Owner = c.ControlMaster;
                                 m_Post.Controlled = c;
-                                c.RemoveFollowers();
                                 if (c.OSUPetStoredControlSlots <= 0)
                                     c.OSUPetStoredControlSlots = Math.Max(1, c.ControlSlots);
                                 c.Home = m_Post.Location;

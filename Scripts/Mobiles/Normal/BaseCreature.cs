@@ -235,46 +235,162 @@ namespace Server.Mobiles
         public bool OSUSuppressSpawnLoot { get; set; } = false;
 
         // OSU Stable Pets
-        [CommandProperty(AccessLevel.GameMaster)] public bool OSUPetInitialized { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetLevel { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetXP { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetNextLevelXP { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetLastGainStr { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetLastGainDex { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetLastGainInt { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetLastGainLevel { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetLevelOneStr { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetLevelOneDex { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetLevelOneInt { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public bool OSUPetCastrated { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public bool OSUPetSterile { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public bool OSUPetMarked { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetBrandOwnerSerial { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public string OSUPetBrandOwnerName { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetLivesRemaining { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetLivesMax { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public bool OSUPetAwaitingResurrection { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public DateTime OSUPetDownedUntilUtc { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public DateTime OSUPetLastCommandUtc { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetBreedCount { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetBreedCountMax { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public string OSUPetBreedGroup { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public string OSUPetAbilitySlot5 { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public string OSUPetAbilitySlot10 { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetServiceOwnerSerial { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetServiceKind { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetServiceCityId { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public DateTime OSUPetServiceReadyUtc { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public DateTime OSUPetServiceClaimFromUtc { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetServicePartnerSerial { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public string OSUPetPendingOffspringTypeName { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public bool OSUPetPendingOffspringFemale { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetPendingOffspringStr { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetPendingOffspringDex { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetPendingOffspringInt { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetPendingOffspringBreedMax { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public string OSUPetPendingOffspringGroup { get; set; }
-        [CommandProperty(AccessLevel.GameMaster)] public int OSUPetStoredControlSlots { get; set; }
+        [CommandProperty(AccessLevel.GameMaster)]
+        public bool OSUPetInitialized { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetLevel { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetXP { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetNextLevelXP { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetLastGainStr { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetLastGainDex { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetLastGainInt { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetLastGainLevel { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetLevelOneStr { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetLevelOneDex { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetLevelOneInt { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public bool OSUPetCastrated { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public bool OSUPetSterile { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public bool OSUPetMarked { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetBrandOwnerSerial { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public string OSUPetBrandOwnerName { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetLivesRemaining { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetLivesMax { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public bool OSUPetAwaitingResurrection { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public DateTime OSUPetDownedUntilUtc { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public DateTime OSUPetLastCommandUtc { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetBreedCount { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetBreedCountMax { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public string OSUPetBreedGroup { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public string OSUPetAbilitySlot5 { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public string OSUPetAbilitySlot10 { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetServiceOwnerSerial { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetServiceKind { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetServiceCityId { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public DateTime OSUPetServiceReadyUtc { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public DateTime OSUPetServiceClaimFromUtc { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetServicePartnerSerial { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public string OSUPetPendingOffspringTypeName { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public bool OSUPetPendingOffspringFemale { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetPendingOffspringStr { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetPendingOffspringDex { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetPendingOffspringInt { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetPendingOffspringBreedMax { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public string OSUPetPendingOffspringGroup { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetStoredControlSlots { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetServiceRoomIndex { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetServiceStage { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetLastTrainedLevel { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public DateTime OSUPetPastureAtUtc { get; set; }
+
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetDebugLevel { get { return OSUPetLevel; } set { OSUPetLevel = value; } }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetDebugXP { get { return OSUPetXP; } set { OSUPetXP = value; } }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetDebugNextLevelXP { get { return OSUPetNextLevelXP; } set { OSUPetNextLevelXP = value; } }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public bool OSUPetDebugMarked { get { return OSUPetMarked; } set { OSUPetMarked = value; } }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public bool OSUPetDebugCastrated { get { return OSUPetCastrated; } set { OSUPetCastrated = value; } }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetDebugLives { get { return OSUPetLivesRemaining; } set { OSUPetLivesRemaining = value; } }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetDebugBreedCount { get { return OSUPetBreedCount; } set { OSUPetBreedCount = value; } }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int OSUPetDebugBreedMax { get { return OSUPetBreedCountMax; } set { OSUPetBreedCountMax = value; } }
 
         #endregion
 
@@ -2701,7 +2817,7 @@ namespace Server.Mobiles
         {
             base.Serialize(writer);
 
-            writer.Write(30); // version
+            writer.Write(31); // version
 
             writer.Write(IsSoulbound);
             OSUStablePetSystem.WriteStableData(writer, this);
@@ -2889,9 +3005,14 @@ namespace Server.Mobiles
 
             switch (version)
             {
+                case 31:
+                    IsSoulbound = reader.ReadBool();
+                    OSUStablePetSystem.ReadStableDataV31(reader, this); // ou ReadStableDataV31
+                    goto case 28;
+
                 case 30:
                     IsSoulbound = reader.ReadBool();
-                    OSUStablePetSystem.ReadStableData(reader, this);
+                    OSUStablePetSystem.ReadStableDataV30(reader, this);
                     goto case 28;
                 case 29:
                     IsSoulbound = reader.ReadBool();
@@ -2943,11 +3064,15 @@ namespace Server.Mobiles
                 for (i = 0; i < iCount; i++)
                 {
                     string str = reader.ReadString();
-                    Type type = Type.GetType(str);
 
-                    if (type != null)
+                    if (!string.IsNullOrEmpty(str))
                     {
-                        m_arSpellAttack.Add(type);
+                        Type type = Type.GetType(str);
+
+                        if (type != null)
+                        {
+                            m_arSpellAttack.Add(type);
+                        }
                     }
                 }
 
@@ -2955,11 +3080,15 @@ namespace Server.Mobiles
                 for (i = 0; i < iCount; i++)
                 {
                     string str = reader.ReadString();
-                    Type type = Type.GetType(str);
 
-                    if (type != null)
+                    if (!string.IsNullOrEmpty(str))
                     {
-                        m_arSpellDefense.Add(type);
+                        Type type = Type.GetType(str);
+
+                        if (type != null)
+                        {
+                            m_arSpellDefense.Add(type);
+                        }
                     }
                 }
             }
@@ -6071,7 +6200,7 @@ namespace Server.Mobiles
 
             if (OSUPetMarked && !String.IsNullOrWhiteSpace(OSUPetBrandOwnerName))
             {
-                list.Add("Marcado para " + OSUPetBrandOwnerName);
+                list.Add("Marca de: " + OSUPetBrandOwnerName);
             }
 
             if (Core.ML)
@@ -7763,8 +7892,6 @@ namespace Server.Mobiles
 
         public virtual void OnThink()
         {
-            OSUStablePetSystem.OnCreatureThink(this);
-
             long tc = Core.TickCount;
 
             if (Paralyzed || Frozen)

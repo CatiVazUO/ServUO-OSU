@@ -14,7 +14,7 @@ namespace Server.Custom.Systems.Stables.Gumps
     {
         private readonly PlayerMobile _from;
         private readonly OSUStableMaster _npc;
-        private readonly List<BaseCreature> _ready;
+        private readonly List<BaseMount> _ready;
 
         public OSUStableMasterGump(PlayerMobile from, OSUStableMaster npc) : base(80, 60)
         {
@@ -327,7 +327,7 @@ namespace Server.Custom.Systems.Stables.Gumps
     {
         private readonly PlayerMobile _from;
         private readonly OSUStableMaster _npc;
-        private readonly List<BaseCreature> _list;
+        private readonly List<BaseMount> _list;
 
         public OSUStableClaimGump(PlayerMobile from, OSUStableMaster npc) : base(130, 90)
         {
@@ -342,7 +342,7 @@ namespace Server.Custom.Systems.Stables.Gumps
             int y = 60;
             for (int idx = 0; idx < _list.Count && idx < 8; idx++)
             {
-                BaseCreature pet = _list[idx];
+                BaseMount pet = _list[idx];
                 int fee = OSUStablePetSystem.GetLateFee(pet);
                 AddButton(35, y, 4005, 4007, 100 + idx, GumpButtonType.Reply, 0);
                 AddHtml(70, y - 3, 390, 24,
@@ -369,7 +369,7 @@ namespace Server.Custom.Systems.Stables.Gumps
             if (idx < 0 || idx >= _list.Count)
                 return;
 
-            BaseCreature pet = _list[idx];
+            BaseMount pet = _list[idx];
             string reason;
             if (!OSUStablePetSystem.TryClaimReadyService(_from, _npc, pet, out reason))
             {

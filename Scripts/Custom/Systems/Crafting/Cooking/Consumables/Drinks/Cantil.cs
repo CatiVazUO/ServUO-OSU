@@ -6,7 +6,7 @@ using Server.Custom.Systems.Needs;
 using Server.Custom.Systems.Needs.Gumps;
 using Server.Custom.Systems.Health;
 
-namespace Server.Custom.Systems.Crafting.Cooking.Consumables.Drinks
+namespace Server.Custom.Drinks
 {
     public class Cantil : BaseBeverage
     {
