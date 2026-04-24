@@ -6,19 +6,19 @@ using Server.Targeting;
 
 namespace Server.Custom.Systems.Stables.Engine
 {
-    public class OSUFrisioCargoBagTool : BaseTool
+    public class FrisioCargoBag : BaseTool
     {
         public override CraftSystem CraftSystem { get { return null; } }
 
         [Constructable]
-        public OSUFrisioCargoBagTool() : base(50, 0x0F33)
+        public FrisioCargoBag() : base(50, 0x0F33)
         {
             Name = "bolsa de carga";
             Weight = 1.0;
             Hue = 0;
         }
 
-        public OSUFrisioCargoBagTool(Serial serial) : base(serial)
+        public FrisioCargoBag(Serial serial) : base(serial)
         {
         }
 
@@ -33,9 +33,9 @@ namespace Server.Custom.Systems.Stables.Engine
 
         private class InternalTarget : Target
         {
-            private readonly OSUFrisioCargoBagTool m_Tool;
+            private readonly FrisioCargoBag m_Tool;
 
-            public InternalTarget(OSUFrisioCargoBagTool tool) : base(2, false, TargetFlags.None)
+            public InternalTarget(FrisioCargoBag tool) : base(2, false, TargetFlags.None)
             {
                 m_Tool = tool;
             }
@@ -76,7 +76,7 @@ namespace Server.Custom.Systems.Stables.Engine
 
     public static class OSUFrisioCargoUtility
     {
-        public static bool TryApplyBag(Mobile from, OSUFrisioCargoBagTool tool, BaseCreature targeted, out string reason)
+        public static bool TryApplyBag(Mobile from, FrisioCargoBag tool, BaseCreature targeted, out string reason)
         {
             reason = null;
 
@@ -293,6 +293,21 @@ namespace Server.Custom.Systems.Stables.Engine
             target.Karma = source.Karma;
             target.Fame = source.Fame;
             target.VirtualArmor = source.VirtualArmor;
+
+            target.PhysicalResistanceSeed = source.PhysicalResistanceSeed;
+            target.FireResistSeed = source.FireResistSeed;
+            target.ColdResistSeed = source.ColdResistSeed;
+            target.PoisonResistSeed = source.PoisonResistSeed;
+            target.EnergyResistSeed = source.EnergyResistSeed;
+
+            target.PhysicalDamage = source.PhysicalDamage;
+            target.FireDamage = source.FireDamage;
+            target.ColdDamage = source.ColdDamage;
+            target.PoisonDamage = source.PoisonDamage;
+            target.EnergyDamage = source.EnergyDamage;
+            target.ChaosDamage = source.ChaosDamage;
+            target.DirectDamage = source.DirectDamage;
+
             target.Tamable = source.Tamable;
             target.MinTameSkill = source.MinTameSkill;
             target.ControlSlots = source.ControlSlots > 0 ? source.ControlSlots : 1;

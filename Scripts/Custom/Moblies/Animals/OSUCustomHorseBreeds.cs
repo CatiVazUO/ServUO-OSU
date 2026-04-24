@@ -86,6 +86,7 @@ namespace Server.Mobiles
     // Hues naturais placeholder. Se alguma não agradar visualmente, basta trocar os números.
     public static class OSUHorseNaturalHues
     {
+        public static readonly int[] DarkFrisio = new int[] { 0 };
         public static readonly int[] Dark = new int[] { 0, 1811, 1812, 1813 };
         public static readonly int[] Brown = new int[] { 0, 1820, 1821, 1822 };
         public static readonly int[] Light = new int[] { 0, 1814, 1815, 1816 };
@@ -97,7 +98,7 @@ namespace Server.Mobiles
     public class HorseFrisio : OSUBaseHorseBreed
     {
         [Constructable]
-        public HorseFrisio() : base("um frisio", 0xC8, 0x3E9F, OSUHorseNaturalHues.Dark, 70, 90, 55, 70, 8, 14, 42, 55, 4, 5, 39.1)
+        public HorseFrisio() : base("um frisio", 0xC8, 0x3E9F, OSUHorseNaturalHues.DarkFrisio, 70, 90, 55, 70, 8, 14, 42, 55, 4, 5, 39.1)
         {
         }
 
@@ -361,7 +362,9 @@ namespace Server.Mobiles
 
         [Constructable]
         public HorseFrisioCarga()
-            : base("um frisio de carga", 0xC8, 0x3E9F, OSUHorseNaturalHues.Dark, 70, 90, 55, 70, 8, 14, 42, 55, 4, 5, 39.1)
+            // Body 0x123 = visual de pack horse no mundo.
+            // ItemID 0x3E9F = visual de montaria do frísio quando o jogador monta.
+            : base("um frisio de carga", 0x123, 0x3EE8, OSUHorseNaturalHues.DarkFrisio, 70, 90, 55, 70, 8, 14, 42, 55, 4, 5, 39.1)
         {
             EnsureCargoBackpack();
             m_CargoBagUsesRemaining = 50;
