@@ -512,4 +512,162 @@ namespace Server.Custom.Systems.Stables.Engine
             int version = reader.ReadInt();
         }
     }
+    public class OSUAnimalBrush : Item
+    {
+        [Constructable]
+        public OSUAnimalBrush() : base(0x1373)
+        {
+            Name = "escova de cuidar animais";
+            Weight = 1.0;
+        }
+
+        public OSUAnimalBrush(Serial serial) : base(serial)
+        {
+        }
+
+        public override void OnDoubleClick(Mobile from)
+        {
+            if (!IsChildOf(from.Backpack))
+            {
+                from.SendLocalizedMessage(1042001);
+                return;
+            }
+
+            from.Target = new InternalTarget(this);
+            from.SendMessage("Escolha o animal que você quer escovar.");
+        }
+
+        private class InternalTarget : Target
+        {
+            private readonly OSUAnimalBrush _brush;
+
+            public InternalTarget(OSUAnimalBrush brush) : base(2, false, TargetFlags.None)
+            {
+                _brush = brush;
+            }
+
+            protected override void OnTarget(Mobile from, object targeted)
+            {
+                BaseCreature pet = targeted as BaseCreature;
+                if (_brush == null || _brush.Deleted || pet == null)
+                    return;
+
+                string reason;
+                if (OSUStablePetSystem.TryGainLoyaltyFromCare(pet, from, 4, "brush", TimeSpan.FromHours(12.0), out reason))
+                    from.Emote("*escova o animal com cuidado*");
+
+                from.SendMessage(reason);
+            }
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write(0);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            int version = reader.ReadInt();
+        }
+    }
+
+    public class OSUHoofCareKit : Item
+    {
+        private int m_UsesRemaining;
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int UsesRemaining
+        {
+            get { return m_UsesRemaining; }
+            set { m_UsesRemaining = Math.Max(0, value); InvalidateProperties(); }
+        }
+
+        [Constructable]
+        public OSUHoofCareKit() : base(0xFB6)
+        {
+            Name = "kit de ferraduras";
+            Weight = 2.0;
+            m_UsesRemaining = 10;
+        }
+
+        public OSUHoofCareKit(Serial serial) : base(serial)
+        {
+        }
+
+        public override void OnDoubleClick(Mobile from)
+        {
+            if (!IsChildOf(from.Backpack))
+            {
+                from.SendLocalizedMessage(1042001);
+                return;
+            }
+
+            from.Target = new InternalTarget(this);
+            from.SendMessage("Escolha a montaria que terá as ferraduras revisadas.");
+        }
+
+        private class InternalTarget : Target
+        {
+            private readonly OSUHoofCareKit _kit;
+
+            public InternalTarget(OSUHoofCareKit kit) : base(2, false, TargetFlags.None)
+            {
+                _kit = kit;
+            }
+
+            protected override void OnTarget(Mobile from, object targeted)
+            {
+                if (_kit == null || _kit.Deleted || _kit.UsesRemaining <= 0)
+                    return;
+
+                BaseCreature pet = targeted as BaseCreature;
+                if (pet == null)
+                    return;
+
+                if (!(pet is BaseMount))
+                {
+                    from.SendMessage("Esse cuidado só faz sentido em montarias.");
+                    return;
+                }
+
+                string reason;
+                if (OSUStablePetSystem.TryGainLoyaltyFromCare(pet, from, 7, "hoof", TimeSpan.FromDays(3.0), out reason))
+                {
+                    _kit.UsesRemaining--;
+                    from.Emote("*limpa os cascos e troca as ferraduras gastas*");
+                    pet.Stam = pet.StamMax;
+
+                    if (_kit.UsesRemaining <= 0)
+                    {
+                        from.SendMessage("O kit de ferraduras acabou.");
+                        _kit.Delete();
+                    }
+                }
+
+                from.SendMessage(reason);
+            }
+        }
+
+        public override void GetProperties(ObjectPropertyList list)
+        {
+            base.GetProperties(list);
+            list.Add("Usos restantes: {0}", m_UsesRemaining);
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write(0);
+            writer.Write(m_UsesRemaining);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            int version = reader.ReadInt();
+            m_UsesRemaining = reader.ReadInt();
+        }
+    }
 }

@@ -8,7 +8,7 @@ using Server.Custom.Systems.SkillXP;
 
 namespace Server.Custom.Systems.Skills.Abilities
 {
-    public class RidingIAbility : IOSUAbility
+    public class RidingIAbility : IOSUAbility, IOSUAbilityModule
     {
 
         public OSUAbilityDefinition Definition { get; private set; }

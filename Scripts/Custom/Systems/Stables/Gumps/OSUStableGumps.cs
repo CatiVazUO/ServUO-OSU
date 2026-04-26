@@ -389,15 +389,16 @@ namespace Server.Custom.Systems.Stables.Gumps
         {
             OSUStablePetSystem.EnsureInitialized(pet);
 
-            AddBackground(0, 0, 460, 310, 5054);
-            AddAlphaRegion(15, 15, 430, 280);
+            AddBackground(0, 0, 460, 335, 5054);
+            AddAlphaRegion(15, 15, 430, 305);
             AddLabel(150, 20, 1152, "Status do Animal");
-            AddHtml(30, 55, 390, 220,
+            AddHtml(30, 55, 390, 245,
                 "<BASEFONT COLOR=#FFFFFF>" +
                 "<B>Nome:</B> " + pet.Name + "<BR>" +
                 "<B>Atributos:</B> STR " + pet.RawStr + " / DEX " + pet.RawDex + " / INT " + pet.RawInt + "<BR>" +
                 "<B>Nível:</B> " + pet.OSUPetLevel + "<BR>" +
                 "<B>XP para o próximo:</B> " + pet.OSUPetXP + "/" + pet.OSUPetNextLevelXP + "<BR>" +
+                "<B>Lealdade:</B> " + pet.Loyalty + "/" + BaseCreature.MaxLoyalty + " (" + OSUStablePetSystem.GetLoyaltyLabel(pet) + ")<BR>" +
                 "<B>Pontos redistribuíveis:</B> " + (pet.OSUPetLastGainStr + pet.OSUPetLastGainDex + pet.OSUPetLastGainInt) + "<BR>" +
                 "<B>Habilidade lvl 5:</B> " + (String.IsNullOrWhiteSpace(pet.OSUPetAbilitySlot5) ? "nenhuma" : pet.OSUPetAbilitySlot5) + "<BR>" +
                 "<B>Habilidade lvl 10:</B> " + (String.IsNullOrWhiteSpace(pet.OSUPetAbilitySlot10) ? "nenhuma" : pet.OSUPetAbilitySlot10) + "<BR>" +

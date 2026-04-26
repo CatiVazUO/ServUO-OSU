@@ -446,6 +446,100 @@ namespace Server.Mobiles
 
         #endregion
 
+        #region OSU Pets
+
+        public void OSULeavePetsInWorldOnLogout()
+        {
+            if (AllFollowers == null || AllFollowers.Count <= 0)
+                return;
+
+            for (int i = AllFollowers.Count - 1; i >= 0; i--)
+            {
+                BaseCreature pet = AllFollowers[i] as BaseCreature;
+
+                if (pet == null || pet.Deleted)
+                    continue;
+
+                if (!pet.Controlled || pet.ControlMaster != this)
+                    continue;
+
+                if (pet.Summoned)
+                    continue;
+
+                IMount mount = pet as IMount;
+
+                if (mount != null && mount.Rider == this)
+                    continue;
+
+                if (pet.Map == null || pet.Map == Map.Internal)
+                    continue;
+
+                pet.ControlTarget = null;
+                pet.ControlOrder = OrderType.None;
+
+                pet.Home = pet.Location;
+
+                if (pet.RangeHome < 4)
+                    pet.RangeHome = 4;
+
+                pet.FightMode = FightMode.None;
+                pet.OwnerAbandonTime = DateTime.MinValue;
+            }
+        }
+
+        private double OSUGetCargoHorseUsedPercent(HorseFrisioCarga horse)
+        {
+            if (horse == null)
+                return 0.0;
+
+            int maxWeight = Math.Max(1, horse.GetCargoMaxWeight());
+
+            int cargoWeight = 0;
+
+            if (horse.Backpack != null)
+                cargoWeight = (int)Math.Ceiling((double)horse.Backpack.TotalWeight);
+
+            // OSU:
+            // O cavaleiro conta como 150 stones de carga.
+            int riderWeight = 150;
+
+            int usedWeight = cargoWeight + riderWeight;
+
+            double usedPercent = (double)usedWeight / (double)maxWeight;
+
+            if (usedPercent < 0.0)
+                usedPercent = 0.0;
+
+            if (usedPercent > 1.0)
+                usedPercent = 1.0;
+
+            return usedPercent;
+        }
+
+        private int OSUComputeCargoHorseRunSpeed(HorseFrisioCarga horse)
+        {
+            if (horse == null)
+                return RunMount;
+
+            double usedPercent = OSUGetCargoHorseUsedPercent(horse);
+
+            // No ServUO, número menor = movimento mais rápido.
+            // RunMount = correr montado.
+            // WalkMount = andar montado.
+            int speed = RunMount + (int)Math.Round((WalkMount - RunMount) * usedPercent);
+
+            if (speed < RunMount)
+                speed = RunMount;
+
+            if (speed > WalkMount)
+                speed = WalkMount;
+
+            return speed;
+        }
+
+        #endregion
+
+
         #region OSU Nations
 
         public bool IsCitizenOf(string cityId)
@@ -2261,11 +2355,6 @@ namespace Server.Mobiles
             EventSink.EquipMacro += EquipMacro;
             EventSink.UnequipMacro += UnequipMacro;
             #endregion
-
-            if (Core.SE)
-            {
-                Timer.DelayCall(TimeSpan.Zero, CheckPets);
-            }
         }
 
         #region Enhanced Client
@@ -2361,19 +2450,6 @@ namespace Server.Mobiles
             }
         }
         #endregion
-
-        private static void CheckPets()
-        {
-            foreach (PlayerMobile pm in World.Mobiles.Values.OfType<PlayerMobile>())
-            {
-                if (((!pm.Mounted || (pm.Mount != null && pm.Mount is EtherealMount)) &&
-                     (pm.AllFollowers.Count > pm.AutoStabled.Count)) ||
-                    (pm.Mounted && (pm.AllFollowers.Count > (pm.AutoStabled.Count + 1))))
-                {
-                    pm.AutoStablePets(); /* autostable checks summons, et al: no need here */
-                }
-            }
-        }
 
         public override void OnSkillInvalidated(Skill skill)
         {
@@ -3057,7 +3133,7 @@ namespace Server.Mobiles
                 pm.m_SpeechLog = null;
                 pm.LastOnline = DateTime.UtcNow;
 
-                pm.AutoStablePets();
+                pm.OSULeavePetsInWorldOnLogout();
             }
 
             DisguiseTimers.StopTimer(from);
@@ -3096,7 +3172,7 @@ namespace Server.Mobiles
         {
             if (AccessLevel < AccessLevel.GameMaster && item.IsChildOf(Backpack))
             {
-                int curWeight = BodyWeight + TotalWeight;
+                decimal curWeight = BodyWeight + TotalWeight;
 
                 if (curWeight > MaxWeight)
                 {
@@ -3419,6 +3495,19 @@ namespace Server.Mobiles
 
         public override bool Move(Direction d)
         {
+
+            HorseFrisioCarga cargoHorse = Mount as HorseFrisioCarga;
+
+            if (cargoHorse != null && (d & Direction.Running) != 0)
+            {
+                double usedPercent = OSUGetCargoHorseUsedPercent(cargoHorse);
+
+                if (usedPercent >= 0.70)
+                {
+                    d &= ~Direction.Running;
+                }
+            }
+
             NetState ns = NetState;
 
             if (ns != null)
@@ -6555,6 +6644,11 @@ namespace Server.Mobiles
 
             if (onHorse || (animalContext != null && animalContext.SpeedBoost))
             {
+                HorseFrisioCarga cargoHorse = Mount as HorseFrisioCarga;
+
+                if (running && cargoHorse != null)
+                    return OSUComputeCargoHorseRunSpeed(cargoHorse);
+
                 return (running ? RunMount : WalkMount);
             }
 

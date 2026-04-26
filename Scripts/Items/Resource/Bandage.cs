@@ -158,6 +158,15 @@ namespace Server.Items
 						from.SendLocalizedMessage(500295); // You are too far away to do that.
 					}
 				}
+                else if (targeted is Corpse)
+                {
+                    Corpse corpse = (Corpse)targeted;
+
+                    if (Server.Custom.Systems.Stables.Engine.OSUStablePetSystem.TryResurrectFromCorpse(corpse, from))
+                        return;
+
+                    from.SendLocalizedMessage(500970); // Bandages can not be used on that.
+                }
 				else if (targeted is PlagueBeastInnard)
 				{
 					if (((PlagueBeastInnard)targeted).OnBandage(from))

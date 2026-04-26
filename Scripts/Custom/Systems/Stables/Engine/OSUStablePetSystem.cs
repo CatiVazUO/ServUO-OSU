@@ -665,6 +665,7 @@ namespace Server.Custom.Systems.Stables.Engine
         public static readonly TimeSpan FarmPassiveXPDelay = TimeSpan.FromDays(1.0);
 
         private static readonly Dictionary<int, DateTime> m_FarmPassiveXPNextUtc = new Dictionary<int, DateTime>();
+        private static readonly Dictionary<string, DateTime> m_LoyaltyCareCooldowns = new Dictionary<string, DateTime>();
 
         private static string FarmPassiveXPFilePath
         {
@@ -1500,6 +1501,87 @@ public static string BuildMarkedCorpseName(BaseCreature pet)
                 return -1;
 
             return ReinoMilitarySystem.ResolveCityIdAt(pet.Location, pet.Map);
+        }
+
+        public static string GetLoyaltyLabel(BaseCreature pet)
+        {
+            if (pet == null)
+                return "desconhecida";
+
+            int loyalty = pet.Loyalty;
+
+            if (loyalty >= 100)
+                return "perfeitamente leal";
+            if (loyalty >= 90)
+                return "muito leal";
+            if (loyalty >= 70)
+                return "leal";
+            if (loyalty >= 50)
+                return "insegura";
+            if (loyalty >= 30)
+                return "desconfiada";
+            if (loyalty > 0)
+                return "quase fugindo";
+
+            return "sem lealdade";
+        }
+
+        public static bool TryGainLoyaltyFromCare(BaseCreature pet, Mobile from, int amount, string actionId, TimeSpan cooldown, out string reason)
+        {
+            reason = null;
+
+            if (pet == null || from == null || pet.Deleted)
+            {
+                reason = "Animal inválido.";
+                return false;
+            }
+
+            EnsureInitialized(pet);
+
+            if (!pet.Controlled || pet.ControlMaster != from)
+            {
+                reason = "Você só pode cuidar de um animal domado por você.";
+                return false;
+            }
+
+            if (pet.IsDeadPet || !pet.Alive)
+            {
+                reason = "Esse animal não pode receber esse cuidado agora.";
+                return false;
+            }
+
+            if (!from.InRange(pet, 2))
+            {
+                reason = "Você está longe demais do animal.";
+                return false;
+            }
+
+            if (amount <= 0)
+                amount = 1;
+
+            string key = pet.Serial.Value.ToString() + ":" + (actionId ?? "care");
+            DateTime next;
+
+            if (m_LoyaltyCareCooldowns.TryGetValue(key, out next) && DateTime.UtcNow < next)
+            {
+                TimeSpan left = next - DateTime.UtcNow;
+                reason = "Esse animal já recebeu esse cuidado recentemente. Tente novamente em " + Math.Max(1, (int)Math.Ceiling(left.TotalMinutes)) + " minuto(s).";
+                return false;
+            }
+
+            m_LoyaltyCareCooldowns[key] = DateTime.UtcNow + cooldown;
+
+            int before = pet.Loyalty;
+            pet.Loyalty = Math.Min(BaseCreature.MaxLoyalty, pet.Loyalty + amount);
+
+            if (pet.Loyalty > before)
+                reason = "A lealdade do animal aumentou para " + pet.Loyalty + "/" + BaseCreature.MaxLoyalty + " (" + GetLoyaltyLabel(pet) + ").";
+            else
+                reason = "O animal já está no máximo de lealdade.";
+
+            pet.PlaySound(pet.GetIdleSound());
+            pet.InvalidateProperties();
+            return true;
         }
 
         public static bool CanAnalyzeWithMuzzle(Item muzzle, BaseCreature pet, Mobile from, out string reason)

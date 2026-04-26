@@ -857,6 +857,11 @@ namespace Server.Mobiles
             get { return m_IsBonded; }
             set
             {
+                // OSU: animais domáveis não usam mais o sistema de bonded.
+                // Eles continuam usando loyalty, controle, vidas custom e reanimação custom do estábulo.
+                if (value && Tamable)
+                    value = false;
+
                 m_IsBonded = value;
                 InvalidateProperties();
             }
@@ -3230,6 +3235,13 @@ namespace Server.Mobiles
                 Loyalty *= 10;
             }
 
+            // OSU: limpa bonded antigo de qualquer animal domável carregado do save.
+            if (Tamable)
+            {
+                m_IsBonded = false;
+                m_BondingBegin = DateTime.MinValue;
+            }
+
             double activeSpeed = m_dActiveSpeed;
             double passiveSpeed = m_dPassiveSpeed;
 
@@ -3639,7 +3651,9 @@ namespace Server.Mobiles
                             Animate(Body.IsAnimal ? 3 : Body.IsHuman ? 34 : 17, 5, 1, true, false, 0);
                         }
 
-                        if (IsBondable && !IsBonded)
+                        // OSU: bonding desativado para animais. Alimentar continua aumentando loyalty,
+                        // mas não inicia vínculo bonded nem transforma o pet em fantasma ao morrer.
+                        if (false && IsBondable && !IsBonded)
                         {
                             Mobile master = m_ControlMaster;
 
@@ -5255,6 +5269,32 @@ namespace Server.Mobiles
 
         public virtual bool CanStealth { get { return false; } }
         public virtual bool SupportsRunAnimation { get { return true; } }
+
+        public override bool CheckMovement(Direction d, out int newZ)
+        {
+            bool allowed = base.CheckMovement(d, out newZ);
+
+            if (!allowed)
+                return false;
+
+            // OSU:
+            // Animais domados com dono são tratados como tendo altura mínima 25.
+            // Isso impede que entrem em prédios, lojas, bancos, celeiros e construções baixas.
+            if (Controlled && ControlMaster != null && Map != null && Map != Map.Internal)
+            {
+                int newX = X;
+                int newY = Y;
+
+                Server.Movement.Movement.Offset(d, ref newX, ref newY);
+
+                int osuAnimalHeight = 25;
+
+                if (!Map.CanFit(newX, newY, newZ, osuAnimalHeight, false, true, true, this))
+                    return false;
+            }
+
+            return true;
+        }
 
         protected override bool OnMove(Direction d)
         {
@@ -8425,7 +8465,14 @@ namespace Server.Mobiles
                         {
                             c.OwnerAbandonTime = DateTime.MinValue;
 
-                            if (c.Map != Map.Internal)
+                            // OSU:
+                            // Animal com OrderType.None está pastando/perambulando.
+                            // Enquanto estiver assim, não perde lealdade.
+                            if (c.ControlOrder == OrderType.None)
+                            {
+                                // Não perde loyalty enquanto está pastando.
+                            }
+                            else if (c.Map != Map.Internal)
                             {
                                 c.Loyalty -= (BaseCreature.MaxLoyalty / 10);
 

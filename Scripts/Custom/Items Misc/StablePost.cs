@@ -173,6 +173,10 @@ namespace Server.Items
                         ((BaseCreature)m).Loyalty = 100;
                     if (((BaseCreature)m).RangeHome != HomeRange)
                         ((BaseCreature)m).RangeHome = HomeRange;
+                    if (!((BaseCreature)m).Frozen)
+                        ((BaseCreature)m).Frozen = true;
+                    if (!((BaseCreature)m).CantWalk)
+                        ((BaseCreature)m).CantWalk = true;
                 }
             }
         }
@@ -298,8 +302,45 @@ namespace Server.Items
 
             if (this.Owner != null && DateTime.Compare(DateTime.MinValue, this.StabledDate) == 0)
                 this.StabledDate = DateTime.Now;
+
+            // OSU: depois de reiniciar o servidor, reaplica o mesmo estado de animal amarrado.
+            // Sem isso, alguns pets continuam invulneráveis, mas voltam a caminhar um tile ao redor do poste.
+            if (this.Controlled != null)
+                ApplyStabledCreatureState();
         }
         #endregion
+
+        private void ApplyStabledCreatureState()
+        {
+            BaseCreature c = Controlled;
+
+            if (c == null || c.Deleted)
+                return;
+
+            c.Home = Location;
+            c.RangeHome = HomeRange;
+            c.Loyalty = 100;
+            c.FightMode = FightMode.None;
+            c.ControlTarget = null;
+            c.ControlOrder = OrderType.None;
+            c.Blessed = true;
+            c.BondingBegin = DateTime.MaxValue;
+            c.OwnerAbandonTime = DateTime.MaxValue;
+            c.MinTameSkill = 240.0;
+            c.ControlMaster = null;
+            c.Frozen = true;
+            c.CantWalk = true;
+        }
+
+        private void RestoreReleasedCreatureState(BaseCreature c)
+        {
+            if (c == null || c.Deleted)
+                return;
+
+            c.Frozen = false;
+            c.CantWalk = false;
+            c.Blessed = false;
+        }
 
         public void Say(string args)
         {
@@ -337,6 +378,7 @@ namespace Server.Items
             c.Controlled = this.Command;
             this.Command = false;
             c.Blessed = false;
+            c.CantWalk = false;
             c.BondingBegin = this.BondingBegin;
             this.BondingBegin = DateTime.MaxValue;
             c.OwnerAbandonTime = this.OwnerAbandonTime;
@@ -347,7 +389,7 @@ namespace Server.Items
             this.Owner = null;
             if (c.ControlSlots <= 0 && c.OSUPetStoredControlSlots > 0)
                 c.ControlSlots = c.OSUPetStoredControlSlots;
-            c.Frozen = false;
+            RestoreReleasedCreatureState(c);
             this.StabledDate = DateTime.MinValue;
 
             from.SendMessage("Foram retiradas " + goldCost + " moedas de ouro do seu banco para pagar as despesas da sua criatura.");
@@ -457,7 +499,9 @@ namespace Server.Items
                                 c.MinTameSkill = 240.0;
                                 c.ControlMaster = null;
                                 c.Frozen = true;
+                                c.CantWalk = true;
                                 m_Post.StabledDate = DateTime.Now;
+                                m_Post.ApplyStabledCreatureState();
                             }
                         }
 

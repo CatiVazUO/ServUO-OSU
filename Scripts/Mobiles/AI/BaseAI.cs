@@ -226,7 +226,54 @@ namespace Server.Mobiles
 			}
 		}
 
-		public virtual void GetContextMenuEntries(Mobile from, List<ContextMenuEntry> list)
+        private class GrazingEntry : ContextMenuEntry
+        {
+            private readonly Mobile m_From;
+            private readonly BaseCreature m_Mobile;
+
+            public GrazingEntry(Mobile from, BaseCreature mobile)
+                : base(1063492, 14) // Pastar / Grazing
+            {
+                m_From = from;
+                m_Mobile = mobile;
+
+                if (mobile == null || mobile.Deleted || mobile.IsDeadPet)
+                    Enabled = false;
+            }
+
+            public override void OnClick()
+            {
+                if (m_From == null || m_Mobile == null || m_Mobile.Deleted)
+                    return;
+
+                if (!m_From.CheckAlive())
+                    return;
+
+                if (!m_Mobile.Controlled || m_Mobile.ControlMaster != m_From)
+                    return;
+
+                if (!m_From.InRange(m_Mobile, 14) || m_From.Map != m_Mobile.Map)
+                    return;
+
+                if (m_From.Hidden)
+                    m_From.RevealingAction();
+
+                m_Mobile.ControlTarget = null;
+                m_Mobile.ControlOrder = OrderType.None;
+                m_Mobile.FightMode = FightMode.None;
+
+                m_Mobile.Home = m_Mobile.Location;
+
+                if (m_Mobile.RangeHome < 4)
+                    m_Mobile.RangeHome = 4;
+
+                m_Mobile.OwnerAbandonTime = DateTime.MinValue;
+
+                m_From.SendMessage("Você solta o animal para pastar. Ele ficará perambulando por perto.");
+            }
+        }
+
+        public virtual void GetContextMenuEntries(Mobile from, List<ContextMenuEntry> list)
 		{
 			if (from.Alive && m_Mobile.Controlled && from.InRange(m_Mobile, 14))
 			{
@@ -243,8 +290,9 @@ namespace Server.Mobiles
 
 					list.Add(new InternalEntry(from, 6112, 14, m_Mobile, this, OrderType.Stop)); // Command: Stop
 					list.Add(new InternalEntry(from, 6114, 14, m_Mobile, this, OrderType.Stay)); // Command: Stay
+                    list.Add(new GrazingEntry(from, m_Mobile)); // Pastar
 
-					if (!m_Mobile.Summoned && !(m_Mobile is GrizzledMare))
+                    if (!m_Mobile.Summoned && !(m_Mobile is GrizzledMare))
 					{
 						list.Add(new InternalEntry(from, 6110, 14, m_Mobile, this, OrderType.Friend)); // Add Friend
 						list.Add(new InternalEntry(from, 6099, 14, m_Mobile, this, OrderType.Unfriend)); // Remove Friend
