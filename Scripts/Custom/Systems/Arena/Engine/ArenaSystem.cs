@@ -24,6 +24,12 @@ namespace Server.Custom.Systems.Arena
             PublicoTeleportOffset = new Point3D(15, 26, 0),
             EjectOffset = new Point3D(0, 31, 0),
             CenterMultiOffset = new Point3D(8, 8, 0),
+            BombermanStorageOffset = new Point3D(15, 16, 0),
+            Doors = new ArenaDoorOffset[]
+            {
+                new ArenaDoorOffset(15, 27, 0, true),
+                new ArenaDoorOffset(15, 25, 0, false)
+            },
             LutaLivreMultiId = 0x0,
             BoxeMultiId = 0x0,
             LutaMagicaMultiId = 0x0,
@@ -63,13 +69,27 @@ namespace Server.Custom.Systems.Arena
 
         public static Point3D[] GetGladiatorSpawnPoints(ReinoLotDefinition lot)
         {
-            return new Point3D[]
+            if (lot == null)
+                return new Point3D[0];
+
+            ArenaDefinition def = GetJoustDefinition(ReinoMaintenanceSystem.BuildLotKey(lot.LotId));
+            if (def == null || def.GladiatorSpawnOffsets == null || def.GladiatorSpawnOffsets.Length == 0)
+                return new Point3D[]
+                {
+                    new Point3D(lot.NorthWest.X + 15, lot.NorthWest.Y + 1, lot.NorthWest.Z),
+                    new Point3D(lot.NorthWest.X + 28, lot.NorthWest.Y + 15, lot.NorthWest.Z),
+                    new Point3D(lot.NorthWest.X + 15, lot.NorthWest.Y + 28, lot.NorthWest.Z),
+                    new Point3D(lot.NorthWest.X + 1, lot.NorthWest.Y + 15, lot.NorthWest.Z)
+                };
+
+            Point3D[] result = new Point3D[def.GladiatorSpawnOffsets.Length];
+            for (int i = 0; i < def.GladiatorSpawnOffsets.Length; i++)
             {
-                new Point3D(lot.NorthWest.X + 15, lot.NorthWest.Y + 1, lot.NorthWest.Z),
-                new Point3D(lot.NorthWest.X + 28, lot.NorthWest.Y + 15, lot.NorthWest.Z),
-                new Point3D(lot.NorthWest.X + 15, lot.NorthWest.Y + 28, lot.NorthWest.Z),
-                new Point3D(lot.NorthWest.X + 1, lot.NorthWest.Y + 15, lot.NorthWest.Z)
-            };
+                Point3D o = def.GladiatorSpawnOffsets[i];
+                result[i] = new Point3D(lot.NorthWest.X + o.X, lot.NorthWest.Y + o.Y, lot.NorthWest.Z + o.Z);
+            }
+
+            return result;
         }
 
         public static void ApplyJoustPlacement(ReinoLotDefinition lot, bool flip, PlayerMobile a, PlayerMobile b)
@@ -77,20 +97,40 @@ namespace Server.Custom.Systems.Arena
             if (lot == null || a == null || b == null)
                 return;
 
-            Point3D aLoc = flip ? new Point3D(lot.NorthWest.X + 24, lot.NorthWest.Y + 14, lot.NorthWest.Z) : new Point3D(lot.NorthWest.X + 5, lot.NorthWest.Y + 14, lot.NorthWest.Z);
-            Point3D bLoc = flip ? new Point3D(lot.NorthWest.X + 24, lot.NorthWest.Y + 15, lot.NorthWest.Z) : new Point3D(lot.NorthWest.X + 5, lot.NorthWest.Y + 15, lot.NorthWest.Z);
+            ArenaDefinition def = GetJoustDefinition(ReinoMaintenanceSystem.BuildLotKey(lot.LotId));
+            Point3D leftA = def != null ? def.JoustKnight1Offset : new Point3D(5, 14, 0);
+            Point3D leftB = def != null ? def.JoustKnight2Offset : new Point3D(5, 15, 0);
+
+            int mirrorX = 29;
+            Point3D rightA = new Point3D(mirrorX - leftA.X, leftA.Y, leftA.Z);
+            Point3D rightB = new Point3D(mirrorX - leftB.X, leftB.Y, leftB.Z);
+
+            Point3D aLoc = flip
+                ? new Point3D(lot.NorthWest.X + rightA.X, lot.NorthWest.Y + rightA.Y, lot.NorthWest.Z + rightA.Z)
+                : new Point3D(lot.NorthWest.X + leftA.X, lot.NorthWest.Y + leftA.Y, lot.NorthWest.Z + leftA.Z);
+            Point3D bLoc = flip
+                ? new Point3D(lot.NorthWest.X + rightB.X, lot.NorthWest.Y + rightB.Y, lot.NorthWest.Z + rightB.Z)
+                : new Point3D(lot.NorthWest.X + leftB.X, lot.NorthWest.Y + leftB.Y, lot.NorthWest.Z + leftB.Z);
+
+            Direction fwd = def != null ? def.JoustDirectionForward : Direction.East;
+            Direction runDir = flip ? ReverseDirection(fwd) : fwd;
 
             a.MoveToWorld(aLoc, lot.Map);
             b.MoveToWorld(bLoc, lot.Map);
 
-            a.Direction = flip ? Direction.West : Direction.East;
-            b.Direction = flip ? Direction.West : Direction.East;
+            a.Direction = runDir;
+            b.Direction = runDir;
 
             a.CantWalk = true;
             b.CantWalk = true;
 
-            Timer.DelayCall(TimeSpan.FromSeconds(0.2), delegate { ForceRun(a, flip ? Direction.West : Direction.East, 12); });
-            Timer.DelayCall(TimeSpan.FromSeconds(0.2), delegate { ForceRun(b, flip ? Direction.West : Direction.East, 12); });
+            Timer.DelayCall(TimeSpan.FromSeconds(0.2), delegate { ForceRun(a, runDir, 12); });
+            Timer.DelayCall(TimeSpan.FromSeconds(0.2), delegate { ForceRun(b, runDir, 12); });
+        }
+
+        public static Direction ReverseDirection(Direction dir)
+        {
+            return (Direction)(((int)(dir & Direction.Mask) + 4) & (int)Direction.Mask);
         }
 
         private static void ForceRun(PlayerMobile pm, Direction dir, int steps)
@@ -208,8 +248,6 @@ namespace Server.Custom.Systems.Arena
 
             from.Backpack.DropItem(new ArenaTicket(cityId, constructionKey));
             ReinoExpansionSystem.AddLedgerResource(cityId, ReinoResourceType.Gold, TicketPrice);
-            ArenaState st = EnsureState(constructionKey, cityId);
-            st.TicketSalesGold += TicketPrice;
             message = "Ingresso comprado com sucesso.";
             return true;
         }
@@ -256,7 +294,6 @@ namespace Server.Custom.Systems.Arena
             ArenaState state = EnsureState(constructionKey, cityId);
             state.EventStarted = true;
             state.LastChangedUtc = DateTime.UtcNow;
-            state.LastEventRevenueGold = 0;
 
             if (state.SelectedMode == ArenaGameMode.LutaLivre || state.SelectedMode == ArenaGameMode.Boxe || state.SelectedMode == ArenaGameMode.LutaMagica)
             {
@@ -272,8 +309,11 @@ namespace Server.Custom.Systems.Arena
             }
             else if (state.SelectedMode == ArenaGameMode.Bomberman)
             {
+                EnsureBombermanStorage(state, lot);
                 ArenaGameModes.GetOrCreateBomberman(constructionKey).Play(lot);
             }
+
+            EnsureDoors(state, lot, false);
         }
 
         public static void StopEvent(string constructionKey, int cityId, ReinoLotDefinition lot)
@@ -284,8 +324,8 @@ namespace Server.Custom.Systems.Arena
 
             DeleteCenterMulti(state);
             ArenaGameModes.StopAll(constructionKey);
-            state.LastEventRevenueGold = state.TicketSalesGold;
-            state.TicketSalesGold = 0;
+            DeleteBombermanStorage(state);
+            EnsureDoors(state, lot, true);
             EjectPlayersFromLot(lot);
         }
 
@@ -335,6 +375,98 @@ namespace Server.Custom.Systems.Arena
                 if (m is PlayerMobile)
                     m.MoveToWorld(outLoc, lot.Map);
             }
+        }
+
+        public static Item GetBombermanStorage(ArenaState state)
+        {
+            if (state == null || state.StorageChestSerial <= 0)
+                return null;
+
+            Item chest = World.FindItem((Serial)state.StorageChestSerial);
+            if (chest == null || chest.Deleted)
+            {
+                state.StorageChestSerial = 0;
+                return null;
+            }
+
+            return chest;
+        }
+
+        private static void EnsureBombermanStorage(ArenaState state, ReinoLotDefinition lot)
+        {
+            if (state == null || lot == null)
+                return;
+
+            if (GetBombermanStorage(state) != null)
+                return;
+
+            ArenaDefinition def = GetDefinitionByConstructionId(ArenaAuroraDefinition.BUILDING_ID);
+            if (def == null)
+                return;
+
+            MetalChest chest = new MetalChest();
+            chest.Movable = false;
+            chest.Name = "Baú da Arena (Bomberman)";
+            chest.Hue = 1150;
+            chest.MoveToWorld(new Point3D(lot.NorthWest.X + def.BombermanStorageOffset.X, lot.NorthWest.Y + def.BombermanStorageOffset.Y, lot.NorthWest.Z + def.BombermanStorageOffset.Z), lot.Map);
+            state.StorageChestSerial = chest.Serial.Value;
+        }
+
+        private static void DeleteBombermanStorage(ArenaState state)
+        {
+            Item chest = GetBombermanStorage(state);
+            if (chest != null)
+                chest.Delete();
+
+            if (state != null)
+                state.StorageChestSerial = 0;
+        }
+
+        private static void EnsureDoors(ArenaState state, ReinoLotDefinition lot, bool keepAll)
+        {
+            if (state == null || lot == null)
+                return;
+
+            ArenaDefinition def = GetDefinitionByConstructionId(ArenaAuroraDefinition.BUILDING_ID);
+            if (def == null || def.Doors == null || def.Doors.Length == 0)
+                return;
+
+            DeleteDoors(state);
+
+            List<int> serials = new List<int>();
+            for (int i = 0; i < def.Doors.Length; i++)
+            {
+                ArenaDoorOffset door = def.Doors[i];
+                if (door == null)
+                    continue;
+
+                if (!keepAll && !door.IsEntryDoor)
+                    continue;
+
+                ArenaGateBlockItem gate = new ArenaGateBlockItem(door.IsEntryDoor);
+                gate.MoveToWorld(new Point3D(lot.NorthWest.X + door.Offset.X, lot.NorthWest.Y + door.Offset.Y, lot.NorthWest.Z + door.Offset.Z), lot.Map);
+                serials.Add(gate.Serial.Value);
+            }
+
+            state.DoorSerials = serials.ToArray();
+        }
+
+        private static void DeleteDoors(ArenaState state)
+        {
+            if (state == null || state.DoorSerials == null)
+                return;
+
+            for (int i = 0; i < state.DoorSerials.Length; i++)
+            {
+                if (state.DoorSerials[i] <= 0)
+                    continue;
+
+                Item item = World.FindItem((Serial)state.DoorSerials[i]);
+                if (item != null && !item.Deleted)
+                    item.Delete();
+            }
+
+            state.DoorSerials = new int[0];
         }
     }
 }

@@ -64,7 +64,6 @@ namespace Server.Custom.Systems.Arena.Gumps
             AddLabel(250, 371, 0xFFFFFF, @"Iniciar Evento");
             AddButton(359, 369, 535, 535, BtnEncerrar, GumpButtonType.Reply, 0);
             AddLabel(395, 369, 0xFFFFFF, @"Encerrar Evento");
-            AddHtml(214, 396, 286, 22, @"<BASEFONT COLOR=#FFFFFF>Bilheteria evento atual: " + st.TicketSalesGold + " moedas</BASEFONT>", false, false);
         }
 
         public override void OnResponse(NetState sender, RelayInfo info)
@@ -116,8 +115,7 @@ namespace Server.Custom.Systems.Arena.Gumps
                     return;
                 case BtnEncerrar:
                     ArenaSystem.StopEvent(m_ConstructionKey, m_CityId, lot);
-                    ArenaState st = ArenaSystem.GetState(m_ConstructionKey);
-                    from.SendMessage("Evento encerrado. Receita da bilheteria deste evento: {0} moedas.", st != null ? st.LastEventRevenueGold : 0);
+                    from.SendMessage("Evento encerrado e arena resetada.");
                     from.SendGump(new ArenaMainGump(from, m_CityId, m_ConstructionKey));
                     return;
             }

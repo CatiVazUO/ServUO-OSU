@@ -124,7 +124,7 @@ namespace Server.Custom.Systems.Arena
 
                 if (!HasJoustGear(Knight1) || !HasJoustGear(Knight2))
                 {
-                    msg = "Um ou ambos cavaleiros não estão com full plate + montaria + lança 0x26CA.";
+                    msg = "Um ou ambos cavaleiros não estão com full plate + montaria + lança 0x26C0.";
                     return false;
                 }
 
@@ -546,6 +546,10 @@ namespace Server.Custom.Systems.Arena
             public List<Item> Bonuses = new List<Item>();
             public Dictionary<int, int> RangeBonus = new Dictionary<int, int>();
             public Dictionary<int, DateTime> MultiBombUntil = new Dictionary<int, DateTime>();
+            public Dictionary<int, int> Falls = new Dictionary<int, int>();
+            public Dictionary<int, DateTime> DownUntil = new Dictionary<int, DateTime>();
+            public int MaxFalls = 3;
+            public Dictionary<int, int> StorageBags = new Dictionary<int, int>();
 
             public BombermanSession(string key) { Key = key; }
 
@@ -578,11 +582,16 @@ namespace Server.Custom.Systems.Arena
                 all.AddRange(Red);
                 all.AddRange(Blue);
 
+                ArenaState state = ArenaSystem.GetState(Key);
+                Item storageChest = ArenaSystem.GetBombermanStorage(state);
+
                 for (int i = 0; i < all.Count; i++)
                 {
                     if (all[i] == null)
                         continue;
 
+                    MoveLoadoutToStorage(storageChest, all[i]);
+                    PositionPlayer(lot, all[i], Red.Contains(all[i]));
                     all[i].CantWalk = false;
                 }
             }
@@ -603,15 +612,61 @@ namespace Server.Custom.Systems.Arena
                 for (int i = 0; i < all.Count; i++)
                 {
                     if (all[i] != null)
+                    {
+                        RestoreLoadout(all[i]);
                         all[i].CantWalk = false;
+                        all[i].Blessed = false;
+                    }
                 }
 
                 Red.Clear();
                 Blue.Clear();
                 RangeBonus.Clear();
                 MultiBombUntil.Clear();
+                Falls.Clear();
+                DownUntil.Clear();
+                StorageBags.Clear();
             }
 
+
+
+            private void PositionPlayer(ReinoLotDefinition lot, PlayerMobile pm, bool red)
+            {
+                if (pm == null || lot == null)
+                    return;
+
+                Point3D loc;
+                ArenaDefinition def = ArenaSystem.GetJoustDefinition(Key);
+                if (TeamMode)
+                {
+                    Point3D[] redSpawns = def != null ? def.BombermanRedSpawnOffsets : null;
+                    Point3D[] blueSpawns = def != null ? def.BombermanBlueSpawnOffsets : null;
+                    int rIdx = Red.IndexOf(pm);
+                    int bIdx = Blue.IndexOf(pm);
+
+                    Point3D rDef = new Point3D(2, rIdx == 0 ? 2 : 27, 0);
+                    Point3D bDef = new Point3D(27, bIdx == 0 ? 2 : 27, 0);
+
+                    Point3D ro = redSpawns != null && redSpawns.Length > 0
+                        ? redSpawns[Math.Max(0, Math.Min(redSpawns.Length - 1, rIdx))]
+                        : rDef;
+                    Point3D bo = blueSpawns != null && blueSpawns.Length > 0
+                        ? blueSpawns[Math.Max(0, Math.Min(blueSpawns.Length - 1, bIdx))]
+                        : bDef;
+
+                    loc = red
+                        ? new Point3D(lot.NorthWest.X + ro.X, lot.NorthWest.Y + ro.Y, lot.NorthWest.Z + ro.Z)
+                        : new Point3D(lot.NorthWest.X + bo.X, lot.NorthWest.Y + bo.Y, lot.NorthWest.Z + bo.Z);
+                }
+                else
+                {
+                    loc = red
+                        ? new Point3D(lot.NorthWest.X + 2, lot.NorthWest.Y + 2, lot.NorthWest.Z)
+                        : new Point3D(lot.NorthWest.X + 27, lot.NorthWest.Y + 27, lot.NorthWest.Z);
+                }
+
+                pm.MoveToWorld(loc, lot.Map);
+            }
 
             private void SpawnGrid(ReinoLotDefinition lot)
             {
@@ -643,7 +698,13 @@ namespace Server.Custom.Systems.Arena
                 DeleteItems(Bonuses);
 
                 HashSet<string> blocked = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                blocked.Add("2:2"); blocked.Add("2:28"); blocked.Add("28:2"); blocked.Add("28:28");
+                ArenaDefinition def = ArenaSystem.GetJoustDefinition(Key);
+                AddBlockedOffsets(blocked, def != null ? def.BombermanRedSpawnOffsets : null);
+                AddBlockedOffsets(blocked, def != null ? def.BombermanBlueSpawnOffsets : null);
+                if (blocked.Count == 0)
+                {
+                    blocked.Add("2:2"); blocked.Add("2:28"); blocked.Add("28:2"); blocked.Add("28:28");
+                }
 
                 int tries = 0;
                 while (Crates.Count < 20 && tries < 200)
@@ -680,6 +741,18 @@ namespace Server.Custom.Systems.Arena
 
                     b.MoveToWorld(loc, lot.Map);
                     Bonuses.Add(b);
+                }
+            }
+
+            private static void AddBlockedOffsets(HashSet<string> blocked, Point3D[] offsets)
+            {
+                if (blocked == null || offsets == null)
+                    return;
+
+                for (int i = 0; i < offsets.Length; i++)
+                {
+                    Point3D p = offsets[i];
+                    blocked.Add(p.X + ":" + p.Y);
                 }
             }
 
@@ -739,6 +812,138 @@ namespace Server.Custom.Systems.Arena
                 return 1;
             }
 
+
+            public bool IsParticipant(PlayerMobile pm)
+            {
+                if (pm == null)
+                    return false;
+
+                return Red.Contains(pm) || Blue.Contains(pm);
+            }
+
+
+            public bool IsDown(PlayerMobile pm)
+            {
+                if (pm == null)
+                    return false;
+
+                DateTime until;
+                if (!DownUntil.TryGetValue(pm.Serial.Value, out until))
+                    return false;
+
+                if (until <= DateTime.UtcNow)
+                {
+                    DownUntil.Remove(pm.Serial.Value);
+                    return false;
+                }
+
+                return true;
+            }
+
+            public void NotifyPlayerHit(PlayerMobile pm)
+            {
+                if (pm == null)
+                    return;
+
+                DateTime until;
+                if (DownUntil.TryGetValue(pm.Serial.Value, out until) && until > DateTime.UtcNow)
+                    return;
+
+                int falls;
+                Falls.TryGetValue(pm.Serial.Value, out falls);
+                falls++;
+                Falls[pm.Serial.Value] = falls;
+
+                DownUntil[pm.Serial.Value] = DateTime.UtcNow + TimeSpan.FromSeconds(30.0);
+                pm.Emote("*cai no chão*");
+                pm.CantWalk = true;
+                pm.Blessed = true;
+                Timer.DelayCall(TimeSpan.FromSeconds(20.0), delegate { if (pm != null && !pm.Deleted) pm.Blessed = false; });
+                Timer.DelayCall(TimeSpan.FromSeconds(30.0), delegate { if (pm != null && !pm.Deleted) pm.CantWalk = false; });
+
+                CheckVictory();
+            }
+
+            public void CheckVictory()
+            {
+                if (!Running)
+                    return;
+
+                if (TeamMode)
+                {
+                    bool redStanding = HasStanding(Red);
+                    bool blueStanding = HasStanding(Blue);
+
+                    if (!redStanding && blueStanding)
+                    {
+                        Announce("Time Azul venceu o bomberman!");
+                        Stop(false);
+                    }
+                    else if (!blueStanding && redStanding)
+                    {
+                        Announce("Time Vermelho venceu o bomberman!");
+                        Stop(false);
+                    }
+                }
+                else
+                {
+                    List<PlayerMobile> players = new List<PlayerMobile>();
+                    players.AddRange(Red);
+                    players.AddRange(Blue);
+
+                    int alive = 0;
+                    PlayerMobile last = null;
+                    for (int i = 0; i < players.Count; i++)
+                    {
+                        PlayerMobile p = players[i];
+                        if (p == null)
+                            continue;
+
+                        int falls;
+                        Falls.TryGetValue(p.Serial.Value, out falls);
+                        if (falls < MaxFalls)
+                        {
+                            alive++;
+                            last = p;
+                        }
+                    }
+
+                    if (alive <= 1)
+                    {
+                        if (last != null)
+                            Announce(last.Name + " venceu o bomberman individual!");
+                        else
+                            Announce("Partida encerrada.");
+
+                        Stop(false);
+                    }
+                }
+            }
+
+            private bool HasStanding(List<PlayerMobile> list)
+            {
+                for (int i = 0; i < list.Count; i++)
+                {
+                    PlayerMobile p = list[i];
+                    if (p == null)
+                        continue;
+
+                    if (!IsDown(p))
+                        return true;
+                }
+
+                return false;
+            }
+
+            private static void Announce(string msg)
+            {
+                foreach (NetState ns in NetState.Instances)
+                {
+                    if (ns != null && ns.Mobile != null)
+                        ns.Mobile.SendMessage(msg);
+                }
+            }
+
             public void ApplyBonus(PlayerMobile pm, int type)
             {
                 if (pm == null)
@@ -761,6 +966,73 @@ namespace Server.Custom.Systems.Arena
                     RangeBonus[pm.Serial.Value] = Math.Min(3, val + 1);
                     pm.SendMessage("Alcance permanente +1.");
                 }
+            }
+
+            private void MoveLoadoutToStorage(Item storageChest, PlayerMobile pm)
+            {
+                if (pm == null || storageChest == null || !(storageChest is Container))
+                    return;
+
+                Container chest = (Container)storageChest;
+                Bag bag = new Bag();
+                bag.Name = "Equipamentos de " + pm.Name;
+                chest.DropItem(bag);
+                StorageBags[pm.Serial.Value] = bag.Serial.Value;
+
+                if (pm.Backpack != null)
+                {
+                    List<Item> packItems = new List<Item>(pm.Backpack.Items);
+                    for (int i = 0; i < packItems.Count; i++)
+                    {
+                        Item it = packItems[i];
+                        if (it == null || it.Deleted)
+                            continue;
+
+                        bag.DropItem(it);
+                    }
+                }
+
+                for (int layer = 0; layer < 32; layer++)
+                {
+                    Layer l = (Layer)layer;
+                    if (l == Layer.Backpack || l == Layer.Bank)
+                        continue;
+
+                    Item equipped = pm.FindItemOnLayer(l);
+                    if (equipped == null || equipped.Deleted)
+                        continue;
+
+                    bag.DropItem(equipped);
+                }
+            }
+
+            private void RestoreLoadout(PlayerMobile pm)
+            {
+                if (pm == null)
+                    return;
+
+                int bagSerial;
+                if (!StorageBags.TryGetValue(pm.Serial.Value, out bagSerial))
+                    return;
+
+                Container bag = World.FindItem((Serial)bagSerial) as Container;
+                if (bag == null || bag.Deleted)
+                    return;
+
+                List<Item> items = new List<Item>(bag.Items);
+                for (int i = 0; i < items.Count; i++)
+                {
+                    Item it = items[i];
+                    if (it == null || it.Deleted)
+                        continue;
+
+                    if (pm.Backpack != null)
+                        pm.Backpack.DropItem(it);
+                    else
+                        pm.AddToBackpack(it);
+                }
+
+                bag.Delete();
             }
 
             private class BombermanTarget : Target
@@ -825,6 +1097,9 @@ namespace Server.Custom.Systems.Arena
             if (!session.Running)
                 return false;
 
+            if (!session.IsParticipant(from))
+                return false;
+
             int count;
             session.ActiveBombs.TryGetValue(from.Serial.Value, out count);
             int max = session.GetMaxBombs(from);
@@ -833,6 +1108,21 @@ namespace Server.Custom.Systems.Arena
                 from.SendMessage("Você atingiu o limite de bombas ativas.");
                 return true;
             }
+
+            IPooledEnumerable itemsAt = from.Map.GetItemsInRange(from.Location, 0);
+            foreach (Item it in itemsAt)
+            {
+                if (it == null || it.Deleted)
+                    continue;
+
+                if (it.ItemID == 0x071E || it.ItemID == 0x0E3C || it.ItemID == 0xA5B4)
+                {
+                    itemsAt.Free();
+                    from.SendMessage("Não dá para colocar bomba nesse tile.");
+                    return true;
+                }
+            }
+            itemsAt.Free();
 
             ArenaBombItem bomb = new ArenaBombItem(from, session, session.GetRange(from));
             bomb.MoveToWorld(from.Location, from.Map);

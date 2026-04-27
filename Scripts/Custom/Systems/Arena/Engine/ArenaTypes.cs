@@ -14,6 +14,15 @@ namespace Server.Custom.Systems.Arena
         Bomberman
     }
 
+    public class ArenaDoorOffset
+    {
+        public Point3D Offset;
+        public bool IsEntryDoor;
+
+        public ArenaDoorOffset() { Offset = Point3D.Zero; IsEntryDoor = false; }
+        public ArenaDoorOffset(int x, int y, int z, bool isEntryDoor) { Offset = new Point3D(x, y, z); IsEntryDoor = isEntryDoor; }
+    }
+
     public class ArenaDefinition
     {
         public string ConstructionId;
@@ -24,6 +33,14 @@ namespace Server.Custom.Systems.Arena
         public Point3D PublicoTeleportOffset;
         public Point3D EjectOffset;
         public Point3D CenterMultiOffset;
+        public Point3D BombermanStorageOffset;
+        public ArenaDoorOffset[] Doors;
+        public Point3D JoustKnight1Offset;
+        public Point3D JoustKnight2Offset;
+        public Direction JoustDirectionForward;
+        public Point3D[] GladiatorSpawnOffsets;
+        public Point3D[] BombermanRedSpawnOffsets;
+        public Point3D[] BombermanBlueSpawnOffsets;
 
         public int JoustHitMinDx;
         public int JoustHitMaxDx;
@@ -50,6 +67,28 @@ namespace Server.Custom.Systems.Arena
             PublicoTeleportOffset = Point3D.Zero;
             EjectOffset = Point3D.Zero;
             CenterMultiOffset = Point3D.Zero;
+            BombermanStorageOffset = Point3D.Zero;
+            Doors = new ArenaDoorOffset[0];
+            JoustKnight1Offset = new Point3D(5, 14, 0);
+            JoustKnight2Offset = new Point3D(5, 15, 0);
+            JoustDirectionForward = Direction.East;
+            GladiatorSpawnOffsets = new Point3D[]
+            {
+                new Point3D(15, 1, 0),
+                new Point3D(28, 15, 0),
+                new Point3D(15, 28, 0),
+                new Point3D(1, 15, 0)
+            };
+            BombermanRedSpawnOffsets = new Point3D[]
+            {
+                new Point3D(2, 2, 0),
+                new Point3D(2, 27, 0)
+            };
+            BombermanBlueSpawnOffsets = new Point3D[]
+            {
+                new Point3D(27, 2, 0),
+                new Point3D(27, 27, 0)
+            };
             JoustHitMinDx = -1;
             JoustHitMaxDx = 0;
             JoustHitDy = 1;
@@ -82,8 +121,8 @@ namespace Server.Custom.Systems.Arena
         public bool EventStarted;
         public int CenterMultiSerial;
         public DateTime LastChangedUtc;
-        public int TicketSalesGold;
-        public int LastEventRevenueGold;
+        public int[] DoorSerials;
+        public int StorageChestSerial;
 
         public ArenaState()
         {
@@ -92,8 +131,8 @@ namespace Server.Custom.Systems.Arena
             EventStarted = false;
             CenterMultiSerial = 0;
             LastChangedUtc = DateTime.UtcNow;
-            TicketSalesGold = 0;
-            LastEventRevenueGold = 0;
+            DoorSerials = new int[0];
+            StorageChestSerial = 0;
         }
     }
 }

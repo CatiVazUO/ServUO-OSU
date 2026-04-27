@@ -5,6 +5,39 @@ using Server.Mobiles;
 
 namespace Server.Custom.Systems.Arena
 {
+    public class ArenaGateBlockItem : Item
+    {
+        private bool m_IsEntryDoor;
+
+        [Constructable]
+        public ArenaGateBlockItem(bool entryDoor) : base(0x071E)
+        {
+            m_IsEntryDoor = entryDoor;
+            Movable = false;
+            Name = m_IsEntryDoor ? "Porta de Entrada da Arena" : "Portão da Arena";
+            Hue = m_IsEntryDoor ? 1150 : 2406;
+        }
+
+        public ArenaGateBlockItem(Serial serial) : base(serial) { }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write(0);
+            writer.Write(m_IsEntryDoor);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            int version = reader.ReadInt();
+            m_IsEntryDoor = reader.ReadBool();
+            Movable = false;
+            Name = m_IsEntryDoor ? "Porta de Entrada da Arena" : "Portão da Arena";
+            Hue = m_IsEntryDoor ? 1150 : 2406;
+        }
+    }
+
     public class ArenaWallItem : Item
     {
         [Constructable]
@@ -80,15 +113,17 @@ namespace Server.Custom.Systems.Arena
 
     public class ArenaBombItem : Item
     {
-        private readonly Mobile m_Owner;
-        private readonly ArenaGameModes.BombermanSession m_Session;
-        private readonly int m_Range;
+        private Mobile m_Owner;
+        private ArenaGameModes.BombermanSession m_Session;
+        private int m_Range;
+        private string m_ConstructionKey;
 
         public ArenaBombItem(Mobile owner, ArenaGameModes.BombermanSession session, int range) : base(0xA5B4)
         {
             m_Owner = owner;
             m_Session = session;
             m_Range = Math.Max(1, Math.Min(4, range));
+            m_ConstructionKey = session != null ? session.Key : String.Empty;
             Movable = false;
             Timer.DelayCall(TimeSpan.FromSeconds(5.0), Explode);
         }
@@ -107,13 +142,13 @@ namespace Server.Custom.Systems.Arena
             for (int i = 0; i < frames.Length; i++)
                 Effects.SendLocationEffect(c, map, frames[i], 10, 0, 0);
 
-            DamageTile(c, map);
+            DamageTile(c, map, m_Session);
             for (int i = 1; i <= m_Range; i++)
             {
-                DamageTile(new Point3D(c.X + i, c.Y, c.Z), map);
-                DamageTile(new Point3D(c.X - i, c.Y, c.Z), map);
-                DamageTile(new Point3D(c.X, c.Y + i, c.Z), map);
-                DamageTile(new Point3D(c.X, c.Y - i, c.Z), map);
+                DamageTile(new Point3D(c.X + i, c.Y, c.Z), map, m_Session);
+                DamageTile(new Point3D(c.X - i, c.Y, c.Z), map, m_Session);
+                DamageTile(new Point3D(c.X, c.Y + i, c.Z), map, m_Session);
+                DamageTile(new Point3D(c.X, c.Y - i, c.Z), map, m_Session);
             }
 
             if (m_Owner != null && m_Session != null)
@@ -127,7 +162,7 @@ namespace Server.Custom.Systems.Arena
             Delete();
         }
 
-        private static void DamageTile(Point3D p, Map map)
+        private static void DamageTile(Point3D p, Map map, ArenaGameModes.BombermanSession session)
         {
             if (map == null || map == Map.Internal)
                 return;
@@ -136,14 +171,10 @@ namespace Server.Custom.Systems.Arena
             foreach (Mobile m in eable)
             {
                 PlayerMobile pm = m as PlayerMobile;
-                if (pm == null)
+                if (pm == null || session == null || !session.IsParticipant(pm))
                     continue;
 
-                pm.Emote("*cai no chão*");
-                pm.CantWalk = true;
-                pm.Blessed = true;
-                Timer.DelayCall(TimeSpan.FromSeconds(20.0), delegate { if (pm != null && !pm.Deleted) pm.Blessed = false; });
-                Timer.DelayCall(TimeSpan.FromSeconds(30.0), delegate { if (pm != null && !pm.Deleted) pm.CantWalk = false; });
+                session.NotifyPlayerHit(pm);
             }
             eable.Free();
 
@@ -163,12 +194,22 @@ namespace Server.Custom.Systems.Arena
         {
             base.Serialize(writer);
             writer.Write(0);
+            writer.Write(m_Owner);
+            writer.Write(m_ConstructionKey ?? String.Empty);
+            writer.Write(m_Range);
         }
 
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);
             int version = reader.ReadInt();
+            m_Owner = reader.ReadMobile();
+            m_ConstructionKey = reader.ReadString();
+            m_Range = reader.ReadInt();
+
+            if (!String.IsNullOrWhiteSpace(m_ConstructionKey))
+                m_Session = ArenaGameModes.GetOrCreateBomberman(m_ConstructionKey);
+
             Delete();
         }
     }

@@ -43,8 +43,8 @@ namespace Server.Custom.Reinos
 
         private static readonly ReinoNpcSpawnDefinition[] NPC_SPAWNS = new ReinoNpcSpawnDefinition[]
         {
-            new ReinoNpcSpawnDefinition(typeof(ArenaBilheteriaNpc).FullName, 14, 29, 0),
-            new ReinoNpcSpawnDefinition(typeof(ArenaPorteiroNpc).FullName, 15, 29, 0)
+            new ReinoNpcSpawnDefinition(typeof(ArenaBilheteriaNpc).FullName, 14, 29, 6),
+            new ReinoNpcSpawnDefinition(typeof(ArenaPorteiroNpc).FullName, 15, 29, 6)
         };
 
         public static ReinoConstructionDefinition Create()
