@@ -21,6 +21,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUPouch : OSUContainerBase
@@ -40,6 +54,20 @@ namespace Server.Items
         public OSUPouch(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -61,6 +89,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUSmallBagBall : OSUContainerBase
@@ -80,6 +122,20 @@ namespace Server.Items
         public OSUSmallBagBall(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -101,6 +157,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUBasket : OSUContainerBase
@@ -120,6 +190,20 @@ namespace Server.Items
         public OSUBasket(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -141,6 +225,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUBasketCraftable : OSUContainerBase
@@ -160,6 +258,20 @@ namespace Server.Items
         public OSUBasketCraftable(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -181,6 +293,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSURoundBasketHandles : OSUContainerBase
@@ -200,6 +326,20 @@ namespace Server.Items
         public OSURoundBasketHandles(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -221,6 +361,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUSmallRoundBasket : OSUContainerBase
@@ -240,6 +394,20 @@ namespace Server.Items
         public OSUSmallRoundBasket(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -261,6 +429,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUSquareBasket : OSUContainerBase
@@ -280,6 +462,20 @@ namespace Server.Items
         public OSUSquareBasket(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -301,6 +497,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUTallRoundBasket : OSUContainerBase
@@ -320,6 +530,20 @@ namespace Server.Items
         public OSUTallRoundBasket(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -341,6 +565,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUBarrel : OSUContainerBase
@@ -360,6 +598,20 @@ namespace Server.Items
         public OSUBarrel(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -382,6 +634,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUKeg : OSUContainerBase
@@ -401,6 +667,20 @@ namespace Server.Items
         public OSUKeg(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -422,6 +702,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUMetalBox : OSUContainerBase
@@ -442,6 +736,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUDecorativeBox : OSUContainerBase
@@ -450,8 +758,8 @@ namespace Server.Items
         public override int OSUDefaultMaxWeight { get { return 220; } }
         public override string OSUContainerName { get { return "caixa decorativa"; } }
         public override int DefaultGumpID { get { return 0x43; } }
-                public override int DefaultDropSound { get { return 0x42; } }
-                public override Rectangle2D Bounds { get { return new Rectangle2D(16, 51, 168, 73); } }
+        public override int DefaultDropSound { get { return 0x42; } }
+        public override Rectangle2D Bounds { get { return new Rectangle2D(16, 51, 168, 73); } }
 
         [Constructable]
         public OSUDecorativeBox()
@@ -464,6 +772,20 @@ namespace Server.Items
         public OSUDecorativeBox(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -485,6 +807,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUMediumCrate : OSUContainerBase
@@ -504,6 +840,20 @@ namespace Server.Items
         public OSUMediumCrate(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -525,6 +875,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUWoodenChest : OSUContainerBase
@@ -544,6 +908,20 @@ namespace Server.Items
         public OSUWoodenChest(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -565,6 +943,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUOrnateWoodenChest : OSUContainerBase
@@ -584,6 +976,20 @@ namespace Server.Items
         public OSUOrnateWoodenChest(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -605,6 +1011,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUFinishedWoodenChest : OSUContainerBase
@@ -624,6 +1044,20 @@ namespace Server.Items
         public OSUFinishedWoodenChest(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -646,6 +1080,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUHeartwoodChest : OSUContainerBase
@@ -654,8 +1102,8 @@ namespace Server.Items
         public override int OSUDefaultMaxWeight { get { return 800; } }
         public override string OSUContainerName { get { return "bau de heartwood"; } }
         public override int DefaultGumpID { get { return 0x10C; } }
-                public override int DefaultDropSound { get { return 0x42; } }
-                public override Rectangle2D Bounds { get { return new Rectangle2D(80, 5, 140, 70); } }
+        public override int DefaultDropSound { get { return 0x42; } }
+        public override Rectangle2D Bounds { get { return new Rectangle2D(80, 5, 140, 70); } }
 
         [Constructable]
         public OSUHeartwoodChest()
@@ -668,6 +1116,20 @@ namespace Server.Items
         public OSUHeartwoodChest(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -688,6 +1150,20 @@ namespace Server.Items
         public OSUGargishChest(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -710,6 +1186,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUMetalChest : OSUContainerBase
@@ -729,6 +1219,20 @@ namespace Server.Items
         public OSUMetalChest(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -750,6 +1254,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUDullCopperChest : OSUContainerBase
@@ -769,6 +1287,20 @@ namespace Server.Items
         public OSUDullCopperChest(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -790,6 +1322,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUTallCabinet : OSUContainerBase
@@ -810,6 +1356,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUShortCabinet : OSUContainerBase
@@ -829,6 +1389,20 @@ namespace Server.Items
         public OSUShortCabinet(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -851,6 +1425,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUFancyDrawer : OSUContainerBase
@@ -872,6 +1460,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUChestOfDrawers : OSUContainerBase
@@ -880,7 +1482,7 @@ namespace Server.Items
         public override int OSUDefaultMaxWeight { get { return 300; } }
         public override string OSUContainerName { get { return "comoda"; } }
         public override int DefaultGumpID { get { return 0x51; } }
-                public override int DefaultDropSound { get { return 0x42; } }
+        public override int DefaultDropSound { get { return 0x42; } }
 
         [Constructable]
         public OSUChestOfDrawers()
@@ -894,6 +1496,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUFootedChestOfDrawers : OSUContainerBase
@@ -902,7 +1518,7 @@ namespace Server.Items
         public override int OSUDefaultMaxWeight { get { return 340; } }
         public override string OSUContainerName { get { return "comoda com pes"; } }
         public override int DefaultGumpID { get { return 0x48; } }
-                public override int DefaultDropSound { get { return 0x42; } }
+        public override int DefaultDropSound { get { return 0x42; } }
 
         [Constructable]
         public OSUFootedChestOfDrawers()
@@ -915,6 +1531,20 @@ namespace Server.Items
         public OSUFootedChestOfDrawers(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -937,6 +1567,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUPieSafe : OSUContainerBase
@@ -958,6 +1602,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSURedArmoire : OSUClothingContainerBase
@@ -977,6 +1635,20 @@ namespace Server.Items
         public OSURedArmoire(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -998,6 +1670,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUMapleArmoire : OSUClothingContainerBase
@@ -1017,6 +1703,20 @@ namespace Server.Items
         public OSUMapleArmoire(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -1038,6 +1738,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUArmoire : OSUClothingContainerBase
@@ -1057,6 +1771,20 @@ namespace Server.Items
         public OSUArmoire(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -1078,6 +1806,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUSimpleElvenArmoire : OSUClothingContainerBase
@@ -1086,8 +1828,8 @@ namespace Server.Items
         public override int OSUDefaultMaxWeight { get { return 330; } }
         public override string OSUContainerName { get { return "guarda-roupas elfico simples"; } }
         public override int DefaultGumpID { get { return 0x4F; } }
-                public override int DefaultDropSound { get { return 0x42; } }
-                public override Rectangle2D Bounds { get { return new Rectangle2D(30, 30, 90, 150); } }
+        public override int DefaultDropSound { get { return 0x42; } }
+        public override Rectangle2D Bounds { get { return new Rectangle2D(30, 30, 90, 150); } }
 
         [Constructable]
         public OSUSimpleElvenArmoire()
@@ -1101,6 +1843,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUFancyElvenArmoire : OSUClothingContainerBase
@@ -1109,8 +1865,8 @@ namespace Server.Items
         public override int OSUDefaultMaxWeight { get { return 420; } }
         public override string OSUContainerName { get { return "guarda-roupas elfico ornamentado"; } }
         public override int DefaultGumpID { get { return 0x4E; } }
-                public override int DefaultDropSound { get { return 0x42; } }
-                public override Rectangle2D Bounds { get { return new Rectangle2D(30, 30, 90, 150); } }
+        public override int DefaultDropSound { get { return 0x42; } }
+        public override Rectangle2D Bounds { get { return new Rectangle2D(30, 30, 90, 150); } }
 
         [Constructable]
         public OSUFancyElvenArmoire()
@@ -1123,6 +1879,20 @@ namespace Server.Items
         public OSUFancyElvenArmoire(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -1145,6 +1915,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUEmptyBookcase : OSUBookContainerBase
@@ -1165,6 +1949,20 @@ namespace Server.Items
         public OSUEmptyBookcase(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 
@@ -1187,6 +1985,20 @@ namespace Server.Items
             : base(serial)
         {
         }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
+        }
     }
 
     public class OSUWoodenBookcase : OSUBookContainerBase
@@ -1207,6 +2019,20 @@ namespace Server.Items
         public OSUWoodenBookcase(Serial serial)
             : base(serial)
         {
+        }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write((int)0); // version
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+
+            reader.ReadInt(); // version
         }
     }
 

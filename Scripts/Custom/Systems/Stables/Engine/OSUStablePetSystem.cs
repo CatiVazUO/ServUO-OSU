@@ -1102,6 +1102,13 @@ namespace Server.Custom.Systems.Stables.Engine
             else
                 addInt = points;
 
+            if (pet.OSUPetLastTrainedLevel >= pet.OSUPetLastGainLevel)
+            {
+                pet.OSUPetLastGainStr = 0;
+                pet.OSUPetLastGainDex = 0;
+                pet.OSUPetLastGainInt = 0;
+            }
+
             pet.RawStr += addStr;
             pet.RawDex += addDex;
             pet.RawInt += addInt;
@@ -1116,9 +1123,9 @@ namespace Server.Custom.Systems.Stables.Engine
             pet.Stam = Math.Min(pet.StamMax, pet.Stam + addDex);
             pet.Mana = Math.Min(pet.ManaMax, pet.Mana + addInt);
 
-            pet.OSUPetLastGainStr = addStr;
-            pet.OSUPetLastGainDex = addDex;
-            pet.OSUPetLastGainInt = addInt;
+            pet.OSUPetLastGainStr += addStr;
+            pet.OSUPetLastGainDex += addDex;
+            pet.OSUPetLastGainInt += addInt;
             pet.OSUPetLastGainLevel = pet.OSUPetLevel;
             pet.InvalidateProperties();
         }
@@ -1723,6 +1730,12 @@ public static string BuildMarkedCorpseName(BaseCreature pet)
                 return false;
             }
 
+            if (pet.OSUPetBreedCount > 0)
+            {
+                reason = "Esse animal já cruzou pelo menos uma vez. A castração só pode ser feita antes do primeiro cruzamento.";
+                return false;
+            }
+
             if (pet.OSUPetServiceKind != (int)OSUStableServiceKind.None)
             {
                 reason = "Esse animal já está em outro serviço do estábulo.";
@@ -2061,6 +2074,24 @@ public static string BuildMarkedCorpseName(BaseCreature pet)
 
                 list.Add(pet);
             }
+
+            list.Sort(delegate (BaseMount a, BaseMount b)
+            {
+                if (a == null && b == null)
+                    return 0;
+
+                if (a == null)
+                    return 1;
+
+                if (b == null)
+                    return -1;
+
+                int cmp = DateTime.Compare(a.OSUPetServiceReadyUtc, b.OSUPetServiceReadyUtc);
+                if (cmp != 0)
+                    return cmp;
+
+                return a.Serial.Value.CompareTo(b.Serial.Value);
+            });
 
             return list;
         }

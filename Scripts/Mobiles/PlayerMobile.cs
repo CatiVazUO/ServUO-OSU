@@ -487,56 +487,6 @@ namespace Server.Mobiles
             }
         }
 
-        private double OSUGetCargoHorseUsedPercent(HorseFrisioCarga horse)
-        {
-            if (horse == null)
-                return 0.0;
-
-            int maxWeight = Math.Max(1, horse.GetCargoMaxWeight());
-
-            int cargoWeight = 0;
-
-            if (horse.Backpack != null)
-                cargoWeight = (int)Math.Ceiling((double)horse.Backpack.TotalWeight);
-
-            // OSU:
-            // O cavaleiro conta como 150 stones de carga.
-            int riderWeight = 150;
-
-            int usedWeight = cargoWeight + riderWeight;
-
-            double usedPercent = (double)usedWeight / (double)maxWeight;
-
-            if (usedPercent < 0.0)
-                usedPercent = 0.0;
-
-            if (usedPercent > 1.0)
-                usedPercent = 1.0;
-
-            return usedPercent;
-        }
-
-        private int OSUComputeCargoHorseRunSpeed(HorseFrisioCarga horse)
-        {
-            if (horse == null)
-                return RunMount;
-
-            double usedPercent = OSUGetCargoHorseUsedPercent(horse);
-
-            // No ServUO, número menor = movimento mais rápido.
-            // RunMount = correr montado.
-            // WalkMount = andar montado.
-            int speed = RunMount + (int)Math.Round((WalkMount - RunMount) * usedPercent);
-
-            if (speed < RunMount)
-                speed = RunMount;
-
-            if (speed > WalkMount)
-                speed = WalkMount;
-
-            return speed;
-        }
-
         #endregion
 
 
@@ -3495,18 +3445,6 @@ namespace Server.Mobiles
 
         public override bool Move(Direction d)
         {
-
-            HorseFrisioCarga cargoHorse = Mount as HorseFrisioCarga;
-
-            if (cargoHorse != null && (d & Direction.Running) != 0)
-            {
-                double usedPercent = OSUGetCargoHorseUsedPercent(cargoHorse);
-
-                if (usedPercent >= 0.70)
-                {
-                    d &= ~Direction.Running;
-                }
-            }
 
             NetState ns = NetState;
 
@@ -6644,11 +6582,6 @@ namespace Server.Mobiles
 
             if (onHorse || (animalContext != null && animalContext.SpeedBoost))
             {
-                HorseFrisioCarga cargoHorse = Mount as HorseFrisioCarga;
-
-                if (running && cargoHorse != null)
-                    return OSUComputeCargoHorseRunSpeed(cargoHorse);
-
                 return (running ? RunMount : WalkMount);
             }
 

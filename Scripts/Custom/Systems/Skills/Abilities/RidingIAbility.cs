@@ -122,7 +122,17 @@ namespace Server.Custom.Systems.Skills.Abilities
                 return;
             }
 
-            // ✅ Riding I sem Riding II = cai sempre (do jeito que você pediu)
+            // OSU: Riding I sem Riding II só pode cair se estiver CORRENDO.
+            // Se estiver andando, nunca cai e também reseta a contagem de passos.
+            bool running = (e.Direction & Direction.Running) != 0;
+
+            if (!running)
+            {
+                _steps[pm.Serial] = 0;
+                return;
+            }
+
+            // ✅ Riding I sem Riding II = só testa queda correndo
             HandleAlwaysFall(pm);
         }
 
