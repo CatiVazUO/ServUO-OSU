@@ -1,0 +1,250 @@
+using Server;
+using Server.Custom.Reinos;
+using Server.Custom.Systems.Arena.Items;
+using Server.Engines.ArenaSystem;
+using Server.Items;
+using Server.Mobiles;
+using Server.Multis;
+using System;
+using System.Collections.Generic;
+
+namespace Server.Custom.Systems.Arena
+{
+    public static class ArenaSystem
+    {
+        public const int TicketPrice = 100;
+
+        private static readonly Dictionary<string, ArenaState> m_States = new Dictionary<string, ArenaState>(StringComparer.OrdinalIgnoreCase);
+
+        public static ArenaDefinition AuroraDefinition = new ArenaDefinition
+        {
+            ConstructionId = ArenaAuroraDefinition.BUILDING_ID,
+            ControlOffset = new Point3D(15, 14, 0),
+            BilheteriaOffset = new Point3D(14, 29, 0),
+            PorteiroOffset = new Point3D(15, 29, 0),
+            EntradaOffset = new Point3D(15, 28, 0),
+            PublicoTeleportOffset = new Point3D(15, 26, 0),
+            EjectOffset = new Point3D(0, 31, 0),
+            CenterMultiOffset = new Point3D(8, 8, 0),
+            LutaLivreMultiId = 0x0,
+            BoxeMultiId = 0x0,
+            LutaMagicaMultiId = 0x0,
+            JustaMultiId = 0x0,
+            GladiadoresMultiId = 0x0,
+            BombermanMultiId = 0x0
+        };
+
+        public static ArenaDefinition GetDefinitionByConstructionId(string constructionId)
+        {
+            if (String.Equals(constructionId, ArenaAuroraDefinition.BUILDING_ID, StringComparison.OrdinalIgnoreCase))
+                return AuroraDefinition;
+
+            return null;
+        }
+
+
+        public static ReinoLotDefinition GetLotFromConstructionKey(string constructionKey)
+        {
+            if (String.IsNullOrWhiteSpace(constructionKey) || !constructionKey.StartsWith("L:", StringComparison.OrdinalIgnoreCase))
+                return null;
+
+            int lotId;
+            if (!Int32.TryParse(constructionKey.Substring(2), out lotId))
+                return null;
+
+            return ReinoExpansionSystem.GetLotDefinition(lotId);
+        }
+
+        public static bool TryResolveArenaAt(Point3D location, Map map, out string constructionKey, out int cityId, out ArenaDefinition def, out ReinoLotDefinition lot)
+        {
+            constructionKey = String.Empty;
+            cityId = -1;
+            def = null;
+            lot = null;
+
+            if (map == null || map == Map.Internal)
+                return false;
+
+            lot = ReinoExpansionSystem.FindLotAt(location, map);
+            if (lot == null)
+                return false;
+
+            ReinoLotState state = ReinoExpansionSystem.GetLotState(lot.LotId);
+            if (state == null || String.IsNullOrWhiteSpace(state.ConstructionId))
+                return false;
+
+            def = GetDefinitionByConstructionId(state.ConstructionId);
+            if (def == null)
+                return false;
+
+            constructionKey = ReinoMaintenanceSystem.BuildLotKey(lot.LotId);
+            cityId = lot.CityId;
+            return true;
+        }
+
+        public static ArenaState EnsureState(string constructionKey, int cityId)
+        {
+            ArenaState state;
+            if (!m_States.TryGetValue(constructionKey, out state) || state == null)
+            {
+                state = new ArenaState();
+                state.ConstructionKey = constructionKey;
+                state.CityId = cityId;
+                m_States[constructionKey] = state;
+            }
+
+            state.CityId = cityId;
+            return state;
+        }
+
+        public static ArenaState GetState(string constructionKey)
+        {
+            ArenaState state;
+            m_States.TryGetValue(constructionKey, out state);
+            return state;
+        }
+
+        public static bool CanAccessControl(PlayerMobile pm, int cityId, string constructionKey)
+        {
+            if (pm == null || pm.Deleted)
+                return false;
+
+            if (pm.AccessLevel >= AccessLevel.GameMaster)
+                return true;
+
+            if (ReinoAccessHelper.HasGovernmentAccess(pm, cityId))
+                return true;
+
+            ReinoCargoEntry role = ReinoEmploymentSystem.GetOccupiedRole(pm, cityId);
+            return role != null && role.IsOccupied && !String.IsNullOrWhiteSpace(role.LinkedConstructionKey)
+                && String.Equals(role.LinkedConstructionKey, constructionKey, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static bool TryBuyTicket(PlayerMobile from, int cityId, string constructionKey, out string message)
+        {
+            message = String.Empty;
+
+            if (from == null || from.Backpack == null)
+            {
+                message = "Mochila inválida.";
+                return false;
+            }
+
+            if (!from.Backpack.ConsumeTotal(typeof(Gold), TicketPrice))
+            {
+                message = "Você precisa de 100 moedas para comprar o ingresso.";
+                return false;
+            }
+
+            from.Backpack.DropItem(new ArenaTicket(cityId, constructionKey));
+            ReinoExpansionSystem.AddLedgerResource(cityId, ReinoResourceType.Gold, TicketPrice);
+            message = "Ingresso comprado com sucesso.";
+            return true;
+        }
+
+        public static bool TryUseGate(PlayerMobile from, string constructionKey, int cityId, Point3D inside, out string message)
+        {
+            message = String.Empty;
+
+            ArenaState state = GetState(constructionKey);
+            if (state == null || !state.EventStarted)
+            {
+                message = "A arena ainda não abriu para entrada.";
+                return false;
+            }
+
+            if (from == null || from.Backpack == null)
+            {
+                message = "Mochila inválida.";
+                return false;
+            }
+
+            ArenaTicket ticket = from.Backpack.FindItemByType(typeof(ArenaTicket), true) as ArenaTicket;
+            if (ticket == null || !String.Equals(ticket.ConstructionKey, constructionKey, StringComparison.OrdinalIgnoreCase))
+            {
+                message = "Você precisa de um ingresso desta arena.";
+                return false;
+            }
+
+            ticket.Delete();
+            from.MoveToWorld(inside, from.Map);
+            message = "Entrada liberada. Bom evento!";
+            return true;
+        }
+
+        public static void SelectMode(string constructionKey, int cityId, ArenaGameMode mode)
+        {
+            ArenaState state = EnsureState(constructionKey, cityId);
+            state.SelectedMode = mode;
+            state.LastChangedUtc = DateTime.UtcNow;
+        }
+
+        public static void StartEvent(string constructionKey, int cityId, ReinoLotDefinition lot)
+        {
+            ArenaState state = EnsureState(constructionKey, cityId);
+            state.EventStarted = true;
+            state.LastChangedUtc = DateTime.UtcNow;
+
+            if (state.SelectedMode == ArenaGameMode.LutaLivre || state.SelectedMode == ArenaGameMode.Boxe || state.SelectedMode == ArenaGameMode.LutaMagica)
+                EnsureCenterMulti(state, lot);
+        }
+
+        public static void StopEvent(string constructionKey, int cityId, ReinoLotDefinition lot)
+        {
+            ArenaState state = EnsureState(constructionKey, cityId);
+            state.EventStarted = false;
+            state.LastChangedUtc = DateTime.UtcNow;
+
+            DeleteCenterMulti(state);
+            EjectPlayersFromLot(lot);
+        }
+
+        private static void EnsureCenterMulti(ArenaState state, ReinoLotDefinition lot)
+        {
+            ArenaDefinition def = GetDefinitionByConstructionId(ArenaAuroraDefinition.BUILDING_ID);
+            if (def == null || lot == null)
+                return;
+
+            int multiId = def.GetMultiId(state.SelectedMode);
+            if (multiId <= 0)
+                return;
+
+            DeleteCenterMulti(state);
+
+            Point3D loc = new Point3D(lot.NorthWest.X + def.CenterMultiOffset.X, lot.NorthWest.Y + def.CenterMultiOffset.Y, lot.NorthWest.Z + def.CenterMultiOffset.Z);
+            BaseMulti multi = new GenericMulti(multiId);
+            multi.MoveToWorld(loc, lot.Map);
+            state.CenterMultiSerial = multi.Serial.Value;
+        }
+
+        private static void DeleteCenterMulti(ArenaState state)
+        {
+            if (state == null || state.CenterMultiSerial <= 0)
+                return;
+
+            Item item = World.FindItem((Serial)state.CenterMultiSerial);
+            if (item != null && !item.Deleted)
+                item.Delete();
+
+            state.CenterMultiSerial = 0;
+        }
+
+        private static void EjectPlayersFromLot(ReinoLotDefinition lot)
+        {
+            if (lot == null || lot.Map == null)
+                return;
+
+            ArenaDefinition def = GetDefinitionByConstructionId(ArenaAuroraDefinition.BUILDING_ID);
+            if (def == null)
+                return;
+
+            Point3D outLoc = new Point3D(lot.NorthWest.X + def.EjectOffset.X, lot.NorthWest.Y + def.EjectOffset.Y, lot.NorthWest.Z + def.EjectOffset.Z);
+
+            foreach (Mobile m in lot.Map.GetMobilesInBounds(lot.Rect))
+            {
+                if (m is PlayerMobile)
+                    m.MoveToWorld(outLoc, lot.Map);
+            }
+        }
+    }
+}
