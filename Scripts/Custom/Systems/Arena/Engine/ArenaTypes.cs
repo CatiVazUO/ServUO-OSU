@@ -25,6 +25,14 @@ namespace Server.Custom.Systems.Arena
         public Point3D EjectOffset;
         public Point3D CenterMultiOffset;
 
+        public int JoustHitMinDx;
+        public int JoustHitMaxDx;
+        public int JoustHitDy;
+        public int BombermanGridStartX;
+        public int BombermanGridStartY;
+        public int BombermanGridWidth;
+        public int BombermanGridHeight;
+
         public int LutaLivreMultiId;
         public int BoxeMultiId;
         public int LutaMagicaMultiId;
@@ -42,6 +50,13 @@ namespace Server.Custom.Systems.Arena
             PublicoTeleportOffset = Point3D.Zero;
             EjectOffset = Point3D.Zero;
             CenterMultiOffset = Point3D.Zero;
+            JoustHitMinDx = -1;
+            JoustHitMaxDx = 0;
+            JoustHitDy = 1;
+            BombermanGridStartX = 2;
+            BombermanGridStartY = 2;
+            BombermanGridWidth = 27;
+            BombermanGridHeight = 27;
         }
 
         public int GetMultiId(ArenaGameMode mode)
@@ -67,6 +82,8 @@ namespace Server.Custom.Systems.Arena
         public bool EventStarted;
         public int CenterMultiSerial;
         public DateTime LastChangedUtc;
+        public int TicketSalesGold;
+        public int LastEventRevenueGold;
 
         public ArenaState()
         {
@@ -75,6 +92,8 @@ namespace Server.Custom.Systems.Arena
             EventStarted = false;
             CenterMultiSerial = 0;
             LastChangedUtc = DateTime.UtcNow;
+            TicketSalesGold = 0;
+            LastEventRevenueGold = 0;
         }
     }
 }

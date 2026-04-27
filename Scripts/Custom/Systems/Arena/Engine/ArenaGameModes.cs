@@ -189,8 +189,9 @@ namespace Server.Custom.Systems.Arena
                 PlayerMobile winner = null;
                 PlayerMobile loser = null;
 
-                if (Knight1Clicked && IsHitWindow(Click1Loc, Click2Loc)) { winner = Knight1; loser = Knight2; }
-                else if (Knight2Clicked && IsHitWindow(Click2Loc, Click1Loc)) { winner = Knight2; loser = Knight1; }
+                ArenaDefinition def = ArenaSystem.GetJoustDefinition(Key);
+                if (Knight1Clicked && IsHitWindow(Click1Loc, Click2Loc, def)) { winner = Knight1; loser = Knight2; }
+                else if (Knight2Clicked && IsHitWindow(Click2Loc, Click1Loc, def)) { winner = Knight2; loser = Knight1; }
 
                 if (winner != null && loser != null)
                 {
@@ -220,14 +221,17 @@ namespace Server.Custom.Systems.Arena
                 Knight2 = null;
             }
 
-            private static bool IsHitWindow(Point3D a, Point3D b)
+            private static bool IsHitWindow(Point3D a, Point3D b, ArenaDefinition def)
             {
                 if (a.Z != b.Z)
                     return false;
 
-                int dx = Math.Abs(a.X - b.X);
-                int dy = Math.Abs(a.Y - b.Y);
-                return dx <= 1 && dy == 1;
+                int dx = a.X - b.X;
+                int dy = a.Y - b.Y;
+                if (def == null)
+                    return Math.Abs(dx) <= 1 && Math.Abs(dy) == 1;
+
+                return dx >= def.JoustHitMinDx && dx <= def.JoustHitMaxDx && dy == def.JoustHitDy;
             }
 
             private static void EmoteBoth(string msg)
@@ -364,7 +368,10 @@ namespace Server.Custom.Systems.Arena
 
                     pm.CantWalk = true;
                     from.SendMessage("Cavaleiro adicionado: {0}", pm.Name);
-                    m_Host.SendGump(new ArenaJoustGump(m_Host, 0, m_Session.Key));
+                    int city = 0;
+                    Server.Custom.Reinos.ReinoLotDefinition lot = ArenaSystem.GetLotFromConstructionKey(m_Session.Key);
+                    if (lot != null) city = lot.CityId;
+                    m_Host.SendGump(new ArenaJoustGump(m_Host, city, m_Session.Key));
                 }
             }
         }
@@ -516,7 +523,10 @@ namespace Server.Custom.Systems.Arena
                     if (!m_Session.Fighters.Contains(pm) && m_Session.Fighters.Count < 3)
                         m_Session.Fighters.Add(pm);
 
-                    m_Host.SendGump(new ArenaGladiatorGump(m_Host, 0, m_Session.Key));
+                    int city = 0;
+                    Server.Custom.Reinos.ReinoLotDefinition lot = ArenaSystem.GetLotFromConstructionKey(m_Session.Key);
+                    if (lot != null) city = lot.CityId;
+                    m_Host.SendGump(new ArenaGladiatorGump(m_Host, city, m_Session.Key));
                 }
             }
         }
@@ -531,6 +541,11 @@ namespace Server.Custom.Systems.Arena
             public List<PlayerMobile> Red = new List<PlayerMobile>();
             public List<PlayerMobile> Blue = new List<PlayerMobile>();
             public Dictionary<int, int> ActiveBombs = new Dictionary<int, int>();
+            public List<Item> Walls = new List<Item>();
+            public List<Item> Crates = new List<Item>();
+            public List<Item> Bonuses = new List<Item>();
+            public Dictionary<int, int> RangeBonus = new Dictionary<int, int>();
+            public Dictionary<int, DateTime> MultiBombUntil = new Dictionary<int, DateTime>();
 
             public BombermanSession(string key) { Key = key; }
 
@@ -552,15 +567,23 @@ namespace Server.Custom.Systems.Arena
 
             public void Play(ReinoLotDefinition lot)
             {
+                if (lot == null)
+                    return;
+
                 Running = true;
+                SpawnGrid(lot);
+                SpawnCratesAndBonuses(lot);
+
                 List<PlayerMobile> all = new List<PlayerMobile>();
                 all.AddRange(Red);
                 all.AddRange(Blue);
 
                 for (int i = 0; i < all.Count; i++)
                 {
-                    if (all[i] != null)
-                        all[i].CantWalk = false;
+                    if (all[i] == null)
+                        continue;
+
+                    all[i].CantWalk = false;
                 }
             }
 
@@ -568,6 +591,10 @@ namespace Server.Custom.Systems.Arena
             {
                 Running = false;
                 ActiveBombs.Clear();
+
+                DeleteItems(Walls);
+                DeleteItems(Crates);
+                DeleteItems(Bonuses);
 
                 List<PlayerMobile> all = new List<PlayerMobile>();
                 all.AddRange(Red);
@@ -581,6 +608,159 @@ namespace Server.Custom.Systems.Arena
 
                 Red.Clear();
                 Blue.Clear();
+                RangeBonus.Clear();
+                MultiBombUntil.Clear();
+            }
+
+
+            private void SpawnGrid(ReinoLotDefinition lot)
+            {
+                DeleteItems(Walls);
+
+                ArenaDefinition def = ArenaSystem.GetJoustDefinition(Key);
+                int startX = def.BombermanGridStartX;
+                int startY = def.BombermanGridStartY;
+                int width = def.BombermanGridWidth;
+                int height = def.BombermanGridHeight;
+
+                for (int x = startX; x < startX + width; x++)
+                {
+                    for (int y = startY; y < startY + height; y++)
+                    {
+                        if ((x % 2 == 0) && (y % 2 == 0))
+                        {
+                            ArenaWallItem wall = new ArenaWallItem();
+                            wall.MoveToWorld(new Point3D(lot.NorthWest.X + x, lot.NorthWest.Y + y, lot.NorthWest.Z), lot.Map);
+                            Walls.Add(wall);
+                        }
+                    }
+                }
+            }
+
+            private void SpawnCratesAndBonuses(ReinoLotDefinition lot)
+            {
+                DeleteItems(Crates);
+                DeleteItems(Bonuses);
+
+                HashSet<string> blocked = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                blocked.Add("2:2"); blocked.Add("2:28"); blocked.Add("28:2"); blocked.Add("28:28");
+
+                int tries = 0;
+                while (Crates.Count < 20 && tries < 200)
+                {
+                    tries++;
+                    int x = Utility.RandomMinMax(2, 28);
+                    int y = Utility.RandomMinMax(2, 28);
+                    string k = x + ":" + y;
+                    if (blocked.Contains(k))
+                        continue;
+
+                    Point3D loc = new Point3D(lot.NorthWest.X + x, lot.NorthWest.Y + y, lot.NorthWest.Z);
+                    if (HasBlockAt(loc, lot.Map))
+                        continue;
+
+                    ArenaCrateItem c = new ArenaCrateItem();
+                    c.MoveToWorld(loc, lot.Map);
+                    Crates.Add(c);
+                }
+
+                for (int i = 0; i < 12; i++)
+                {
+                    int x = Utility.RandomMinMax(2, 28);
+                    int y = Utility.RandomMinMax(2, 28);
+                    Point3D loc = new Point3D(lot.NorthWest.X + x, lot.NorthWest.Y + y, lot.NorthWest.Z);
+                    if (HasBlockAt(loc, lot.Map))
+                        continue;
+
+                    Item b;
+                    int r = Utility.Random(100);
+                    if (r < 45) b = new ArenaMoveBonusItem();
+                    else if (r < 80) b = new ArenaMultiBombBonusItem();
+                    else b = new ArenaRangeBonusItem();
+
+                    b.MoveToWorld(loc, lot.Map);
+                    Bonuses.Add(b);
+                }
+            }
+
+            private static bool HasBlockAt(Point3D loc, Map map)
+            {
+                IPooledEnumerable eable = map.GetItemsInRange(loc, 0);
+                foreach (Item item in eable)
+                {
+                    if (item == null || item.Deleted)
+                        continue;
+
+                    if (item.ItemID == 0x071E || item.ItemID == 0x0E3C)
+                    {
+                        eable.Free();
+                        return true;
+                    }
+                }
+
+                eable.Free();
+                return false;
+            }
+
+            private static void DeleteItems(List<Item> items)
+            {
+                if (items == null)
+                    return;
+
+                for (int i = items.Count - 1; i >= 0; i--)
+                {
+                    if (items[i] != null && !items[i].Deleted)
+                        items[i].Delete();
+                }
+
+                items.Clear();
+            }
+
+
+            public int GetRange(PlayerMobile pm)
+            {
+                if (pm == null)
+                    return 1;
+
+                int add;
+                RangeBonus.TryGetValue(pm.Serial.Value, out add);
+                return Math.Max(1, Math.Min(4, 1 + add));
+            }
+
+            public int GetMaxBombs(PlayerMobile pm)
+            {
+                if (pm == null)
+                    return 1;
+
+                DateTime until;
+                if (MultiBombUntil.TryGetValue(pm.Serial.Value, out until) && until > DateTime.UtcNow)
+                    return 2;
+
+                return 1;
+            }
+
+            public void ApplyBonus(PlayerMobile pm, int type)
+            {
+                if (pm == null)
+                    return;
+
+                if (type == 1)
+                {
+                    bool up = Utility.RandomBool();
+                    pm.SendMessage(up ? "Movimento ++ por 10s" : "Movimento -- por 10s");
+                }
+                else if (type == 2)
+                {
+                    MultiBombUntil[pm.Serial.Value] = DateTime.UtcNow + TimeSpan.FromSeconds(15.0);
+                    pm.SendMessage("Bombas: 2 por 15s.");
+                }
+                else if (type == 3)
+                {
+                    int val;
+                    RangeBonus.TryGetValue(pm.Serial.Value, out val);
+                    RangeBonus[pm.Serial.Value] = Math.Min(3, val + 1);
+                    pm.SendMessage("Alcance permanente +1.");
+                }
             }
 
             private class BombermanTarget : Target
@@ -620,7 +800,10 @@ namespace Server.Custom.Systems.Arena
                     pm.CantWalk = true;
                     pm.CloseGump(typeof(ArenaBombermanPlayerGump));
                     pm.SendGump(new ArenaBombermanPlayerGump());
-                    m_Host.SendGump(new ArenaBombermanGump(m_Host, 0, m_Session.Key));
+                    int city = 0;
+                    Server.Custom.Reinos.ReinoLotDefinition lot = ArenaSystem.GetLotFromConstructionKey(m_Session.Key);
+                    if (lot != null) city = lot.CityId;
+                    m_Host.SendGump(new ArenaBombermanGump(m_Host, city, m_Session.Key));
                 }
             }
         }
@@ -644,13 +827,14 @@ namespace Server.Custom.Systems.Arena
 
             int count;
             session.ActiveBombs.TryGetValue(from.Serial.Value, out count);
-            if (count >= 1)
+            int max = session.GetMaxBombs(from);
+            if (count >= max)
             {
-                from.SendMessage("Aguarde sua bomba atual explodir.");
+                from.SendMessage("Você atingiu o limite de bombas ativas.");
                 return true;
             }
 
-            ArenaBombItem bomb = new ArenaBombItem(from, session);
+            ArenaBombItem bomb = new ArenaBombItem(from, session, session.GetRange(from));
             bomb.MoveToWorld(from.Location, from.Map);
             session.ActiveBombs[from.Serial.Value] = count + 1;
             return true;

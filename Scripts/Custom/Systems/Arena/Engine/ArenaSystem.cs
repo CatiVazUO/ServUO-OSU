@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Server;
 using Server.Items;
 using Server.Mobiles;
-using Server.Multis;
 using Server.Custom.Reinos;
 using Server.Custom.Systems.Arena.Items;
 
@@ -30,7 +29,14 @@ namespace Server.Custom.Systems.Arena
             LutaMagicaMultiId = 0x0,
             JustaMultiId = 0x0,
             GladiadoresMultiId = 0x0,
-            BombermanMultiId = 0x0
+            BombermanMultiId = 0x0,
+            JoustHitMinDx = -1,
+            JoustHitMaxDx = 0,
+            JoustHitDy = 1,
+            BombermanGridStartX = 2,
+            BombermanGridStartY = 2,
+            BombermanGridWidth = 27,
+            BombermanGridHeight = 27
         };
 
         public static ArenaDefinition GetDefinitionByConstructionId(string constructionId)
@@ -102,6 +108,21 @@ namespace Server.Custom.Systems.Arena
                         pm.Move(dir);
                 });
             }
+        }
+
+
+        public static ArenaDefinition GetJoustDefinition(string constructionKey)
+        {
+            ReinoLotDefinition lot = GetLotFromConstructionKey(constructionKey);
+            if (lot == null)
+                return AuroraDefinition;
+
+            ReinoLotState st = ReinoExpansionSystem.GetLotState(lot.LotId);
+            if (st == null)
+                return AuroraDefinition;
+
+            ArenaDefinition def = GetDefinitionByConstructionId(st.ConstructionId);
+            return def ?? AuroraDefinition;
         }
 
         public static bool TryResolveArenaAt(Point3D location, Map map, out string constructionKey, out int cityId, out ArenaDefinition def, out ReinoLotDefinition lot)
@@ -187,6 +208,8 @@ namespace Server.Custom.Systems.Arena
 
             from.Backpack.DropItem(new ArenaTicket(cityId, constructionKey));
             ReinoExpansionSystem.AddLedgerResource(cityId, ReinoResourceType.Gold, TicketPrice);
+            ArenaState st = EnsureState(constructionKey, cityId);
+            st.TicketSalesGold += TicketPrice;
             message = "Ingresso comprado com sucesso.";
             return true;
         }
@@ -233,6 +256,7 @@ namespace Server.Custom.Systems.Arena
             ArenaState state = EnsureState(constructionKey, cityId);
             state.EventStarted = true;
             state.LastChangedUtc = DateTime.UtcNow;
+            state.LastEventRevenueGold = 0;
 
             if (state.SelectedMode == ArenaGameMode.LutaLivre || state.SelectedMode == ArenaGameMode.Boxe || state.SelectedMode == ArenaGameMode.LutaMagica)
             {
@@ -260,6 +284,8 @@ namespace Server.Custom.Systems.Arena
 
             DeleteCenterMulti(state);
             ArenaGameModes.StopAll(constructionKey);
+            state.LastEventRevenueGold = state.TicketSalesGold;
+            state.TicketSalesGold = 0;
             EjectPlayersFromLot(lot);
         }
 
@@ -276,7 +302,7 @@ namespace Server.Custom.Systems.Arena
             DeleteCenterMulti(state);
 
             Point3D loc = new Point3D(lot.NorthWest.X + def.CenterMultiOffset.X, lot.NorthWest.Y + def.CenterMultiOffset.Y, lot.NorthWest.Z + def.CenterMultiOffset.Z);
-            BaseMulti multi = new GenericMulti(multiId);
+            ReinoConstructionMulti multi = new ReinoConstructionMulti(multiId, lot.LotId, ArenaAuroraDefinition.BUILDING_ID, -1);
             multi.MoveToWorld(loc, lot.Map);
             state.CenterMultiSerial = multi.Serial.Value;
         }
