@@ -1,12 +1,11 @@
+using System;
+using System.Collections.Generic;
 using Server;
-using Server.Custom.Reinos;
-using Server.Custom.Systems.Arena.Items;
-using Server.Engines.ArenaSystem;
 using Server.Items;
 using Server.Mobiles;
 using Server.Multis;
-using System;
-using System.Collections.Generic;
+using Server.Custom.Reinos;
+using Server.Custom.Systems.Arena.Items;
 
 namespace Server.Custom.Systems.Arena
 {
@@ -53,6 +52,56 @@ namespace Server.Custom.Systems.Arena
                 return null;
 
             return ReinoExpansionSystem.GetLotDefinition(lotId);
+        }
+
+
+        public static Point3D[] GetGladiatorSpawnPoints(ReinoLotDefinition lot)
+        {
+            return new Point3D[]
+            {
+                new Point3D(lot.NorthWest.X + 15, lot.NorthWest.Y + 1, lot.NorthWest.Z),
+                new Point3D(lot.NorthWest.X + 28, lot.NorthWest.Y + 15, lot.NorthWest.Z),
+                new Point3D(lot.NorthWest.X + 15, lot.NorthWest.Y + 28, lot.NorthWest.Z),
+                new Point3D(lot.NorthWest.X + 1, lot.NorthWest.Y + 15, lot.NorthWest.Z)
+            };
+        }
+
+        public static void ApplyJoustPlacement(ReinoLotDefinition lot, bool flip, PlayerMobile a, PlayerMobile b)
+        {
+            if (lot == null || a == null || b == null)
+                return;
+
+            Point3D aLoc = flip ? new Point3D(lot.NorthWest.X + 24, lot.NorthWest.Y + 14, lot.NorthWest.Z) : new Point3D(lot.NorthWest.X + 5, lot.NorthWest.Y + 14, lot.NorthWest.Z);
+            Point3D bLoc = flip ? new Point3D(lot.NorthWest.X + 24, lot.NorthWest.Y + 15, lot.NorthWest.Z) : new Point3D(lot.NorthWest.X + 5, lot.NorthWest.Y + 15, lot.NorthWest.Z);
+
+            a.MoveToWorld(aLoc, lot.Map);
+            b.MoveToWorld(bLoc, lot.Map);
+
+            a.Direction = flip ? Direction.West : Direction.East;
+            b.Direction = flip ? Direction.West : Direction.East;
+
+            a.CantWalk = true;
+            b.CantWalk = true;
+
+            Timer.DelayCall(TimeSpan.FromSeconds(0.2), delegate { ForceRun(a, flip ? Direction.West : Direction.East, 12); });
+            Timer.DelayCall(TimeSpan.FromSeconds(0.2), delegate { ForceRun(b, flip ? Direction.West : Direction.East, 12); });
+        }
+
+        private static void ForceRun(PlayerMobile pm, Direction dir, int steps)
+        {
+            if (pm == null || pm.Deleted)
+                return;
+
+            pm.CantWalk = false;
+            for (int i = 0; i < steps; i++)
+            {
+                double pct = Utility.RandomMinMax(90, 100) / 100.0;
+                Timer.DelayCall(TimeSpan.FromSeconds(i * (0.12 / pct)), delegate
+                {
+                    if (pm != null && !pm.Deleted)
+                        pm.Move(dir);
+                });
+            }
         }
 
         public static bool TryResolveArenaAt(Point3D location, Map map, out string constructionKey, out int cityId, out ArenaDefinition def, out ReinoLotDefinition lot)
@@ -186,7 +235,21 @@ namespace Server.Custom.Systems.Arena
             state.LastChangedUtc = DateTime.UtcNow;
 
             if (state.SelectedMode == ArenaGameMode.LutaLivre || state.SelectedMode == ArenaGameMode.Boxe || state.SelectedMode == ArenaGameMode.LutaMagica)
+            {
                 EnsureCenterMulti(state, lot);
+            }
+            else if (state.SelectedMode == ArenaGameMode.Justa)
+            {
+                ArenaGameModes.GetOrCreateJoust(constructionKey).Running = true;
+            }
+            else if (state.SelectedMode == ArenaGameMode.Gladiadores)
+            {
+                ArenaGameModes.GetOrCreateGladiator(constructionKey).Play(lot);
+            }
+            else if (state.SelectedMode == ArenaGameMode.Bomberman)
+            {
+                ArenaGameModes.GetOrCreateBomberman(constructionKey).Play(lot);
+            }
         }
 
         public static void StopEvent(string constructionKey, int cityId, ReinoLotDefinition lot)
@@ -196,6 +259,7 @@ namespace Server.Custom.Systems.Arena
             state.LastChangedUtc = DateTime.UtcNow;
 
             DeleteCenterMulti(state);
+            ArenaGameModes.StopAll(constructionKey);
             EjectPlayersFromLot(lot);
         }
 

@@ -2,6 +2,7 @@ using System;
 using Server.Gumps;
 using Server.Mobiles;
 using Server.Network;
+using Server.Custom.Reinos;
 
 namespace Server.Custom.Systems.Arena.Gumps
 {
@@ -14,6 +15,8 @@ namespace Server.Custom.Systems.Arena.Gumps
         {
             m_CityId = cityId;
             m_ConstructionKey = constructionKey ?? String.Empty;
+
+            ArenaGameModes.GladiatorSession s = ArenaGameModes.GetOrCreateGladiator(m_ConstructionKey);
 
             Closable = true;
             Disposable = true;
@@ -33,9 +36,9 @@ namespace Server.Custom.Systems.Arena.Gumps
             AddLabel(250, 255, 0xFFFFFF, @"Add Jogador 2");
             AddLabel(250, 291, 0xFFFFFF, @"Add Jogador 3");
             AddLabel(429, 217, 0xFFFFFF, @"JOGAR");
-            AddLabel(429, 255, 0xFFFFFF, @"PAUSAR");
+            AddLabel(429, 255, 0xFFFFFF, s.Paused ? @"DESPAUSAR" : @"PAUSAR");
             AddLabel(430, 291, 0xFFFFFF, @"PARAR");
-            AddHtml(220, 327, 279, 83, @"<BASEFONT COLOR=#FFFFFF>Fase 1: interface pronta com labels brancas. Lógica de ondas vem no próximo passo.</BASEFONT>", false, false);
+            AddHtml(220, 327, 279, 83, @"<BASEFONT COLOR=#FFFFFF>Onda atual: " + s.Wave + "<BR>Lutadores: " + s.Fighters.Count + "</BASEFONT>", false, false);
         }
 
         public override void OnResponse(NetState sender, RelayInfo info)
@@ -44,7 +47,32 @@ namespace Server.Custom.Systems.Arena.Gumps
             if (from == null)
                 return;
 
-            from.SendGump(new ArenaMainGump(from, m_CityId, m_ConstructionKey));
+            ArenaGameModes.GladiatorSession s = ArenaGameModes.GetOrCreateGladiator(m_ConstructionKey);
+            ReinoLotDefinition lot = ArenaSystem.GetLotFromConstructionKey(m_ConstructionKey);
+
+            switch (info.ButtonID)
+            {
+                case 1:
+                case 2:
+                case 3:
+                    s.AddFighter(from);
+                    return;
+                case 4:
+                    if (lot != null) s.Play(lot);
+                    from.SendGump(new ArenaGladiatorGump(from, m_CityId, m_ConstructionKey));
+                    return;
+                case 5:
+                    if (lot != null) s.TogglePause(lot);
+                    from.SendGump(new ArenaGladiatorGump(from, m_CityId, m_ConstructionKey));
+                    return;
+                case 6:
+                    s.Stop(false);
+                    from.SendGump(new ArenaMainGump(from, m_CityId, m_ConstructionKey));
+                    return;
+                default:
+                    from.SendGump(new ArenaMainGump(from, m_CityId, m_ConstructionKey));
+                    return;
+            }
         }
     }
 }

@@ -1,48 +1,24 @@
 using System;
 using Server.Gumps;
-using Server.Mobiles;
-using Server.Network;
 
 namespace Server.Custom.Systems.Arena.Gumps
 {
-    public class ArenaBombermanGump : Gump
+    public class ArenaBombermanPlayerGump : Gump
     {
-        private readonly int m_CityId;
-        private readonly string m_ConstructionKey;
-
-        public ArenaBombermanGump(PlayerMobile from, int cityId, string constructionKey) : base(0, 0)
+        public ArenaBombermanPlayerGump() : base(0, 0)
         {
-            m_CityId = cityId;
-            m_ConstructionKey = constructionKey ?? String.Empty;
-
-            Closable = true;
+            Closable = false;
             Disposable = true;
             Dragable = true;
             Resizable = false;
 
             AddPage(0);
             AddImageTiled(199, 148, 328, 286, 375);
-            AddLabel(333, 164, 0xFFFFFF, @"Arena - Bomberman");
-            AddButton(214, 218, 535, 535, 1, GumpButtonType.Reply, 0);
-            AddButton(214, 255, 535, 535, 2, GumpButtonType.Reply, 0);
-            AddButton(214, 291, 535, 535, 3, GumpButtonType.Reply, 0);
-            AddButton(394, 217, 535, 535, 4, GumpButtonType.Reply, 0);
-            AddButton(394, 255, 535, 535, 5, GumpButtonType.Reply, 0);
-            AddLabel(249, 218, 0xFFFFFF, @"Time");
-            AddLabel(250, 255, 0xFFFFFF, @"Add Jogador 1");
-            AddLabel(250, 291, 0xFFFFFF, @"Add Jogador 2");
-            AddLabel(429, 217, 0xFFFFFF, @"JOGAR");
-            AddLabel(429, 255, 0xFFFFFF, @"PARAR");
-            AddHtml(220, 327, 279, 83, @"<BASEFONT COLOR=#FFFFFF>Fase 1: painel base criado. Lógica do comando [bomba entra na próxima etapa.</BASEFONT>", false, false);
-        }
-
-        public override void OnResponse(NetState sender, RelayInfo info)
-        {
-            PlayerMobile from = sender.Mobile as PlayerMobile;
-            if (from == null)
-                return;
-
-            from.SendGump(new ArenaMainGump(from, m_CityId, m_ConstructionKey));
+            AddHtml(220, 214, 279, 127, @"<BASEFONT COLOR=#FFFFFF>Crie um atalho para [bomba. Objetivo: explodir os adversários.</BASEFONT>", false, false);
+            AddLabel(226, 357, 0xFFFFFF, @"Tempo: 5s");
+            AddLabel(227, 391, 0xFFFFFF, @"Alcance: 1");
+            AddLabel(344, 357, 0xFFFFFF, @"Bombas: 1");
+            AddLabel(345, 391, 0xFFFFFF, @"Movimento:");
         }
     }
 }

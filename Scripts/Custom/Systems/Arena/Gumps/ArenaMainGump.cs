@@ -97,12 +97,15 @@ namespace Server.Custom.Systems.Arena.Gumps
                     from.SendGump(new ArenaMainGump(from, m_CityId, m_ConstructionKey));
                     return;
                 case BtnJusta:
+                    ArenaSystem.SelectMode(m_ConstructionKey, m_CityId, ArenaGameMode.Justa);
                     from.SendGump(new ArenaJoustGump(from, m_CityId, m_ConstructionKey));
                     return;
                 case BtnGladiadores:
+                    ArenaSystem.SelectMode(m_ConstructionKey, m_CityId, ArenaGameMode.Gladiadores);
                     from.SendGump(new ArenaGladiatorGump(from, m_CityId, m_ConstructionKey));
                     return;
                 case BtnBomberman:
+                    ArenaSystem.SelectMode(m_ConstructionKey, m_CityId, ArenaGameMode.Bomberman);
                     from.SendGump(new ArenaBombermanGump(from, m_CityId, m_ConstructionKey));
                     return;
                 case BtnIniciar:

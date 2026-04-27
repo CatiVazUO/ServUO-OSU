@@ -2,6 +2,7 @@ using System;
 using Server.Gumps;
 using Server.Mobiles;
 using Server.Network;
+using Server.Custom.Reinos;
 
 namespace Server.Custom.Systems.Arena.Gumps
 {
@@ -33,7 +34,7 @@ namespace Server.Custom.Systems.Arena.Gumps
             AddLabel(250, 291, 0xFFFFFF, @"Checar Equipamentos");
             AddLabel(429, 217, 0xFFFFFF, @"JOGAR");
             AddLabel(429, 252, 0xFFFFFF, @"PARAR");
-            AddHtml(220, 327, 279, 83, @"<BASEFONT COLOR=#FFFFFF>Fase 1: estrutura do gump criada. Lógica completa de justa entra na próxima etapa.</BASEFONT>", false, false);
+            AddHtml(220, 327, 279, 83, @"<BASEFONT COLOR=#FFFFFF>Adicione 2 cavaleiros, cheque equipamento e jogue. O botão de impacto (5585) aparece para os cavaleiros.</BASEFONT>", false, false);
         }
 
         public override void OnResponse(NetState sender, RelayInfo info)
@@ -42,7 +43,30 @@ namespace Server.Custom.Systems.Arena.Gumps
             if (from == null)
                 return;
 
-            from.SendGump(new ArenaMainGump(from, m_CityId, m_ConstructionKey));
+            ArenaGameModes.JoustSession s = ArenaGameModes.GetOrCreateJoust(m_ConstructionKey);
+            ReinoLotDefinition lot = ArenaSystem.GetLotFromConstructionKey(m_ConstructionKey);
+
+            switch (info.ButtonID)
+            {
+                case 1: s.AddKnight(from, 1); return;
+                case 2: s.AddKnight(from, 2); return;
+                case 3:
+                    string msg;
+                    if (!s.CheckGear(out msg)) from.SendMessage(msg); else from.SendMessage(msg);
+                    from.SendGump(new ArenaJoustGump(from, m_CityId, m_ConstructionKey));
+                    return;
+                case 4:
+                    if (lot != null) s.Play(lot);
+                    from.SendGump(new ArenaJoustGump(from, m_CityId, m_ConstructionKey));
+                    return;
+                case 5:
+                    s.Stop(false);
+                    from.SendGump(new ArenaMainGump(from, m_CityId, m_ConstructionKey));
+                    return;
+                default:
+                    from.SendGump(new ArenaMainGump(from, m_CityId, m_ConstructionKey));
+                    return;
+            }
         }
     }
 }
