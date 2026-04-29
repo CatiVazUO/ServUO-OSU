@@ -94,8 +94,8 @@ namespace Server.Custom.Systems.Arena
             JoustHitDy = 1;
             BombermanGridStartX = 2;
             BombermanGridStartY = 2;
-            BombermanGridWidth = 27;
-            BombermanGridHeight = 27;
+            BombermanGridWidth = 20;
+            BombermanGridHeight = 20;
         }
 
         public int GetMultiId(ArenaGameMode mode)

@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using Server;
+using Server.Custom.Systems.Arena;
 using Server.Custom.Systems.Arena.Mobiles;
 using Server.Custom.Systems.Reinos.Expansion.Multis;
 
@@ -43,8 +44,41 @@ namespace Server.Custom.Reinos
 
         private static readonly ReinoNpcSpawnDefinition[] NPC_SPAWNS = new ReinoNpcSpawnDefinition[]
         {
-            new ReinoNpcSpawnDefinition(typeof(ArenaBilheteriaNpc).FullName, 14, 29, 6),
-            new ReinoNpcSpawnDefinition(typeof(ArenaPorteiroNpc).FullName, 15, 29, 6)
+            new ReinoNpcSpawnDefinition(typeof(ArenaBilheteriaNpc).FullName, 14, 29, 0),
+            new ReinoNpcSpawnDefinition(typeof(ArenaPorteiroNpc).FullName, 15, 29, 0)
+        };
+
+        public static readonly ArenaDefinition ArenaConfig = new ArenaDefinition
+        {
+            ConstructionId = BUILDING_ID,
+            ControlOffset = new Point3D(15, 14, 0),
+            BilheteriaOffset = new Point3D(14, 29, 0),
+            PorteiroOffset = new Point3D(15, 29, 0),
+            EntradaOffset = new Point3D(15, 28, 0),
+            PublicoTeleportOffset = new Point3D(15, 26, 0),
+            EjectOffset = new Point3D(0, 31, 0),
+            CenterMultiOffset = new Point3D(8, 8, 0),
+            BombermanStorageOffset = new Point3D(15, 16, 0),
+            Doors = new ArenaDoorOffset[]
+            {
+                new ArenaDoorOffset(15, 27, 0, true),
+                new ArenaDoorOffset(15, 25, 0, false)
+            },
+            LutaLivreMultiId = 0x0,
+            BoxeMultiId = 0x0,
+            LutaMagicaMultiId = 0x0,
+            JustaMultiId = 0x0,
+            GladiadoresMultiId = 0x0,
+            BombermanMultiId = 0x0,
+            JoustKnight1Offset = new Point3D(5, 13, 0),
+            JoustDirectionForward = Direction.East,
+            JoustHitMinDx = -1,
+            JoustHitMaxDx = 0,
+            JoustHitDy = 1,
+            BombermanGridStartX = 2,
+            BombermanGridStartY = 2,
+            BombermanGridWidth = 20,
+            BombermanGridHeight = 20
         };
 
         public static ReinoConstructionDefinition Create()

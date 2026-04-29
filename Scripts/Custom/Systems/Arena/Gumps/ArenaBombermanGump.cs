@@ -18,24 +18,32 @@ namespace Server.Custom.Systems.Arena.Gumps
 
             ArenaGameModes.BombermanSession s = ArenaGameModes.GetOrCreateBomberman(m_ConstructionKey);
 
-            Closable = true;
+            Closable = false;
             Disposable = true;
             Dragable = true;
             Resizable = false;
 
             AddPage(0);
             AddImageTiled(199, 148, 328, 286, 375);
-            AddLabel(333, 164, 0xFFFFFF, @"Arena - Bomberman");
+            AddImageTiled(515, 159, 25, 269, 369);
+            AddImageTiled(178, 158, 26, 271, 370);
+            AddImageTiled(194, 134, 331, 25, 371);
+            AddImageTiled(205, 422, 304, 30, 372);
+            AddImage(170, 125, 402);
+            AddImage(502, 129, 402);
+            AddImage(171, 419, 402);
+            AddImage(502, 419, 402);
+            AddLabel(333, 164, 1152, @"Arena - Bomberman");
             AddButton(214, 218, 535, 535, 1, GumpButtonType.Reply, 0);
             AddButton(214, 255, 535, 535, 2, GumpButtonType.Reply, 0);
             AddButton(214, 291, 535, 535, 3, GumpButtonType.Reply, 0);
             AddButton(394, 217, 535, 535, 4, GumpButtonType.Reply, 0);
             AddButton(394, 255, 535, 535, 5, GumpButtonType.Reply, 0);
-            AddLabel(249, 218, 0xFFFFFF, s.TeamMode ? @"Time" : @"Individual");
-            AddLabel(250, 255, 0xFFFFFF, s.TeamMode ? @"Add Time Vermelho" : @"Add Jogador 1");
-            AddLabel(250, 291, 0xFFFFFF, s.TeamMode ? @"Add Time Azul" : @"Add Jogador 2");
-            AddLabel(429, 217, 0xFFFFFF, @"JOGAR");
-            AddLabel(429, 255, 0xFFFFFF, @"PARAR");
+            AddLabel(249, 218, 1152, s.TeamMode ? @"Time" : @"Individual");
+            AddLabel(250, 255, 1152, s.TeamMode ? @"Add Time Vermelho" : @"Add Jogador 1");
+            AddLabel(250, 291, 1152, s.TeamMode ? @"Add Time Azul" : @"Add Jogador 2");
+            AddLabel(429, 217, 1152, @"JOGAR");
+            AddLabel(429, 255, 1152, @"PARAR");
             AddHtml(220, 327, 279, 83, @"<BASEFONT COLOR=#FFFFFF>Vermelho: " + s.Red.Count + " | Azul: " + s.Blue.Count + "<BR>Use [bomba dentro do jogo.</BASEFONT>", false, false);
         }
 
@@ -50,6 +58,9 @@ namespace Server.Custom.Systems.Arena.Gumps
 
             switch (info.ButtonID)
             {
+                case 0:
+                    from.SendGump(new ArenaBombermanGump(from, m_CityId, m_ConstructionKey));
+                    return;
                 case 1:
                     s.ToggleMode();
                     from.SendGump(new ArenaBombermanGump(from, m_CityId, m_ConstructionKey));

@@ -41,10 +41,45 @@ namespace Server.Custom.Systems.Arena
     public class ArenaWallItem : Item
     {
         [Constructable]
-        public ArenaWallItem() : base(0x071E) { Movable = false; }
+        public ArenaWallItem() : base(0x071E) { Movable = false; Name = "Parede da Arena"; }
         public ArenaWallItem(Serial s) : base(s) { }
+        public override bool BlocksFit { get { return true; } }
         public override void Serialize(GenericWriter writer) { base.Serialize(writer); writer.Write(0); }
-        public override void Deserialize(GenericReader reader) { base.Deserialize(reader); int v = reader.ReadInt(); Movable = false; }
+        public override void Deserialize(GenericReader reader) { base.Deserialize(reader); int v = reader.ReadInt(); Movable = false; Name = "Parede da Arena"; }
+    }
+
+    public class ArenaBombermanTeamVest : Item
+    {
+        private bool m_Red;
+
+        public ArenaBombermanTeamVest(bool red) : base(0x1F03)
+        {
+            m_Red = red;
+            Layer = Layer.OuterTorso;
+            Name = red ? "Colete do Time Vermelho" : "Colete do Time Azul";
+            Hue = red ? 33 : 1152;
+            Movable = false;
+        }
+
+        public ArenaBombermanTeamVest(Serial serial) : base(serial) { }
+
+        public override void Serialize(GenericWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write(0);
+            writer.Write(m_Red);
+        }
+
+        public override void Deserialize(GenericReader reader)
+        {
+            base.Deserialize(reader);
+            int version = reader.ReadInt();
+            m_Red = reader.ReadBool();
+            Layer = Layer.OuterTorso;
+            Name = m_Red ? "Colete do Time Vermelho" : "Colete do Time Azul";
+            Hue = m_Red ? 33 : 1152;
+            Movable = false;
+        }
     }
 
     public class ArenaCrateItem : Item
@@ -166,6 +201,10 @@ namespace Server.Custom.Systems.Arena
         {
             if (map == null || map == Map.Internal)
                 return;
+
+            int[] frames = new int[] { 0x370A, 0x370B, 0x370C, 0x370D, 0x370E, 0x370F, 0x3710, 0x3711 };
+            for (int i = 0; i < frames.Length; i++)
+                Effects.SendLocationEffect(p, map, frames[i], 10, 0, 0);
 
             IPooledEnumerable eable = map.GetMobilesInRange(p, 0);
             foreach (Mobile m in eable)

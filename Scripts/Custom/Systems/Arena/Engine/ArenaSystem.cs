@@ -14,36 +14,7 @@ namespace Server.Custom.Systems.Arena
 
         private static readonly Dictionary<string, ArenaState> m_States = new Dictionary<string, ArenaState>(StringComparer.OrdinalIgnoreCase);
 
-        public static ArenaDefinition AuroraDefinition = new ArenaDefinition
-        {
-            ConstructionId = ArenaAuroraDefinition.BUILDING_ID,
-            ControlOffset = new Point3D(15, 14, 0),
-            BilheteriaOffset = new Point3D(14, 29, 0),
-            PorteiroOffset = new Point3D(15, 29, 0),
-            EntradaOffset = new Point3D(15, 28, 0),
-            PublicoTeleportOffset = new Point3D(15, 26, 0),
-            EjectOffset = new Point3D(0, 31, 0),
-            CenterMultiOffset = new Point3D(8, 8, 0),
-            BombermanStorageOffset = new Point3D(15, 16, 0),
-            Doors = new ArenaDoorOffset[]
-            {
-                new ArenaDoorOffset(15, 27, 0, true),
-                new ArenaDoorOffset(15, 25, 0, false)
-            },
-            LutaLivreMultiId = 0x0,
-            BoxeMultiId = 0x0,
-            LutaMagicaMultiId = 0x0,
-            JustaMultiId = 0x0,
-            GladiadoresMultiId = 0x0,
-            BombermanMultiId = 0x0,
-            JoustHitMinDx = -1,
-            JoustHitMaxDx = 0,
-            JoustHitDy = 1,
-            BombermanGridStartX = 2,
-            BombermanGridStartY = 2,
-            BombermanGridWidth = 27,
-            BombermanGridHeight = 27
-        };
+        public static ArenaDefinition AuroraDefinition = ArenaAuroraDefinition.ArenaConfig;
 
         public static ArenaDefinition GetDefinitionByConstructionId(string constructionId)
         {
@@ -94,38 +65,43 @@ namespace Server.Custom.Systems.Arena
 
         public static void ApplyJoustPlacement(ReinoLotDefinition lot, bool flip, PlayerMobile a, PlayerMobile b)
         {
+            ApplyJoustPlacement(lot, flip, a, b, true);
+        }
+
+        public static void ApplyJoustPlacement(ReinoLotDefinition lot, bool flip, PlayerMobile a, PlayerMobile b, bool autoRun)
+        {
             if (lot == null || a == null || b == null)
                 return;
 
             ArenaDefinition def = GetJoustDefinition(ReinoMaintenanceSystem.BuildLotKey(lot.LotId));
-            Point3D leftA = def != null ? def.JoustKnight1Offset : new Point3D(5, 14, 0);
-            Point3D leftB = def != null ? def.JoustKnight2Offset : new Point3D(5, 15, 0);
-
-            int mirrorX = 29;
-            Point3D rightA = new Point3D(mirrorX - leftA.X, leftA.Y, leftA.Z);
-            Point3D rightB = new Point3D(mirrorX - leftB.X, leftB.Y, leftB.Z);
-
-            Point3D aLoc = flip
-                ? new Point3D(lot.NorthWest.X + rightA.X, lot.NorthWest.Y + rightA.Y, lot.NorthWest.Z + rightA.Z)
-                : new Point3D(lot.NorthWest.X + leftA.X, lot.NorthWest.Y + leftA.Y, lot.NorthWest.Z + leftA.Z);
-            Point3D bLoc = flip
-                ? new Point3D(lot.NorthWest.X + rightB.X, lot.NorthWest.Y + rightB.Y, lot.NorthWest.Z + rightB.Z)
-                : new Point3D(lot.NorthWest.X + leftB.X, lot.NorthWest.Y + leftB.Y, lot.NorthWest.Z + leftB.Z);
-
+            Point3D startOffset = def != null ? def.JoustKnight1Offset : new Point3D(5, 14, 0);
             Direction fwd = def != null ? def.JoustDirectionForward : Direction.East;
-            Direction runDir = flip ? ReverseDirection(fwd) : fwd;
+            Direction dirA = flip ? ReverseDirection(fwd) : fwd;
+
+            int stepX, stepY;
+            GetStepForDirection(dirA, out stepX, out stepY);
+
+            int leftX = stepY;
+            int leftY = -stepX;
+
+            Point3D aLoc = new Point3D(lot.NorthWest.X + startOffset.X, lot.NorthWest.Y + startOffset.Y, lot.NorthWest.Z + startOffset.Z);
+            Point3D bLoc = new Point3D(aLoc.X + (stepX * 12) + leftX, aLoc.Y + (stepY * 12) + leftY, aLoc.Z);
+            Direction dirB = ReverseDirection(dirA);
 
             a.MoveToWorld(aLoc, lot.Map);
             b.MoveToWorld(bLoc, lot.Map);
 
-            a.Direction = runDir;
-            b.Direction = runDir;
+            a.Direction = dirA;
+            b.Direction = dirB;
 
             a.CantWalk = true;
             b.CantWalk = true;
 
-            Timer.DelayCall(TimeSpan.FromSeconds(0.2), delegate { ForceRun(a, runDir, 12); });
-            Timer.DelayCall(TimeSpan.FromSeconds(0.2), delegate { ForceRun(b, runDir, 12); });
+            if (!autoRun)
+                return;
+
+            Timer.DelayCall(TimeSpan.FromSeconds(0.2), delegate { ForceRun(a, dirA, 12); });
+            Timer.DelayCall(TimeSpan.FromSeconds(0.2), delegate { ForceRun(b, dirB, 12); });
         }
 
         public static Direction ReverseDirection(Direction dir)
@@ -138,15 +114,29 @@ namespace Server.Custom.Systems.Arena
             if (pm == null || pm.Deleted)
                 return;
 
-            pm.CantWalk = false;
+            Direction runDir = dir | Direction.Running;
+            double baseStep = 0.20 * (100.0 / Utility.RandomMinMax(90, 100));
             for (int i = 0; i < steps; i++)
             {
-                double pct = Utility.RandomMinMax(90, 100) / 100.0;
-                Timer.DelayCall(TimeSpan.FromSeconds(i * (0.12 / pct)), delegate
+                double jitter = Utility.RandomMinMax(96, 104) / 100.0;
+                double delay = i * (baseStep * jitter);
+                Timer.DelayCall(TimeSpan.FromSeconds(delay), delegate
                 {
                     if (pm != null && !pm.Deleted)
-                        pm.Move(dir);
+                        pm.Move(runDir);
                 });
+            }
+        }
+
+        private static void GetStepForDirection(Direction dir, out int x, out int y)
+        {
+            switch (dir & Direction.Mask)
+            {
+                case Direction.North: x = 0; y = -1; return;
+                case Direction.East: x = 1; y = 0; return;
+                case Direction.South: x = 0; y = 1; return;
+                case Direction.West: x = -1; y = 0; return;
+                default: x = 1; y = 0; return;
             }
         }
 
@@ -298,14 +288,6 @@ namespace Server.Custom.Systems.Arena
             if (state.SelectedMode == ArenaGameMode.LutaLivre || state.SelectedMode == ArenaGameMode.Boxe || state.SelectedMode == ArenaGameMode.LutaMagica)
             {
                 EnsureCenterMulti(state, lot);
-            }
-            else if (state.SelectedMode == ArenaGameMode.Justa)
-            {
-                ArenaGameModes.GetOrCreateJoust(constructionKey).Running = true;
-            }
-            else if (state.SelectedMode == ArenaGameMode.Gladiadores)
-            {
-                ArenaGameModes.GetOrCreateGladiator(constructionKey).Play(lot);
             }
             else if (state.SelectedMode == ArenaGameMode.Bomberman)
             {

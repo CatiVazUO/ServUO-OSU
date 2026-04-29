@@ -1,6 +1,8 @@
 using Server;
 using Server.Accounting;
 using Server.Custom.Systems.Correios.Correios;
+using Server.Custom.Systems.HtmlBooks.Engine;
+using Server.Custom.Systems.HtmlBooks.Html.Readable;
 using Server.Items;
 using Server.Mobiles;
 using Server.Spells.Bushido;
@@ -721,13 +723,40 @@ namespace Server.Custom.Correios
             {
                 Item copy = null;
 
-                if (original is PergaminhoEditavel pe)
+                if (original is HtmlDocumentBase hdoc)
+                {
+                    var c = Activator.CreateInstance(original.GetType()) as HtmlDocumentBase;
+                    if (c == null)
+                        return null;
+
+                    c.CopyFullStateFrom(hdoc);
+                    c.Name = hdoc.Name;
+                    c.Hue = hdoc.Hue;
+                    c.Weight = hdoc.Weight;
+                    c.Movable = true;
+                    copy = c;
+                }
+                else if (original is HtmlCompilationBook comp)
+                {
+                    var c = Activator.CreateInstance(original.GetType()) as HtmlCompilationBook;
+                    if (c == null)
+                        return null;
+
+                    CopyCompilationBookState(comp, c);
+                    c.Name = comp.Name;
+                    c.Hue = comp.Hue;
+                    c.Weight = comp.Weight;
+                    c.Movable = true;
+                    copy = c;
+                }
+                else if (original is PergaminhoEditavel pe)
                 {
                     var c = new PergaminhoEditavel();
                     c.Texto = pe.Texto;
                     c.Name = pe.Name;
                     c.Hue = pe.Hue;
                     c.Weight = pe.Weight;
+                    c.Movable = true;
                     copy = c;
                 }
                 else if (original is BaseBook book)
@@ -746,6 +775,7 @@ namespace Server.Custom.Correios
                     nb.Writable = book.Writable;
                     nb.Title = book.Title;
                     nb.Author = book.Author;
+                    nb.Movable = true;
 
                     // Deep-copy pages via reflection (works across most ServUO/RunUO variants)
                     try
@@ -795,6 +825,61 @@ namespace Server.Custom.Correios
             catch
             {
                 return null;
+            }
+        }
+
+        private static void CopyCompilationBookState(HtmlCompilationBook source, HtmlCompilationBook dest)
+        {
+            if (source == null || dest == null)
+                return;
+
+            dest.Language = source.Language;
+            dest.FontSize = source.FontSize;
+            dest.DocumentTitle = source.DocumentTitle;
+            dest.CompiledBy = source.CompiledBy;
+            dest.SealId = source.SealId;
+            dest.ShowAuthorOnTooltip = source.ShowAuthorOnTooltip;
+
+            for (int i = 0; i < source.PageCount; i++)
+                dest.SetPageHtml(i, source.GetPageHtml(i));
+
+            TryCopyPrivateField(source, dest, "_closed");
+            TryCopyPrivateField(source, dest, "_pages");
+            TryCopyPrivateField(source, dest, "_pageAuthors");
+            TryCopyPrivateField(source, dest, "_pageSealIds");
+            TryCopyPrivateField(source, dest, "_showAuthorOnTooltip");
+        }
+
+        private static void TryCopyPrivateField(object source, object dest, string fieldName)
+        {
+            if (source == null || dest == null || String.IsNullOrWhiteSpace(fieldName))
+                return;
+
+            try
+            {
+                Type t = source.GetType();
+                FieldInfo field = null;
+
+                while (t != null && field == null)
+                {
+                    field = t.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+                    t = t.BaseType;
+                }
+
+                if (field == null)
+                    return;
+
+                object value = field.GetValue(source);
+
+                if (value is List<string> stringList)
+                    value = new List<string>(stringList);
+                else if (value is List<int> intList)
+                    value = new List<int>(intList);
+
+                field.SetValue(dest, value);
+            }
+            catch
+            {
             }
         }
 

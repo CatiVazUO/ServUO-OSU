@@ -1,4 +1,5 @@
 using Server;
+using Server.Items;
 using Server.Mobiles;
 
 namespace Server.Custom.Systems.Arena
@@ -48,6 +49,23 @@ namespace Server.Custom.Systems.Arena
                 }
             }
             eable.Free();
+
+            if (e.Blocked)
+                return;
+
+            IPooledEnumerable items = pm.Map.GetItemsInRange(new Point3D(x, y, pm.Z), 0);
+            foreach (Item it in items)
+            {
+                if (it == null || it.Deleted)
+                    continue;
+
+                if (it is ArenaWallItem || it is ArenaCrateItem || it is ArenaBombItem || it is ArenaGateBlockItem)
+                {
+                    e.Blocked = true;
+                    break;
+                }
+            }
+            items.Free();
         }
     }
 }

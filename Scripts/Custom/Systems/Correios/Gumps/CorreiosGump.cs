@@ -1583,6 +1583,11 @@ namespace Server.Custom.Correios
         private void PrepareSendNewEditionConfirm(Mobile from)
         {
             var pub = CorreioStorage.Instance.GetPublicationByOwner(from.Serial);
+            if (pub == null)
+            {
+                from.SendGump(new CorreiosGump(from, 8));
+                return;
+            }
 
             // 1h pra preparar
             if (pub.ComposeStartUtc == DateTime.MinValue || (DateTime.UtcNow - pub.ComposeStartUtc) > ComposeWindow)
@@ -1601,12 +1606,6 @@ namespace Server.Custom.Correios
                 double horas = Math.Ceiling(falta.TotalHours);
                 from.SendMessage($"Você ainda não pode publicar. Faltam {horas} horas.");
                 pub.ComposeStartUtc = DateTime.MinValue;
-                from.SendGump(new CorreiosGump(from, 8));
-                return;
-            }
-
-            if (pub == null)
-            {
                 from.SendGump(new CorreiosGump(from, 8));
                 return;
             }
@@ -1630,8 +1629,6 @@ namespace Server.Custom.Correios
                 $"<BR>Custo total: <B>{total}</B> moedas\n" +
                 "<BR><BR>Confirmar publicação?</BASEFONT>";
 
-            pub.LastEditionSentUtc = DateTime.UtcNow;
-            pub.ComposeStartUtc = DateTime.MinValue;
             from.SendGump(new CorreiosGump(from, 9));
         }
 
@@ -2206,46 +2203,14 @@ namespace Server.Custom.Correios
                 return;
             }
 
+            // IMPORTANTE:
+            // CorreioStorage.Subscribe() já faz tudo: adiciona o assinante, cobra e envia UMA cópia da última edição.
+            // Antes este método cobrava de novo e criava uma segunda carta, causando carta duplicada/vazia.
             if (!CorreioStorage.Instance.Subscribe(from, pub.PublicationId))
             {
-                from.SendMessage("Não foi possível assinar (talvez você já assinou ou é o dono).");
+                from.SendMessage("Não foi possível assinar (talvez você já assinou, é o dono, ou não tem ouro suficiente no banco)." );
                 from.SendGump(new CorreiosGump(from, 4));
                 return;
-            }
-
-            // 1) cobrar do assinante agora
-            int price = pub.PricePerIssue; // se o seu campo tiver outro nome, me diga qual é
-
-            if (price > 0)
-            {
-                if (!WithdrawWithKingdomRevenue(from, price))
-                {
-                    // sem dinheiro: desfaz assinatura
-                    CorreioStorage.Instance.Unsubscribe(from, pub.PublicationId);
-                    from.SendMessage("Você não tem ouro suficiente no banco para assinar.");
-                    from.SendGump(new CorreiosGump(from, 4));
-                    return;
-                }
-
-                // deposita no banco do publicador
-                Mobile owner = pubOwnerMobile(pub);
-                if (owner != null)
-                    Banker.DepositUpTo(owner, price);
-            }
-
-            // 2) mandar cópia da última edição agora
-            // Aqui você precisa duplicar o “master/última edição” da publicação.
-            // Encontre dentro da Publication qual campo guarda o item principal (ex: pub.MasterItem, pub.ContentItem, pub.Template, etc).
-            Item last = TryDupeItem(pub.MasterContent /* TROQUE para o nome real */);
-
-            if (last != null)
-            {
-                string body =
-                    $"Bem-vindo! Você assinou: {pub.Name}\n" +
-                    $"Você está recebendo a última edição automaticamente.\n\n" +
-                    "Obrigado por assinar!";
-                Mobile owner = CorreioStorage.Instance.GetOwnerMobile(pub);
-                CorreioStorage.Instance.CreateMail(owner ?? from, from, pub.Name, body, new List<Item> { last });
             }
 
             from.SendMessage("Assinatura realizada.");
@@ -2483,6 +2448,11 @@ namespace Server.Custom.Correios
         private void ExecuteSendNewEdition(Mobile from)
         {
             var pub = CorreioStorage.Instance.GetPublicationByOwner(from.Serial);
+            if (pub == null)
+            {
+                from.SendGump(new CorreiosGump(from, 8));
+                return;
+            }
 
             // Janela de 1h para preparar
             if (pub.ComposeStartUtc == DateTime.MinValue || (DateTime.UtcNow - pub.ComposeStartUtc) > ComposeWindow)
@@ -2490,12 +2460,6 @@ namespace Server.Custom.Correios
                 from.SendMessage("Seu tempo para preparar a edição expirou. Abra 'Enviar nova edição' novamente.");
                 _s.ClearEditionDraft(from);
                 pub.ComposeStartUtc = DateTime.MinValue;
-                from.SendGump(new CorreiosGump(from, 8));
-                return;
-            }
-
-            if (pub == null)
-            {
                 from.SendGump(new CorreiosGump(from, 8));
                 return;
             }
@@ -2564,24 +2528,24 @@ namespace Server.Custom.Correios
                 return;
             }
 
-            if (!WithdrawWithKingdomRevenue(from, total))
-            {
-                from.SendMessage($"Você precisa de {total} moedas no banco para enviar esta edição.");
-                from.SendGump(new CorreiosGump(from, 10));
-                return;
-            }
-
             int sent = 0;
+            int failedSends = 0;
 
-            foreach (var s in pub.Subscribers)
+            foreach (var sub in pagantes)
             {
-                Mobile sub;
-                if (!World.Mobiles.TryGetValue(s, out sub) || sub == null || sub.Deleted)
+                if (sub == null || sub.Deleted)
                     continue;
 
                 Item copy = TryDupeItem(master);
                 if (copy == null)
+                {
+                    failedSends++;
+
+                    if (price > 0)
+                        Banker.DepositUpTo(sub, price);
+
                     continue;
+                }
 
                 string body =
                     $"Nova edição de: {pub.Name}\n" +
@@ -2604,24 +2568,31 @@ namespace Server.Custom.Correios
                     // devolve a taxa da edição porque não recebeu
                     if (price > 0)
                         Banker.DepositUpTo(sub, price);
+
+                    failedSends++;
                 }
             }
 
-            // Consome o master
-            if (master != null && !master.Deleted)
-                master.Delete();
-
-            _s.EditionContentHeld = null;
-            _s.EditionCostPerSubscriber = 0;
+            if (failedSends > 0 && perSub > 0)
+                Banker.DepositUpTo(from, perSub * failedSends);
 
             if (sent <= 0)
             {
-                // devolve o dinheiro se não conseguiu enviar pra ninguém
-                Banker.DepositUpTo(from, total);
                 from.SendMessage("Não foi possível enviar para nenhum assinante.");
                 from.SendGump(new CorreiosGump(from, 8));
                 return;
             }
+
+            // Guarda esta edição como a nova "última edição" da publicação.
+            // Antes o código deletava o master novo; aí futuros assinantes podiam receber a edição antiga ou vazia.
+            Item oldMaster = pub.MasterContent;
+            pub.MasterContent = master;
+
+            if (oldMaster != null && oldMaster != master && !oldMaster.Deleted)
+                oldMaster.Delete();
+
+            _s.EditionContentHeld = null;
+            _s.EditionCostPerSubscriber = 0;
 
             pub.LastEditionSentUtc = DateTime.UtcNow;
             pub.ComposeStartUtc = DateTime.MinValue;
@@ -2635,44 +2606,10 @@ namespace Server.Custom.Correios
             if (item == null || item.Deleted)
                 return null;
 
-            try
-            {
-                // Prefer Dupe(int) if available
-                var mi = item.GetType().GetMethod("Dupe", new Type[] { typeof(int) });
-                if (mi != null)
-                {
-                    var o = mi.Invoke(item, new object[] { 1 });
-                    return o as Item;
-                }
-
-                // Fallback: Dupe()
-                mi = item.GetType().GetMethod("Dupe", Type.EmptyTypes);
-                if (mi != null)
-                {
-                    var o = mi.Invoke(item, null);
-                    return o as Item;
-                }
-            }
-            catch { }
-
-            try
-            {
-                // Last resort: attempt to create same type and copy properties
-                var copy = Activator.CreateInstance(item.GetType()) as Item;
-                if (copy == null)
-                    return null;
-
-                var cp = item.GetType().GetMethod("CopyProperties", new Type[] { typeof(Item) });
-                if (cp != null)
-                    cp.Invoke(copy, new object[] { item });
-
-                copy.Name = item.Name;
-                return copy;
-            }
-            catch
-            {
-                return null;
-            }
+            // Usa o clone próprio do correio, que sabe copiar HtmlDocumentBase com texto, selo, autor, idioma e estilos.
+            // O método antigo usava Dupe()/Activator e criava documentos HTML visualmente em branco.
+            CorreioStorage.Ensure();
+            return CorreioStorage.Instance.ClonePublicationItem(item);
         }
 
         private void ExecuteAcceptNewTerms(Mobile from)

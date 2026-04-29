@@ -8,6 +8,7 @@ using Server.Targeting;
 using Server.Network;
 using Server.Custom.Reinos;
 using Server.Custom.Systems.Arena.Gumps;
+using Server.Custom.Systems.Animations;
 
 namespace Server.Custom.Systems.Arena
 {
@@ -36,14 +37,9 @@ namespace Server.Custom.Systems.Arena
             public PlayerMobile Knight2;
             public bool Running;
             public bool RoundOpen;
-            public bool DirectionFlip;
-            public bool Knight1Clicked;
-            public bool Knight2Clicked;
-            public DateTime Click1Utc;
-            public DateTime Click2Utc;
-            public Point3D Click1Loc;
-            public Point3D Click2Loc;
-            public Timer RoundTimer;
+            public Point3D Knight1Start;
+            public Point3D Knight2Start;
+            public readonly Dictionary<int, DateTime> LanceCooldown = new Dictionary<int, DateTime>();
 
             private static readonly string[] WinEmotes = new string[]
             {
@@ -124,9 +120,12 @@ namespace Server.Custom.Systems.Arena
 
                 if (!HasJoustGear(Knight1) || !HasJoustGear(Knight2))
                 {
-                    msg = "Um ou ambos cavaleiros não estão com full plate + montaria + lança 0x26C0.";
+                    msg = "Um ou ambos cavaleiros não estão com full plate + shield + montaria + lança 0x26CA.";
                     return false;
                 }
+
+                Knight1.CantWalk = true;
+                Knight2.CantWalk = true;
 
                 msg = "Equipamentos corretos. Evento pronto para começar.";
                 return true;
@@ -139,81 +138,16 @@ namespace Server.Custom.Systems.Arena
 
                 Running = true;
                 RoundOpen = true;
-                Knight1Clicked = false;
-                Knight2Clicked = false;
-
-                ArenaSystem.ApplyJoustPlacement(lot, DirectionFlip, Knight1, Knight2);
-                DirectionFlip = !DirectionFlip;
-
-                SendHitGump(Knight1);
-                SendHitGump(Knight2);
-
-                if (RoundTimer != null)
-                    RoundTimer.Stop();
-
-                RoundTimer = Timer.DelayCall(TimeSpan.FromSeconds(4.0), EvaluateRound);
-            }
-
-            public void Click(PlayerMobile pm)
-            {
-                if (!RoundOpen || pm == null)
-                    return;
-
-                if (pm == Knight1 && !Knight1Clicked)
-                {
-                    Knight1Clicked = true;
-                    Click1Utc = DateTime.UtcNow;
-                    Click1Loc = pm.Location;
-                }
-                else if (pm == Knight2 && !Knight2Clicked)
-                {
-                    Knight2Clicked = true;
-                    Click2Utc = DateTime.UtcNow;
-                    Click2Loc = pm.Location;
-                }
-            }
-
-            private void EvaluateRound()
-            {
-                RoundOpen = false;
-
-                if (Knight1 == null || Knight2 == null)
-                    return;
-
-                if (Knight1Clicked && Knight2Clicked && Math.Abs((Click1Utc - Click2Utc).TotalMilliseconds) <= 250)
-                {
-                    EmoteBoth(String.Format(TieEmotes[Utility.Random(TieEmotes.Length)]));
-                    return;
-                }
-
-                PlayerMobile winner = null;
-                PlayerMobile loser = null;
-
-                ArenaDefinition def = ArenaSystem.GetJoustDefinition(Key);
-                if (Knight1Clicked && IsHitWindow(Click1Loc, Click2Loc, def)) { winner = Knight1; loser = Knight2; }
-                else if (Knight2Clicked && IsHitWindow(Click2Loc, Click1Loc, def)) { winner = Knight2; loser = Knight1; }
-
-                if (winner != null && loser != null)
-                {
-                    winner.Emote(String.Format(WinEmotes[Utility.Random(WinEmotes.Length)], winner.Name, loser.Name));
-                    loser.Emote(String.Format(LoseEmotes[Utility.Random(LoseEmotes.Length)], loser.Name));
-                    TryDismount(loser);
-                    loser.Damage(Utility.RandomMinMax(8, 20));
-                    LoseArmorDurability(loser);
-                    LoseLanceDurability(winner);
-                }
+                PlaceKnightsAtLanes(lot, false);
+                Knight1.CantWalk = false;
+                Knight2.CantWalk = false;
             }
 
             public void Stop(bool hard)
             {
                 Running = false;
                 RoundOpen = false;
-
-                if (RoundTimer != null)
-                {
-                    RoundTimer.Stop();
-                    RoundTimer = null;
-                }
+                LanceCooldown.Clear();
 
                 Release(Knight1);
                 Release(Knight2);
@@ -221,17 +155,14 @@ namespace Server.Custom.Systems.Arena
                 Knight2 = null;
             }
 
-            private static bool IsHitWindow(Point3D a, Point3D b, ArenaDefinition def)
+            private static bool IsHitWindow(Point3D a, Point3D b)
             {
                 if (a.Z != b.Z)
                     return false;
 
                 int dx = a.X - b.X;
                 int dy = a.Y - b.Y;
-                if (def == null)
-                    return Math.Abs(dx) <= 1 && Math.Abs(dy) == 1;
-
-                return dx >= def.JoustHitMinDx && dx <= def.JoustHitMaxDx && dy == def.JoustHitDy;
+                return Math.Abs(dx) <= 1 && Math.Abs(dy) >= 1 && Math.Abs(dy) <= 3;
             }
 
             private static void EmoteBoth(string msg)
@@ -262,6 +193,10 @@ namespace Server.Custom.Systems.Arena
                 Item twoHand = pm.FindItemOnLayer(Layer.TwoHanded);
                 Item lance = oneHand != null && oneHand.ItemID == 0x26CA ? oneHand : twoHand != null && twoHand.ItemID == 0x26CA ? twoHand : null;
                 if (lance == null)
+                    return false;
+
+                Item shieldItem = pm.FindItemOnLayer(Layer.TwoHanded);
+                if (!(shieldItem is BaseShield))
                     return false;
 
                 return IsPlate(pm.FindItemOnLayer(Layer.Helm))
@@ -321,15 +256,6 @@ namespace Server.Custom.Systems.Arena
                 lance.HitPoints = Math.Max(0, lance.HitPoints - loss);
             }
 
-            private static void SendHitGump(PlayerMobile pm)
-            {
-                if (pm == null)
-                    return;
-
-                pm.CloseGump(typeof(JoustHitGump));
-                pm.SendGump(new JoustHitGump(pm));
-            }
-
             private static void Release(PlayerMobile pm)
             {
                 if (pm == null)
@@ -339,13 +265,196 @@ namespace Server.Custom.Systems.Arena
                 pm.CloseGump(typeof(JoustHitGump));
             }
 
+            private bool IsMoving(PlayerMobile pm)
+            {
+                if (pm == null)
+                    return false;
+
+                return Core.TickCount - pm.LastMoveTime <= 500;
+            }
+
+            private static bool IsFacingTarget(PlayerMobile from, PlayerMobile target)
+            {
+                if (from == null || target == null)
+                    return false;
+
+                Direction toward = from.GetDirectionTo(target);
+                return (from.Direction & Direction.Mask) == (toward & Direction.Mask);
+            }
+
+            private static bool IsHorizontalDirection(PlayerMobile attacker)
+            {
+                if (attacker == null)
+                    return false;
+
+                Direction dir = attacker.Direction & Direction.Mask;
+                return dir == Direction.East || dir == Direction.West;
+            }
+
+            public bool TryLanca(PlayerMobile attacker)
+            {
+                if (!Running || !RoundOpen || attacker == null)
+                    return false;
+
+                PlayerMobile defender = attacker == Knight1 ? Knight2 : attacker == Knight2 ? Knight1 : null;
+                if (defender == null)
+                    return false;
+
+                DateTime next;
+                if (LanceCooldown.TryGetValue(attacker.Serial.Value, out next) && next > DateTime.UtcNow)
+                {
+                    attacker.SendMessage("Aguarde para usar [lanca novamente.");
+                    return true;
+                }
+
+                LanceCooldown[attacker.Serial.Value] = DateTime.UtcNow + TimeSpan.FromSeconds(3.0);
+
+                bool hit = IsHitWindow(attacker.Location, defender.Location)
+                    && IsMoving(attacker)
+                    && IsHorizontalDirection(attacker)
+                    && !IsFacingTarget(attacker, defender);
+
+                if (!hit)
+                {
+                    attacker.PlaySound(0x238);
+                    attacker.SendMessage("Sua lança foi esquivada.");
+                    RefreshJoustGump(attacker);
+                    return true;
+                }
+
+                attacker.PlaySound(0x13B);
+                attacker.Emote(String.Format(WinEmotes[Utility.Random(WinEmotes.Length)], attacker.Name, defender.Name));
+                defender.Emote(String.Format(LoseEmotes[Utility.Random(LoseEmotes.Length)], defender.Name));
+                TryDismount(defender);
+                OSUKnockdownSystem.KnockDown(defender, TimeSpan.FromSeconds(2.0));
+                int damage = 20;
+                if (GetShield(defender) == null)
+                    damage += 10;
+
+                damage += (CountBrokenArmorPieces(defender) * 5);
+                defender.Damage(damage);
+                LoseArmorDurability(defender);
+                LoseLanceDurability(attacker);
+
+                RefreshJoustGump(attacker);
+                RefreshJoustGump(defender);
+
+                if (defender.Hits <= 0)
+                {
+                    EmoteBoth(attacker.Name + " venceu a justa por nocaute!");
+                    Stop(false);
+                }
+                return true;
+            }
+
+            private void PlaceKnightsAtLanes(ReinoLotDefinition lot, bool keepLocked)
+            {
+                if (lot == null || Knight1 == null || Knight2 == null)
+                    return;
+
+                ArenaDefinition def = ArenaSystem.GetJoustDefinition(Key);
+                Point3D off = def != null ? def.JoustKnight1Offset : new Point3D(5, 13, 0);
+                int westX = lot.NorthWest.X + off.X;
+                int topY = lot.NorthWest.Y + off.Y;
+                int laneLen = 17;
+
+                Knight1Start = new Point3D(westX, topY, lot.NorthWest.Z + off.Z);
+                Knight2Start = new Point3D(westX + laneLen, topY + 2, lot.NorthWest.Z + off.Z);
+
+                Knight1.MoveToWorld(Knight1Start, lot.Map);
+                Knight2.MoveToWorld(Knight2Start, lot.Map);
+                Knight1.Direction = Direction.East;
+                Knight2.Direction = Direction.West;
+                Knight1.CantWalk = keepLocked;
+                Knight2.CantWalk = keepLocked;
+                RefreshJoustGump(Knight1);
+                RefreshJoustGump(Knight2);
+            }
+
+            private static BaseWeapon GetLance(PlayerMobile pm)
+            {
+                if (pm == null)
+                    return null;
+
+                Item oneHand = pm.FindItemOnLayer(Layer.OneHanded);
+                Item twoHand = pm.FindItemOnLayer(Layer.TwoHanded);
+                BaseWeapon w = oneHand as BaseWeapon;
+                if (w != null && w.ItemID == 0x26CA)
+                    return w;
+
+                w = twoHand as BaseWeapon;
+                if (w != null && w.ItemID == 0x26CA)
+                    return w;
+
+                return null;
+            }
+
+            private static BaseShield GetShield(PlayerMobile pm)
+            {
+                return pm != null ? pm.FindItemOnLayer(Layer.TwoHanded) as BaseShield : null;
+            }
+
+            private static int CountBrokenArmorPieces(PlayerMobile pm)
+            {
+                if (pm == null)
+                    return 0;
+
+                Layer[] layers = new Layer[] { Layer.Helm, Layer.Neck, Layer.InnerTorso, Layer.Arms, Layer.Gloves, Layer.Pants };
+                int broken = 0;
+                for (int i = 0; i < layers.Length; i++)
+                {
+                    BaseArmor ba = pm.FindItemOnLayer(layers[i]) as BaseArmor;
+                    if (ba == null || ba.HitPoints <= 0)
+                        broken++;
+                }
+
+                return broken;
+            }
+
+            private static int GetArmorDurability(PlayerMobile pm, bool max)
+            {
+                if (pm == null)
+                    return 0;
+
+                Layer[] layers = new Layer[] { Layer.Helm, Layer.Neck, Layer.InnerTorso, Layer.Arms, Layer.Gloves, Layer.Pants };
+                int val = 0;
+                for (int i = 0; i < layers.Length; i++)
+                {
+                    BaseArmor ba = pm.FindItemOnLayer(layers[i]) as BaseArmor;
+                    if (ba == null)
+                        continue;
+
+                    val += max ? ba.MaxHitPoints : Math.Max(0, ba.HitPoints);
+                }
+
+                return val;
+            }
+
+            private static void RefreshJoustGump(PlayerMobile pm)
+            {
+                if (pm == null)
+                    return;
+
+                BaseWeapon lance = GetLance(pm);
+                BaseShield shield = GetShield(pm);
+                int lanceCur = lance != null ? Math.Max(0, lance.HitPoints) : 0;
+                int lanceMax = lance != null ? lance.MaxHitPoints : 0;
+                int shieldCur = shield != null ? Math.Max(0, shield.HitPoints) : 0;
+                int shieldMax = shield != null ? shield.MaxHitPoints : 0;
+                int armorCur = GetArmorDurability(pm, false);
+                int armorMax = GetArmorDurability(pm, true);
+
+                pm.CloseGump(typeof(JoustHitGump));
+                pm.SendGump(new JoustHitGump(lanceCur, lanceMax, shieldCur, shieldMax, armorCur, armorMax));
+            }
+
             private class KnightTarget : Target
             {
                 private readonly JoustSession m_Session;
                 private readonly int m_Slot;
                 private readonly PlayerMobile m_Host;
 
-                public KnightTarget(JoustSession session, int slot, PlayerMobile host) : base(12, false, TargetFlags.None)
+                public KnightTarget(JoustSession session, int slot, PlayerMobile host) : base(-1, false, TargetFlags.None)
                 {
                     m_Session = session;
                     m_Slot = slot;
@@ -367,9 +476,13 @@ namespace Server.Custom.Systems.Arena
                         m_Session.Knight2 = pm;
 
                     pm.CantWalk = true;
+
+                    Server.Custom.Reinos.ReinoLotDefinition lot = ArenaSystem.GetLotFromConstructionKey(m_Session.Key);
+                    if (m_Session.Knight1 != null && m_Session.Knight2 != null && lot != null)
+                        m_Session.PlaceKnightsAtLanes(lot, true);
+
                     from.SendMessage("Cavaleiro adicionado: {0}", pm.Name);
                     int city = 0;
-                    Server.Custom.Reinos.ReinoLotDefinition lot = ArenaSystem.GetLotFromConstructionKey(m_Session.Key);
                     if (lot != null) city = lot.CityId;
                     m_Host.SendGump(new ArenaJoustGump(m_Host, city, m_Session.Key));
                 }
@@ -384,6 +497,7 @@ namespace Server.Custom.Systems.Arena
             public bool Running;
             public bool Paused;
             public int Wave;
+            public bool WaitingForWaveClear;
             public List<PlayerMobile> Fighters;
             public List<BaseCreature> Spawned;
             public Timer NextWave;
@@ -409,6 +523,7 @@ namespace Server.Custom.Systems.Arena
                 Running = true;
                 Paused = false;
                 Wave = 0;
+                WaitingForWaveClear = false;
                 ScheduleNextWave(lot, TimeSpan.FromSeconds(30.0));
             }
 
@@ -424,6 +539,7 @@ namespace Server.Custom.Systems.Arena
                 Running = false;
                 Paused = false;
                 Wave = 0;
+                WaitingForWaveClear = false;
 
                 if (NextWave != null)
                 {
@@ -454,9 +570,16 @@ namespace Server.Custom.Systems.Arena
                 if (!Running || Paused || lot == null)
                     return;
 
-                if (HasAliveSpawn())
+                if (WaitingForWaveClear)
                 {
-                    ScheduleNextWave(lot, TimeSpan.FromSeconds(5.0));
+                    if (HasAliveSpawn())
+                    {
+                        ScheduleNextWave(lot, TimeSpan.FromSeconds(5.0));
+                        return;
+                    }
+
+                    WaitingForWaveClear = false;
+                    ScheduleNextWave(lot, TimeSpan.FromSeconds(30.0));
                     return;
                 }
 
@@ -480,7 +603,8 @@ namespace Server.Custom.Systems.Arena
                     Spawned.Add(bc);
                 }
 
-                ScheduleNextWave(lot, TimeSpan.FromSeconds(30.0));
+                WaitingForWaveClear = true;
+                ScheduleNextWave(lot, TimeSpan.FromSeconds(5.0));
             }
 
             private bool HasAliveSpawn()
@@ -500,12 +624,22 @@ namespace Server.Custom.Systems.Arena
                 return false;
             }
 
+            private static void EnsureNotMounted(PlayerMobile pm)
+            {
+                if (pm == null)
+                    return;
+
+                IMount mount = pm.Mount;
+                if (mount != null)
+                    mount.Rider = null;
+            }
+
             private class FighterTarget : Target
             {
                 private readonly GladiatorSession m_Session;
                 private readonly PlayerMobile m_Host;
 
-                public FighterTarget(GladiatorSession session, PlayerMobile host) : base(12, false, TargetFlags.None)
+                public FighterTarget(GladiatorSession session, PlayerMobile host) : base(-1, false, TargetFlags.None)
                 {
                     m_Session = session;
                     m_Host = host;
@@ -519,6 +653,8 @@ namespace Server.Custom.Systems.Arena
                         from.SendMessage("Selecione um jogador.");
                         return;
                     }
+
+                    EnsureNotMounted(pm);
 
                     if (!m_Session.Fighters.Contains(pm) && m_Session.Fighters.Count < 3)
                         m_Session.Fighters.Add(pm);
@@ -590,7 +726,9 @@ namespace Server.Custom.Systems.Arena
                     if (all[i] == null)
                         continue;
 
+                    EnsureNotMounted(all[i]);
                     MoveLoadoutToStorage(storageChest, all[i]);
+                    EquipTeamVest(all[i], Red.Contains(all[i]));
                     PositionPlayer(lot, all[i], Red.Contains(all[i]));
                     all[i].CantWalk = false;
                 }
@@ -613,6 +751,7 @@ namespace Server.Custom.Systems.Arena
                 {
                     if (all[i] != null)
                     {
+                        RemoveTeamVest(all[i]);
                         RestoreLoadout(all[i]);
                         all[i].CantWalk = false;
                         all[i].Blessed = false;
@@ -675,8 +814,8 @@ namespace Server.Custom.Systems.Arena
                 ArenaDefinition def = ArenaSystem.GetJoustDefinition(Key);
                 int startX = def.BombermanGridStartX;
                 int startY = def.BombermanGridStartY;
-                int width = def.BombermanGridWidth;
-                int height = def.BombermanGridHeight;
+                int width = Math.Max(5, Math.Min(20, def.BombermanGridWidth));
+                int height = Math.Max(5, Math.Min(20, def.BombermanGridHeight));
 
                 for (int x = startX; x < startX + width; x++)
                 {
@@ -697,21 +836,32 @@ namespace Server.Custom.Systems.Arena
                 DeleteItems(Crates);
                 DeleteItems(Bonuses);
 
+                ArenaDefinition defDim = ArenaSystem.GetJoustDefinition(Key);
+                int startX = defDim.BombermanGridStartX;
+                int startY = defDim.BombermanGridStartY;
+                int width = Math.Max(5, Math.Min(20, defDim.BombermanGridWidth));
+                int height = Math.Max(5, Math.Min(20, defDim.BombermanGridHeight));
+                int maxX = startX + width - 1;
+                int maxY = startY + height - 1;
+
                 HashSet<string> blocked = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 ArenaDefinition def = ArenaSystem.GetJoustDefinition(Key);
                 AddBlockedOffsets(blocked, def != null ? def.BombermanRedSpawnOffsets : null);
                 AddBlockedOffsets(blocked, def != null ? def.BombermanBlueSpawnOffsets : null);
                 if (blocked.Count == 0)
                 {
-                    blocked.Add("2:2"); blocked.Add("2:28"); blocked.Add("28:2"); blocked.Add("28:28");
+                    blocked.Add(startX + ":" + startY);
+                    blocked.Add(startX + ":" + maxY);
+                    blocked.Add(maxX + ":" + startY);
+                    blocked.Add(maxX + ":" + maxY);
                 }
 
                 int tries = 0;
-                while (Crates.Count < 20 && tries < 200)
+                while (Crates.Count < 20 && tries < 300)
                 {
                     tries++;
-                    int x = Utility.RandomMinMax(2, 28);
-                    int y = Utility.RandomMinMax(2, 28);
+                    int x = Utility.RandomMinMax(startX, maxX);
+                    int y = Utility.RandomMinMax(startY, maxY);
                     string k = x + ":" + y;
                     if (blocked.Contains(k))
                         continue;
@@ -727,8 +877,8 @@ namespace Server.Custom.Systems.Arena
 
                 for (int i = 0; i < 12; i++)
                 {
-                    int x = Utility.RandomMinMax(2, 28);
-                    int y = Utility.RandomMinMax(2, 28);
+                    int x = Utility.RandomMinMax(startX, maxX);
+                    int y = Utility.RandomMinMax(startY, maxY);
                     Point3D loc = new Point3D(lot.NorthWest.X + x, lot.NorthWest.Y + y, lot.NorthWest.Z);
                     if (HasBlockAt(loc, lot.Map))
                         continue;
@@ -754,6 +904,35 @@ namespace Server.Custom.Systems.Arena
                     Point3D p = offsets[i];
                     blocked.Add(p.X + ":" + p.Y);
                 }
+            }
+
+            private static void EnsureNotMounted(PlayerMobile pm)
+            {
+                if (pm == null)
+                    return;
+
+                IMount mount = pm.Mount;
+                if (mount != null)
+                    mount.Rider = null;
+            }
+
+            private static void EquipTeamVest(PlayerMobile pm, bool red)
+            {
+                if (pm == null)
+                    return;
+
+                RemoveTeamVest(pm);
+                pm.AddItem(new ArenaBombermanTeamVest(red));
+            }
+
+            private static void RemoveTeamVest(PlayerMobile pm)
+            {
+                if (pm == null)
+                    return;
+
+                Item vest = pm.FindItemOnLayer(Layer.OuterTorso);
+                if (vest is ArenaBombermanTeamVest)
+                    vest.Delete();
             }
 
             private static bool HasBlockAt(Point3D loc, Map map)
@@ -1041,7 +1220,7 @@ namespace Server.Custom.Systems.Arena
                 private readonly PlayerMobile m_Host;
                 private readonly bool m_Red;
 
-                public BombermanTarget(BombermanSession session, PlayerMobile host, bool red) : base(12, false, TargetFlags.None)
+                public BombermanTarget(BombermanSession session, PlayerMobile host, bool red) : base(-1, false, TargetFlags.None)
                 {
                     m_Session = session;
                     m_Host = host;
@@ -1054,19 +1233,17 @@ namespace Server.Custom.Systems.Arena
                     if (pm == null)
                         return;
 
+                    EnsureNotMounted(pm);
+
                     if (m_Red)
                     {
                         if (!m_Session.Red.Contains(pm))
                             m_Session.Red.Add(pm);
-
-                        pm.Hue = 33;
                     }
                     else
                     {
                         if (!m_Session.Blue.Contains(pm))
                             m_Session.Blue.Add(pm);
-
-                        pm.Hue = 1152;
                     }
 
                     pm.CantWalk = true;
@@ -1128,6 +1305,23 @@ namespace Server.Custom.Systems.Arena
             bomb.MoveToWorld(from.Location, from.Map);
             session.ActiveBombs[from.Serial.Value] = count + 1;
             return true;
+        }
+
+        public static bool HandleLancaCommand(PlayerMobile from)
+        {
+            if (from == null || from.Map == null)
+                return false;
+
+            string key;
+            int city;
+            ArenaDefinition def;
+            ReinoLotDefinition lot;
+
+            if (!ArenaSystem.TryResolveArenaAt(from.Location, from.Map, out key, out city, out def, out lot))
+                return false;
+
+            JoustSession session = GetOrCreateJoust(key);
+            return session.TryLanca(from);
         }
         #endregion
     }

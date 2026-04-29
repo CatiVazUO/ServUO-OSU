@@ -1,45 +1,35 @@
 using Server.Gumps;
-using Server.Mobiles;
-using Server.Network;
-using Server.Custom.Systems.Arena;
 
 namespace Server.Custom.Systems.Arena.Gumps
 {
     public class JoustHitGump : Gump
     {
-        private readonly PlayerMobile m_Player;
-
-        public JoustHitGump(PlayerMobile pm) : base(50, 50)
+        public JoustHitGump(int lanceCur, int lanceMax, int shieldCur, int shieldMax, int armorCur, int armorMax) : base(0, 0)
         {
-            m_Player = pm;
             Closable = false;
             Dragable = true;
             Disposable = true;
             Resizable = false;
 
             AddPage(0);
-            AddImage(0, 0, 5585);
-            AddButton(10, 10, 5601, 5605, 1, GumpButtonType.Reply, 0);
-        }
+            AddImageTiled(199, 148, 328, 286, 375);
+            AddImageTiled(515, 159, 25, 269, 369);
+            AddImageTiled(178, 158, 26, 271, 370);
+            AddImageTiled(194, 134, 331, 25, 371);
+            AddImageTiled(205, 422, 304, 30, 372);
+            AddImage(170, 125, 402);
+            AddImage(502, 129, 402);
+            AddImage(171, 419, 402);
+            AddImage(502, 419, 402);
 
-        public override void OnResponse(NetState sender, RelayInfo info)
-        {
-            if (info.ButtonID != 1)
-                return;
-
-            if (m_Player == null)
-                return;
-
-            string key;
-            int city;
-            ArenaDefinition def;
-            Server.Custom.Reinos.ReinoLotDefinition lot;
-
-            if (!ArenaSystem.TryResolveArenaAt(m_Player.Location, m_Player.Map, out key, out city, out def, out lot))
-                return;
-
-            ArenaGameModes.JoustSession s = ArenaGameModes.GetOrCreateJoust(key);
-            s.Click(m_Player);
+            AddLabel(313, 163, 1152, "Arena - Justa");
+            AddHtml(220, 205, 280, 58, "<BASEFONT COLOR=#FFFFFF>Use o comando [lanca para atacar quando o adversário estiver paralelo.</BASEFONT>", false, false);
+            AddLabel(223, 283, 1152, "Lança:");
+            AddLabel(300, 283, 1152, lanceCur + "/" + lanceMax);
+            AddLabel(223, 315, 1152, "Escudo:");
+            AddLabel(300, 315, 1152, shieldCur + "/" + shieldMax);
+            AddLabel(223, 347, 1152, "Armadura:");
+            AddLabel(320, 347, 1152, armorCur + "/" + armorMax);
         }
     }
 }
