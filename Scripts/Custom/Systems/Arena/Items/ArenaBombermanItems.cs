@@ -63,6 +63,14 @@ namespace Server.Custom.Systems.Arena
 
         public ArenaBombermanTeamVest(Serial serial) : base(serial) { }
 
+        public override void OnRemoved(object parent)
+        {
+            base.OnRemoved(parent);
+
+            if (parent is Mobile)
+                Delete();
+        }
+
         public override void Serialize(GenericWriter writer)
         {
             base.Serialize(writer);

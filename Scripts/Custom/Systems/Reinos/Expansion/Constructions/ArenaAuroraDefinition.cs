@@ -70,7 +70,7 @@ namespace Server.Custom.Reinos
             JustaMultiId = 0x0,
             GladiadoresMultiId = 0x0,
             BombermanMultiId = 0x0,
-            JoustKnight1Offset = new Point3D(5, 13, 0),
+            JoustKnight1Offset = new Point3D(11, 22, 0),
             JoustDirectionForward = Direction.East,
             JoustHitMinDx = -1,
             JoustHitMaxDx = 0,

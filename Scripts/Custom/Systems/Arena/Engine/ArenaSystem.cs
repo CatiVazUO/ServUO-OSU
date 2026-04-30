@@ -285,6 +285,9 @@ namespace Server.Custom.Systems.Arena
             state.EventStarted = true;
             state.LastChangedUtc = DateTime.UtcNow;
 
+            // sempre limpa qualquer multi central remanescente antes de iniciar novo modo
+            DeleteCenterMulti(state);
+
             if (state.SelectedMode == ArenaGameMode.LutaLivre || state.SelectedMode == ArenaGameMode.Boxe || state.SelectedMode == ArenaGameMode.LutaMagica)
             {
                 EnsureCenterMulti(state, lot);

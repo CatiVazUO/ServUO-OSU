@@ -686,14 +686,12 @@ namespace Server.Custom.Systems.Arena
             public Dictionary<int, DateTime> DownUntil = new Dictionary<int, DateTime>();
             public int MaxFalls = 3;
             public Dictionary<int, int> StorageBags = new Dictionary<int, int>();
+            public Timer BonusRespawnTimer;
 
             public BombermanSession(string key) { Key = key; }
 
             public void ToggleMode()
             {
-                if (Running)
-                    return;
-
                 TeamMode = !TeamMode;
                 Red.Clear();
                 Blue.Clear();
@@ -713,6 +711,7 @@ namespace Server.Custom.Systems.Arena
                 Running = true;
                 SpawnGrid(lot);
                 SpawnCratesAndBonuses(lot);
+                StartBonusRespawn(lot);
 
                 List<PlayerMobile> all = new List<PlayerMobile>();
                 all.AddRange(Red);
@@ -742,6 +741,11 @@ namespace Server.Custom.Systems.Arena
                 DeleteItems(Walls);
                 DeleteItems(Crates);
                 DeleteItems(Bonuses);
+                if (BonusRespawnTimer != null)
+                {
+                    BonusRespawnTimer.Stop();
+                    BonusRespawnTimer = null;
+                }
 
                 List<PlayerMobile> all = new List<PlayerMobile>();
                 all.AddRange(Red);
@@ -751,7 +755,6 @@ namespace Server.Custom.Systems.Arena
                 {
                     if (all[i] != null)
                     {
-                        RemoveTeamVest(all[i]);
                         RestoreLoadout(all[i]);
                         all[i].CantWalk = false;
                         all[i].Blessed = false;
@@ -857,7 +860,7 @@ namespace Server.Custom.Systems.Arena
                 }
 
                 int tries = 0;
-                while (Crates.Count < 20 && tries < 300)
+                while (Crates.Count < 40 && tries < 600)
                 {
                     tries++;
                     int x = Utility.RandomMinMax(startX, maxX);
@@ -892,6 +895,48 @@ namespace Server.Custom.Systems.Arena
                     b.MoveToWorld(loc, lot.Map);
                     Bonuses.Add(b);
                 }
+            }
+
+            private void StartBonusRespawn(ReinoLotDefinition lot)
+            {
+                if (BonusRespawnTimer != null)
+                    BonusRespawnTimer.Stop();
+
+                BonusRespawnTimer = Timer.DelayCall(TimeSpan.FromSeconds(20.0), TimeSpan.FromSeconds(20.0), delegate
+                {
+                    if (!Running || lot == null || lot.Map == null)
+                        return;
+
+                    if (Bonuses.Count >= 20)
+                        return;
+
+                    ArenaDefinition defDim = ArenaSystem.GetJoustDefinition(Key);
+                    int startX = defDim.BombermanGridStartX;
+                    int startY = defDim.BombermanGridStartY;
+                    int width = Math.Max(5, Math.Min(20, defDim.BombermanGridWidth));
+                    int height = Math.Max(5, Math.Min(20, defDim.BombermanGridHeight));
+                    int maxX = startX + width - 1;
+                    int maxY = startY + height - 1;
+
+                    for (int attempt = 0; attempt < 20; attempt++)
+                    {
+                        int x = Utility.RandomMinMax(startX, maxX);
+                        int y = Utility.RandomMinMax(startY, maxY);
+                        Point3D loc = new Point3D(lot.NorthWest.X + x, lot.NorthWest.Y + y, lot.NorthWest.Z);
+                        if (HasBlockAt(loc, lot.Map))
+                            continue;
+
+                        Item b;
+                        int r = Utility.Random(100);
+                        if (r < 45) b = new ArenaMoveBonusItem();
+                        else if (r < 80) b = new ArenaMultiBombBonusItem();
+                        else b = new ArenaRangeBonusItem();
+
+                        b.MoveToWorld(loc, lot.Map);
+                        Bonuses.Add(b);
+                        break;
+                    }
+                });
             }
 
             private static void AddBlockedOffsets(HashSet<string> blocked, Point3D[] offsets)
