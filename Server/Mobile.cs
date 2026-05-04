@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using CustomsFramework;
-
+using Server.Mobiles;
 using Server.Accounting;
 using Server.Commands;
 using Server.ContextMenus;
@@ -18,7 +18,6 @@ using Server.Gumps;
 using Server.HuePickers;
 using Server.Items;
 using Server.Menus;
-using Server.Mobiles;
 using Server.Network;
 using Server.Prompts;
 using Server.Targeting;
@@ -26,6 +25,11 @@ using Server.Targeting;
 
 namespace Server
 {
+    public interface IOSUDamageLedger
+    {
+        void OSURegisterIncomingDamage(Mobile from, int amount);
+    }
+
     #region Callbacks
     public delegate void TargetCallback(Mobile from, object targeted);
 
@@ -5557,7 +5561,7 @@ namespace Server
 			{
 				int oldHits = Hits;
 
-                if (this is PlayerMobile osuDamageVictim)
+                if (this is IOSUDamageLedger osuDamageVictim)
                 {
                     int realDamage = Math.Min(amount, Math.Max(0, oldHits));
 

@@ -349,6 +349,9 @@ namespace Server.Gumps
                 Skill sk = target.Skills[i];
                 if (sk == null) continue;
 
+                if (!target.OSUIsPvpChar && (sk.SkillName == SkillName.Stealing || sk.SkillName == SkillName.Lockpicking))
+                    continue;
+
                 var group = SkillXPSystem.GetSkillGroup(sk.SkillName);
 
 
@@ -786,6 +789,14 @@ namespace Server.Gumps
                     }
 
                     SkillName sn = (SkillName)(id - LockSkillButtonBase);
+
+                    if (!m_Target.OSUIsPvpChar && (sn == SkillName.Stealing || sn == SkillName.Lockpicking))
+                    {
+                        m_Target.SendMessage(0x35, "Apenas personagens PvP podem aprender esta skill.");
+                        m_Viewer.CloseGump(typeof(OSUSkillGump));
+                        m_Viewer.SendGump(new OSUSkillGump(m_Viewer, m_Target, m_SkillsTab, m_SkillsPage, HubView.Skills));
+                        return;
+                    }
 
                     Skill sk = m_Target.Skills[sn];
                     if (sk == null)

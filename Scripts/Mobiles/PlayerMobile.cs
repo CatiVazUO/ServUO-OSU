@@ -130,7 +130,7 @@ namespace Server.Mobiles
     }
     #endregion
 
-    public partial class PlayerMobile : Mobile, IHonorTarget
+    public partial class PlayerMobile : Mobile, IHonorTarget, Server.IOSUDamageLedger
     {
         public static List<PlayerMobile> Instances { get; private set; }
 
@@ -744,6 +744,12 @@ namespace Server.Mobiles
 
         public void UnlockOSUSkill(SkillName skill)
         {
+            if (!OSUIsPvpChar && (skill == SkillName.Stealing || skill == SkillName.Lockpicking))
+            {
+                SendMessage(0x35, "Apenas personagens PvP podem aprender esta skill.");
+                return;
+            }
+
             if (_OSUUnlockedSkills == null)
                 _OSUUnlockedSkills = new HashSet<SkillName>();
 
