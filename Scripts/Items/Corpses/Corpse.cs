@@ -15,6 +15,7 @@ using Server.Custom.Reinos;
 using Server.Mobiles;
 using Server.Network;
 using Server.Custom.Systems.Stables.Engine;
+using Server.Custom;
 #endregion
 
 namespace Server.Items
@@ -1199,6 +1200,12 @@ namespace Server.Items
 
         public bool CanLoot(Mobile from, Item item)
         {
+            if (!OSUPvpRules.CanLootCorpse(from, this))
+            {
+                from.SendMessage(0x35, "Você não pode lootear este corpo.");
+                return false;
+            }
+
             if (!IsCriminalAction(from))
             {
                 return true;

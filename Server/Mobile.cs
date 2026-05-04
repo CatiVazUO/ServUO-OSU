@@ -8,7 +8,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
 using CustomsFramework;
 
 using Server.Accounting;
@@ -5557,7 +5556,16 @@ namespace Server
 			if (amount > 0)
 			{
 				int oldHits = Hits;
-				int newHits = oldHits - amount;
+
+                if (this is PlayerMobile osuDamageVictim)
+                {
+                    int realDamage = Math.Min(amount, Math.Max(0, oldHits));
+
+                    if (realDamage > 0)
+                        osuDamageVictim.OSURegisterIncomingDamage(from, realDamage);
+                }
+
+                int newHits = oldHits - amount;
 
                 if (checkDisrupt && m_Spell != null)
 				{

@@ -12,6 +12,7 @@ using Server.Spells.Ninjitsu;
 using Server.Spells.Seventh;
 using Server.Targeting;
 using Server.Engines.VvV;
+using Server.Custom;
 #endregion
 
 namespace Server.SkillHandlers
@@ -58,7 +59,7 @@ namespace Server.SkillHandlers
 
 				object root = toSteal.RootParent;
 
-				StealableArtifactsSpawner.StealableInstance si = null;
+                StealableArtifactsSpawner.StealableInstance si = null;
 				if (toSteal.Parent == null || !toSteal.Movable)
 				{
 					si = toSteal is AddonComponent ? StealableArtifactsSpawner.GetStealableInstance(((AddonComponent)toSteal).Addon) : StealableArtifactsSpawner.GetStealableInstance(toSteal);
@@ -68,11 +69,11 @@ namespace Server.SkillHandlers
 				{
 					m_Thief.SendLocalizedMessage(1005584); // Both hands must be free to steal.
 				}
-				else if (root is Mobile && ((Mobile)root).Player && !IsInGuild(m_Thief))
-				{
-					m_Thief.SendLocalizedMessage(1005596); // You must be in the thieves guild to steal from other players.
-				}
-				else if (SuspendOnMurder && root is Mobile && ((Mobile)root).Player && IsInGuild(m_Thief) && m_Thief.Kills > 0)
+                else if (root is Mobile && ((Mobile)root).Player && m_Thief.Skills[SkillName.Stealing].Value <= 0.0)
+                {
+                    m_Thief.SendMessage(0x35, "Você não sabe roubar.");
+                }
+                else if (SuspendOnMurder && root is Mobile && ((Mobile)root).Player && IsInGuild(m_Thief) && m_Thief.Kills > 0)
 				{
 					m_Thief.SendLocalizedMessage(502706); // You are currently suspended from the thieves guild.
 				}
@@ -511,13 +512,6 @@ namespace Server.SkillHandlers
 
 		public static TimeSpan OnUse(Mobile m)
 		{
-
-            if (m is PlayerMobile pm && !pm.OSUIsPvpChar)
-            {
-                m.SendMessage(0x35, "Apenas personagens PVP podem roubar.");
-                return TimeSpan.FromSeconds(1.0);
-            }
-
             if (!IsEmptyHanded(m))
 			{
 				m.SendLocalizedMessage(1005584); // Both hands must be free to steal.

@@ -158,6 +158,12 @@ namespace Server.Mobiles
         private bool _OSUKnockoutFromPlayer;
         private bool _OSUKnockoutPending;
         private bool _OSUPermaDeathPending;
+        private int _OSUDamageFromPlayers;
+        private int _OSUDamageFromPvpPlayers;
+        private int _OSUDamageFromNonPvpPlayers;
+        private int _OSUDamageFromMobs;
+        private DateTime _OSULastPlayerDamageUtc;
+        private DateTime _OSULastAnyDamageUtc;
 
         private Timer _OSULifeRegenTimer;
 
@@ -793,6 +799,174 @@ namespace Server.Mobiles
 
         #region OSU Desmaios PermaDeath
 
+        public void OSURegisterIncomingDamage(Mobile from, int amount)
+        {
+            if (amount <= 0)
+                return;
+
+            Mobile source = OSUPvpRules.ResolveDamageSource(from);
+
+            PlayerMobile pm = source as PlayerMobile;
+
+            if (pm != null)
+            {
+                _OSUDamageFromPlayers += amount;
+
+                if (pm.OSUIsPvpChar)
+                    _OSUDamageFromPvpPlayers += amount;
+                else
+                    _OSUDamageFromNonPvpPlayers += amount;
+
+                _OSULastPlayerDamageUtc = DateTime.UtcNow;
+            }
+            else
+            {
+                _OSUDamageFromMobs += amount;
+            }
+
+            _OSULastAnyDamageUtc = DateTime.UtcNow;
+        }
+
+        private void OSUResetDamageLedger()
+        {
+            _OSUDamageFromPlayers = 0;
+            _OSUDamageFromPvpPlayers = 0;
+            _OSUDamageFromNonPvpPlayers = 0;
+            _OSUDamageFromMobs = 0;
+            _OSULastPlayerDamageUtc = DateTime.MinValue;
+            _OSULastAnyDamageUtc = DateTime.MinValue;
+        }
+
+        private int OSUTotalTrackedDamage
+        {
+            get
+            {
+                return _OSUDamageFromPlayers + _OSUDamageFromMobs;
+            }
+        }
+
+        private double OSUPlayerDamageRatio
+        {
+            get
+            {
+                int total = OSUTotalTrackedDamage;
+
+                if (total <= 0)
+                    return 0.0;
+
+                return (double)_OSUDamageFromPlayers / total;
+            }
+        }
+
+        private double OSUPvpPlayerDamageRatio
+        {
+            get
+            {
+                int total = OSUTotalTrackedDamage;
+
+                if (total <= 0)
+                    return 0.0;
+
+                return (double)_OSUDamageFromPvpPlayers / total;
+            }
+        }
+
+        private double OSUMobDamageRatio
+        {
+            get
+            {
+                int total = OSUTotalTrackedDamage;
+
+                if (total <= 0)
+                    return 0.0;
+
+                return (double)_OSUDamageFromMobs / total;
+            }
+        }
+
+        private double OSURecentPlayerPressureRatio
+        {
+            get
+            {
+                int max = Math.Max(1, HitsMax);
+                return (double)_OSUDamageFromPlayers / max;
+            }
+        }
+
+        private bool OSUHasRecentPlayerPressure()
+        {
+            if (_OSULastPlayerDamageUtc == DateTime.MinValue)
+                return false;
+
+            if (DateTime.UtcNow - _OSULastPlayerDamageUtc > OSUPvpRules.RecentPlayerPressureWindow)
+                return false;
+
+            return OSURecentPlayerPressureRatio >= OSUPvpRules.RecentPlayerPressureThreshold;
+        }
+
+        private OSUDeathAttribution OSUGetDeathAttribution()
+        {
+            int total = OSUTotalTrackedDamage;
+
+            if (total <= 0)
+                return OSUDeathAttribution.None;
+
+            if (OSUPlayerDamageRatio >= OSUPvpRules.PlayerDeathThreshold)
+                return OSUDeathAttribution.Player;
+
+            if (OSUMobDamageRatio >= OSUPvpRules.MobDeathThreshold)
+                return OSUDeathAttribution.Mob;
+
+            return OSUDeathAttribution.Mixed;
+        }
+
+        private bool OSUShouldConsumeLifeOnThisDeath()
+        {
+            OSUDeathAttribution attribution = OSUGetDeathAttribution();
+
+            // Jogador Não-PvP nunca perde OSULives por dano de player.
+            // Ele só perde OSULives se a morte/desmaio foi claramente de mob/PvE.
+            if (!OSUIsPvpChar)
+            {
+                if (attribution == OSUDeathAttribution.Mob && !OSUHasRecentPlayerPressure())
+                    return true;
+
+                return false;
+            }
+
+            // Jogador PvP perde OSULives se 70%+ do dano total veio de jogadores PvP.
+            // Dano de jogador Não-PvP NÃO tira OSULives de ninguém.
+            if (OSUPvpPlayerDamageRatio >= OSUPvpRules.PlayerDeathThreshold)
+                return true;
+
+            // Jogador PvP também perde OSULives em morte PvE limpa.
+            if (attribution == OSUDeathAttribution.Mob)
+                return true;
+
+            return false;
+        }
+
+        private void OSUApplyLifeLossForCurrentDeath()
+        {
+            OSUDeathAttribution attribution = OSUGetDeathAttribution();
+
+            _OSUKnockoutFromPlayer = attribution == OSUDeathAttribution.Player;
+            _OSUPermaDeathPending = false;
+
+            if (!OSUShouldConsumeLifeOnThisDeath())
+                return;
+
+            OSULives--;
+
+            if (OSULives < 0)
+                OSULives = 0;
+
+            OSUConsumeLifeAndStartRegenIfNeeded();
+
+            if (OSULives <= 0)
+                _OSUPermaDeathPending = true;
+        }
+
         private TimeSpan GetOSUKnockoutDuration()
         {
             int seconds;
@@ -901,6 +1075,8 @@ namespace Server.Mobiles
 
         private void OSUHandleKnockoutOnDeath(Container c)
         {
+            OSUApplyLifeLossForCurrentDeath();
+
             // Guarda o corpse para restaurar o que sobrar
             if (c is Corpse corpse && corpse != null && !corpse.Deleted)
             {
@@ -1003,6 +1179,7 @@ namespace Server.Mobiles
             }
 
             SendMessage(0x35, "Você acordou do desmaio.");
+            OSUResetDamageLedger();
         }
 
 
@@ -1384,10 +1561,10 @@ namespace Server.Mobiles
                     {
                         if (OSULives > 0)
                         {
-                            OSULives--;
+                           
                             Server.Custom.Systems.Health.OSUHealthSystem.OnPlayerKnockoutLostLife(this);
                             _OSUKnockoutPending = true;
-                            OSUConsumeLifeAndStartRegenIfNeeded();
+                          
                         }
                         else
                         {
